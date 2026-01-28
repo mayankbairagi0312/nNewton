@@ -4,5 +4,4 @@
 # CMake build output
 out/
 
-# Third-party deps handled by CMake FetchContent
-external/
+

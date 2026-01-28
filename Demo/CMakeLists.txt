@@ -30,7 +30,6 @@ target_link_libraries(nNewtonTest PRIVATE
     imgui
     glad
     OpenGL::GL
-    glm
 )
 add_dependencies(nNewtonTest imgui)
 target_compile_definitions(nNewton PRIVATE GLM_ENABLE_EXPERIMENTAL)

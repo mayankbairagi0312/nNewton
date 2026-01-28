@@ -66,7 +66,7 @@ public:
 	void DrawPoint(const glm::vec3 Position, const glm::vec4 Color, const float size = 0.1);
 	void DrawBox(const glm::vec3& min, const glm::vec3& max, const glm::vec3& Center, const glm::vec4& Color);
 	void DrawSphare(const glm::vec3& Center, const glm::vec4& Color,const float Radius = 1, const uint8_t Segments = 32);
-
+	void drawArrow(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color);
 	void BeginFrame();
 	void Endframe();
 

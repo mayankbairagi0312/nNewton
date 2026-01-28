@@ -57,6 +57,10 @@ void DebugRenderer::DrawBox(const glm::vec3& min, const glm::vec3& max, const gl
 	DrawPoint(Center, Color);
 }
 
+void drawArrow(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color)
+{
+
+}
 
 
 void DebugRenderer::Endframe()
