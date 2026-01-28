@@ -1,6 +1,6 @@
 #include "DebugRenderer.hpp"
 #include <iostream>
-
+#include <cmath>
 DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false) ,m_Drawer(nullptr){};
 DebugRenderer::~DebugRenderer(){}
 
@@ -13,11 +13,56 @@ void DebugRenderer::BeginFrame()
 	}
 	m_Drawer->BeginFrameRenderer();
 }
-void DebugRenderer::DrawSphare(const glm::vec3& Center, const glm::vec4& Color, const float Radius ,const uint8_t Segments )
+void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, const float Radius ,const uint8_t Segments )
 {
 
-	
+    float PI = 3.1459265f;
+    float x, y, z;
+    uint8_t lati = Segments;
+    uint8_t longi = Segments;
+    float longiAngle, latiAngle;
+    std::vector <glm::vec3> PointsOnSphere;
+    for (int i = 0; i <= lati; ++i)
+    {
+        latiAngle = i*PI/ lati ;
+        
+        for (int j = 0; j <= longi; ++j)
+        {
+            longiAngle = 2 * PI - (j *2*PI)/ longi;
 
+            x = Center.x + (Radius * sin(latiAngle)) * cos(longiAngle);
+            y = Center.y + Radius * cos(latiAngle); 
+            z = Center.z + (Radius * sin(longiAngle)) * sin(latiAngle);
+
+            PointsOnSphere.push_back(glm::vec3(x, y, z));
+
+        }
+
+    }
+
+    for (int i = 0; i < lati; ++i)  
+    {
+        for (int j = 0; j < longi; ++j)  
+        {
+            int current = i * (longi + 1) + j;
+            int nextInLongitude = current + 1;
+            int nextInLatitude = (i + 1) * (longi + 1) + j;
+
+            // Draw horizontal lines (same latitude, different longitude)
+            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLongitude], Color);
+            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLatitude], Color);
+        }
+    }
+
+    
+    for (int i = 0; i < lati; ++i)
+    {
+        int lastInRow = i * (longi + 1) + longi;
+        int firstInNextRow = (i + 1) * (longi + 1) + longi;
+        DrawLine(PointsOnSphere[lastInRow], PointsOnSphere[firstInNextRow], Color);
+    }
+
+    DrawPoint(Center, Color);
 }
 
 void DebugRenderer::DrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color) {
@@ -57,9 +102,29 @@ void DebugRenderer::DrawBox(const glm::vec3& min, const glm::vec3& max, const gl
 	DrawPoint(Center, Color);
 }
 
-void drawArrow(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color)
+void DebugRenderer::drawArrow(const glm::vec3& from, const glm::vec3& to,float headsize , const glm::vec4& Color)
 {
+    DrawLine(from, to, Color);
 
+    glm::vec3 dir = glm::normalize(to - from);
+
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+
+    if (abs(glm::dot(up, dir)) > 0.99)
+    {
+        up = glm::vec3(1, 0, 0);
+    }
+
+    glm::vec3 right = glm::normalize(glm::cross(dir, up));
+    //up = glm::cross(right, dir);
+
+    glm::vec3 arrowbase = to - dir * headsize;
+
+    glm::vec3 point1 = arrowbase + right * headsize * 0.3f;
+    glm::vec3 point2 = arrowbase - right * headsize * 0.3f;
+
+    DrawLine(to , point1, Color);
+    DrawLine(to, point2, Color);
 }
 
 

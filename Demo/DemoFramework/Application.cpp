@@ -91,7 +91,10 @@ void Application::TRender()
     m_TestDebugRenderer.BeginFrame();
     //m_TestDebugRenderer.DrawLine(from,to ,color);
     //m_TestDebugRenderer.DrawLine(from, to1, color);
+    m_TestDebugRenderer.drawArrow(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 5.0f, 0.0f), 0.4,color2);
     m_TestDebugRenderer.DrawBox(min, max, center, color);
+    m_TestDebugRenderer.DrawSphere(center, color);
+    m_TestDebugRenderer.DrawSphere(center2, color);
     m_TestDebugRenderer.DrawBox(min1, max1, center2, color2);
     m_TestDebugRenderer.Endframe();
     
