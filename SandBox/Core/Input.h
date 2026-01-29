@@ -4,7 +4,9 @@
 #include <string>
 #include<SDL3/SDL.h>
 #include "Window.h"
-#include "Camera.hpp"
+#include "Renderer/Camera.hpp"
+#include <imgui.h>
+
 class Input
 {
 public:

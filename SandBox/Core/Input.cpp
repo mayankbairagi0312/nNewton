@@ -111,7 +111,15 @@ void Input::ProcessEvent(const SDL_Event* event)
 			m_mouseState.buttons[index] = true;
 			m_mouseState.pressedButtons[index] = true;
 		}
-		SDL_CaptureMouse(true);
+
+		if (ImGui::GetIO().WantCaptureMouse) {
+			// Optional: Reset your game-specific "pressed" flags so the camera doesn't jump
+			//m_mouseState.pressedButtons[index] = false;
+		}
+		else {
+			//SDL_CaptureMouse(true); // Only capture for the game if ImGui doesn't want it
+		}
+	
 		break;
 	}
 	case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -123,7 +131,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 			m_mouseState.buttons[index] = false;
 			m_mouseState.releasedButtons[index] = true;
 		}
-		SDL_CaptureMouse(true);
+		//SDL_CaptureMouse(true);
 		break;
 	}
 	case SDL_EVENT_MOUSE_MOTION: {
@@ -137,6 +145,8 @@ void Input::ProcessEvent(const SDL_Event* event)
 		break;
 	}
 	case SDL_EVENT_WINDOW_RESIZED:
+		testwindow.HandleWindowEvent(event->window);
+		break;
 	case SDL_EVENT_WINDOW_MINIMIZED:
 	case SDL_EVENT_WINDOW_RESTORED:
 		testwindow.HandleWindowEvent(event->window);
@@ -165,7 +175,10 @@ void Input::ProcessInputKey(float deltaTime)
 
 }
 void Input::ProcessMosueInput()
-{
+{	
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+
 	float xoffset, yoffset;
 	GetMouseDelta(&xoffset, &yoffset);
 
@@ -193,3 +206,4 @@ void Input::SetCamera(Camera& camera)
 {	
 	m_camera = &camera;
 }
+

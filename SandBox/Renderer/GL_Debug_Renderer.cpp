@@ -19,8 +19,8 @@ public:
 
 		InitialzedBuf();
 		if (!m_Shader->LoadFromFile(
-			"C:\\Users\\LENOVO\\source\\repos\\nNewton\\Demo\\assets\\vert.glsl",
-			"C:\\Users\\LENOVO\\source\\repos\\nNewton\\Demo\\assets\\frag.glsl"))
+			"assets\\vert.glsl",
+			"assets\\frag.glsl"))
 		{
 			std::cerr << "Debug shader failed iski ma ka barosa to load\n";
 			m_Shader.reset();

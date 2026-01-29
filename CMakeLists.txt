@@ -1,5 +1,5 @@
 ﻿cmake_minimum_required(VERSION 3.20)
-project(nNewton )
+project(nNewton VERSION 0.1.0)
 
 
 set(CMAKE_CXX_STANDARD 20)
@@ -33,7 +33,7 @@ add_subdirectory(src)
 
 #testbed
 if(BUILD_TESTBED)
-    add_subdirectory(Demo)
+    add_subdirectory(SandBox)
 endif()
 
 

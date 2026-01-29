@@ -1,12 +1,13 @@
 //======================================== Mayank Bairagi ===========================================//
-//========================================?? nNewton demo application ??===================================================//
-//=========================================== version 0.1 =========================================//
+//========================================| nNewtonText  |===================================================//
+//========================================= Version 0.1 =========================================//
 #pragma once
 #include <iostream>
 #include "Input.h"
-#include "DebugRenderer.hpp"
-#include"GL_Debug_Renderer.cpp"
-#include<imgui.h>
+#include "Renderer/DebugRenderer.hpp"
+#include"Renderer/GL_Debug_Renderer.cpp"
+#include "DebugUI/DebugUI.cpp"
+
 class Application {
 private :
 
@@ -17,6 +18,7 @@ private :
 	DebugRenderer m_TestDebugRenderer;
 	//OpneGLDebugRenderer* m_debugDrawer;
 	std::unique_ptr<OpneGLDebugRenderer> m_debugDrawer;
+	std::unique_ptr<DebugUIEditor> m_DebugUI = std::make_unique<DebugUIEditor>();
 	Camera m_camera;
 
 	Uint64 m_CurrTime;

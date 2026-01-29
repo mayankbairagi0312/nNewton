@@ -24,15 +24,24 @@ bool Application::Initialize() {
         return false;
     }
 
+    glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
+
+    // init UI
+    if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get()))
+    {
+        std::cerr << "UI : kya cheda bosdi \n" << std::endl;
+    }
+    
     m_input.SetCamera(m_camera);
     if (!m_debugDrawer->init_renderer(&m_camera))
     {
         std::cerr << "camera ki MKC" << std::endl;
     }
     m_camera.setPosition(glm::vec3(0.0f, 0.0f, 15.0f));
-    glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
+    
     m_running = true;
 
+    
 
     std::cout << "Application initialized successfully.\n";
 
@@ -55,25 +64,39 @@ void Application::Run() {
         m_DeltaTime = (double)((m_CurrTime - m_PrevTime)  / (double)SDL_GetPerformanceFrequency());
         m_PrevTime = m_CurrTime;
 
-        m_input.BeginFrame();
+        
+        
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL3_ProcessEvent(&event);
             if (event.type == SDL_EVENT_QUIT) {
                 m_running = false;
             }
-           
             m_input.ProcessEvent(&event);
-            
-            
         }
+        m_input.BeginFrame();
+        m_DebugUI->BeginUIFrame();
+
+        bool pauseGameInput = ImGui::GetIO().WantCaptureMouse;
+
+        static bool demo = true;
+        ImGui::ShowDemoWindow(&demo);
+
+        
 
         
         m_input.ProcessInputKey(m_DeltaTime);
-        m_input.ProcessMosueInput();
+        if (!pauseGameInput) {
+            m_input.ProcessMosueInput();
+        }
+        
         TRender();
-        m_input.EndFrame();
+
+        
+        m_DebugUI->EndUIFrame();
         SDL_GL_SwapWindow(m_testWindow->GetNativeHandle());
-	}
+        m_input.EndFrame();
+    }
 }
 
 
@@ -102,13 +125,14 @@ void Application::TRender()
 
 void Application::Shutdown() {
     std::cout << "Application shutting down...\n";
+    
     m_TestDebugRenderer.clear();
     if (m_testWindow) {
         
         m_testWindow->Shutdown();
-
+        m_DebugUI->ShutDownUI();
     }
-
+    
     m_testWindow.reset();  
     m_running = false;
 }

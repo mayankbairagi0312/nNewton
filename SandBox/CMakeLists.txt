@@ -3,16 +3,16 @@ find_package(OpenGL REQUIRED)
 
 add_executable(nNewtonTest
     main.cpp
-    DemoFramework/Application.cpp
+    Core/Application.cpp
     "Renderer/DebugRenderer.cpp"
-    ui/DebugUI.cpp
-   
- "DemoFramework/Application.h" 
- "DemoFramework/Window.h" 
- "DemoFramework/Window.cpp" 
- "DemoFramework/Input.h"
- "DemoFramework/Input.cpp" 
- "Renderer/Shader.cpp"
+    DebugUI/DebugUI.cpp
+    Renderer/Shader.cpp
+ "Core/Application.h" 
+ "Core/Window.h" 
+ "Core/Window.cpp" 
+ "Core/Input.h"
+ "Core/Input.cpp" 
+ 
  "Renderer/Camera.cpp"
  "Renderer/GL_Debug_Renderer.cpp")
 
@@ -37,6 +37,11 @@ set_target_properties(nNewtonTest PROPERTIES
     FOLDER "Applications"
 )
 target_include_directories(nNewtonTest PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/application
-    ${CMAKE_CURRENT_SOURCE_DIR}/Renderer
+    ${CMAKE_CURRENT_SOURCE_DIR}
+
+)
+add_custom_command(TARGET nNewtonTest POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:nNewtonTest>/assets
 )
