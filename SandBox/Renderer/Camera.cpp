@@ -59,8 +59,8 @@ void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch 
 	xOffset *= 0.1f;
 	yOffset *= 0.1f;
 
-	m_Pitch += yOffset;
-	m_Yaw += xOffset;
+	m_Pitch -= yOffset;
+	m_Yaw -= xOffset;
 
 	printf("m_Pitch:%.2f\n", m_Pitch);
 	printf("m_Yaw:%.2f\n" , m_Yaw);
@@ -76,12 +76,12 @@ void Camera::ProcessMousePan(float xOffset, float yOffset)
 {
 	xOffset *= 0.01f;
 	yOffset *= 0.01f;
-	glm::vec3 x_Offset (xOffset,yOffset,0.0f);
-	glm::vec3 y_Offset(xOffset, yOffset, 0.0f); 
+	glm::vec3 x_Offset (xOffset,xOffset,0.0f);
+	glm::vec3 y_Offset(yOffset, yOffset, 0.0f); 
 		
 	m_Position.x += xOffset;
 	m_Position.y -= yOffset;
-
+	std::cout << "Camera Position: " << m_Position.x << ", " << m_Position.y << ", " << m_Position.z << "\n";
 	MarkViewDirty();
 }
 
@@ -123,7 +123,7 @@ void Camera::UpdateCameraVectors()
 
 	//recalc right and up
 
-	m_Right = glm::normalize(glm::cross(m_WorldUP, m_Front));
+	m_Right = glm::normalize(glm::cross(m_Front,m_WorldUP));
 	m_Up = glm::normalize(glm::cross(m_Right, m_Front));
 
 }

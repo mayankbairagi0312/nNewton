@@ -48,7 +48,6 @@ void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, 
             int nextInLongitude = current + 1;
             int nextInLatitude = (i + 1) * (longi + 1) + j;
 
-            // Draw horizontal lines (same latitude, different longitude)
             DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLongitude], Color);
             DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLatitude], Color);
         }
@@ -127,7 +126,127 @@ void DebugRenderer::drawArrow(const glm::vec3& from, const glm::vec3& to,float h
     DrawLine(to, point2, Color);
 }
 
+void DebugRenderer::DrawGrid(const uint16_t GridLength)
+{
+    for (uint16_t i = 1; i <= GridLength; ++i)
+    {   
+        if(i%2==0)
+        {
+            auto xfrom = glm::vec3(i, 0, GridLength);
+            auto xto = glm::vec3(i, 0, -GridLength);
+            DrawLine(xfrom, xto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
 
+            auto zfrom = glm::vec3(GridLength, 0, i);
+            auto zto = glm::vec3(-GridLength, 0, i);
+
+            DrawLine(zfrom, zto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+        }
+
+    }
+    for (uint16_t i = 1; i <= GridLength; ++i)
+    {
+        if (i % 2 == 0)
+        {
+            auto xfrom = glm::vec3(-i, 0, GridLength);
+            auto xto = glm::vec3(-i, 0, -GridLength);
+            DrawLine(xfrom, xto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+
+            auto zfrom = glm::vec3(GridLength, 0, -i);
+            auto zto = glm::vec3(-GridLength, 0, -i);
+
+            DrawLine(zfrom, zto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+        }
+    }
+
+}
+
+void DebugRenderer::DrawAxis(const glm::vec3& camPOS , float MaxLength)
+{
+    // X Axis
+    glm::vec3 xfrom(camPOS.x - MaxLength, 0, 0);
+    glm::vec3 xto(camPOS.x + MaxLength, 0, 0);
+    DrawLine(xfrom, xto, glm::vec4(.7f, .2f, .18f, 0.3f));
+
+    //Y AXIS    
+    glm::vec3 yfrom(0,  camPOS.y - MaxLength,0);
+    glm::vec3 yto(0, camPOS.y + MaxLength,0);
+    DrawLine(yfrom, yto, glm::vec4(.2f, .2f, .6f, 0.3f));
+
+    //Z AXIS
+    glm::vec3 zfrom(0, 0, camPOS.z - MaxLength);
+    glm::vec3 zto(0, 0, camPOS.z + MaxLength);
+    DrawLine(zfrom, zto, glm::vec4(.4f, .7f, .2f, 0.3f));
+}
+
+void DebugRenderer::DrawCapsule(const glm::vec3& Center,const float height, const glm::vec4& Color, const float Radius , const uint8_t Segments )
+{
+   
+    float PI = 3.1459265f;
+    float x, y, z;
+    uint8_t lati = Segments;
+    uint8_t longi = Segments;
+    float longiAngle, latiAngle;
+    std::vector <glm::vec3> PointsOnSphere;
+
+    for (int i = 0; i <= lati/2; ++i)
+    {
+        latiAngle = i * PI / lati;
+
+        for (int j = 0; j <= longi; ++j)
+        {
+            longiAngle = 2 * PI - (j * 2 * PI) / longi;
+
+            x = Center.x  + (Radius * sin(latiAngle)) * cos(longiAngle);
+            y = Center.y + height/2 + Radius * cos(latiAngle);
+            z = Center.z + (Radius * sin(longiAngle)) * sin(latiAngle);
+
+            PointsOnSphere.emplace_back(glm::vec3(x, y, z));
+
+        }
+
+    }
+    for (int i = lati / 2 + 1; i <= lati ; ++i)
+    {
+        latiAngle = i * PI / lati;
+
+        for (int j = 0; j <= longi; ++j)
+        {
+            longiAngle = 2 * PI - (j * 2 * PI) / longi;
+
+            x = Center.x   + (Radius * sin(latiAngle)) * cos(longiAngle);
+            y = Center.y  - height/2 + Radius * cos(latiAngle);
+            z = Center.z   + (Radius * sin(longiAngle)) * sin(latiAngle);
+
+            PointsOnSphere.emplace_back(glm::vec3(x, y, z));
+
+        }
+
+    }
+
+    for (int i = 0; i < lati; ++i)
+    {
+        for (int j = 0; j < longi; ++j)
+        {
+            int current = i * (longi + 1) + j;
+            int nextInLongitude = current + 1;
+            int nextInLatitude = (i + 1) * (longi + 1) + j;
+
+            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLongitude], Color);
+            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLatitude], Color);
+        }
+    }
+
+
+    for (int i = 0; i < lati; ++i)
+    {
+        int lastInRow = i * (longi + 1) + longi;
+        int firstInNextRow = (i + 1) * (longi + 1) + longi;
+        DrawLine(PointsOnSphere[lastInRow], PointsOnSphere[firstInNextRow], Color);
+    }
+
+    DrawPoint(Center, Color);
+
+}
 void DebugRenderer::Endframe()
 {
 	m_Inframe = false;

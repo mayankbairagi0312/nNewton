@@ -5,6 +5,8 @@ Application::Application()
 
 bool Application::Initialize() {
 
+    std::cout << ">>>===================================================================<<<\n >>       nNEWTON TEST BUILD       <<\n>>>===================================================================<<<\n>>        VERSION 0.1.0       <<\n"
+        <<">>>===================================================================<<<\n" <<std::endl;
     m_testWindow = std::make_unique<Window>();
     
 
@@ -100,7 +102,7 @@ void Application::Run() {
 
 
 void Application::TRender()
-{
+{   
     auto min = glm::vec3(-1.5f, -1.5f, -1.5f);  
     auto max = glm::vec3(1.5f, 1.5f, 1.5f);
     auto min1 = glm::vec3(2.0f, 2.0f, 2.0f);
@@ -110,6 +112,10 @@ void Application::TRender()
     auto color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     auto color2 = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     m_TestDebugRenderer.BeginFrame();
+    m_TestDebugRenderer.DrawGrid(64);
+    m_TestDebugRenderer.DrawAxis(m_camera.GetPosition(), 256);
+    auto centerCapsule = glm::vec3(17.5f, -7.5f, 7.5f);
+    m_TestDebugRenderer.DrawCapsule(centerCapsule,4, color,2);
     //m_TestDebugRenderer.DrawLine(from,to ,color);
     //m_TestDebugRenderer.DrawLine(from, to1, color);
     m_TestDebugRenderer.drawArrow(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 5.0f, 0.0f), 0.4,color2);

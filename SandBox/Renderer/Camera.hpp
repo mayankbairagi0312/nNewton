@@ -54,6 +54,7 @@ public:
 	const glm::vec3& GetUp() const { return m_Up; }
 	const glm::vec3 GetRight() const { return glm::normalize(m_Right); }
 	float GetFOV() const { return m_fov; }
+	float GetFarPlane()const { return m_farPlane; }
 
 private:
 	void UpdateCameraVectors();
