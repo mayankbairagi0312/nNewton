@@ -45,9 +45,9 @@ glm::mat4 Camera::GetProjectionMatrix()const
 	return m_ProjectionMatrix;
 }
 
-void Camera::ProccessKeyboard(const glm::vec3& direction, float deltaTime)
+void Camera::ProcessKeyboard(const glm::vec3& direction, float deltaTime)
 {
-	float cam_velocity = 3.0f * deltaTime;
+	float cam_velocity = 4.0f * deltaTime;
 	printf("Velocity: %.6f, Direction: %.2f %.2f %.2f\n",
 		cam_velocity, direction.x, direction.y, direction.z);
 	m_Position += direction * cam_velocity;
@@ -55,7 +55,7 @@ void Camera::ProccessKeyboard(const glm::vec3& direction, float deltaTime)
 	MarkViewDirty();
 }
 
-void Camera::ProccessMouseMove(float xOffset, float yOffset, bool constrainPitch ) {
+void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch ) {
 	xOffset *= 0.1f;
 	yOffset *= 0.1f;
 
@@ -72,11 +72,26 @@ void Camera::ProccessMouseMove(float xOffset, float yOffset, bool constrainPitch
 	UpdateCameraVectors();
 	MarkViewDirty();
 }
+void Camera::ProcessMousePan(float xOffset, float yOffset)
+{
+	xOffset *= 0.01f;
+	yOffset *= 0.01f;
+	glm::vec3 x_Offset (xOffset,yOffset,0.0f);
+	glm::vec3 y_Offset(xOffset, yOffset, 0.0f); 
+		
+	m_Position.x += xOffset;
+	m_Position.y -= yOffset;
 
-void Camera::ProcessMouseScroll(float yOffset) {
-	m_fov -= yOffset;
+	MarkViewDirty();
+}
+
+void Camera::ProcessMouseScroll(float yOffset , float xOffset) {
+	m_fov -= xOffset - 0.8f;
+	m_fov += yOffset - 0.8f;
+	
 	if (m_fov < 1.0f) m_fov = 1.0f;
 	if (m_fov > 90.0f) m_fov = 90.0f;
+	printf("===> FOV : %.2f <===\n", m_fov);
 	MarkProjectionDirty();
 }
 void Camera::setPosition(const glm::vec3& position) {

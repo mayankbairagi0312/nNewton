@@ -69,7 +69,7 @@ void Application::Run() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT) {
+            if (event.type == SDL_EVENT_QUIT ) {
                 m_running = false;
             }
             m_input.ProcessEvent(&event);
@@ -81,8 +81,6 @@ void Application::Run() {
 
         static bool demo = true;
         ImGui::ShowDemoWindow(&demo);
-
-        
 
         
         m_input.ProcessInputKey(m_DeltaTime);

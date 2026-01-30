@@ -40,9 +40,10 @@ public:
 	glm::mat4 GetViewMatrix()const;
 	glm::mat4 GetProjectionMatrix()const;
 
-	void ProccessKeyboard(const glm::vec3& direction, float deltaTime);
-	void ProccessMouseMove(float xOffset, float yOffset, bool constrainPitch = true);
-	void ProcessMouseScroll(float yOffset);
+	void ProcessKeyboard(const glm::vec3& direction, float deltaTime);
+	void ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch = true);
+	void ProcessMousePan(float xOffset, float yOffset);
+	void ProcessMouseScroll(float yOffset, float xOffset);
 
 	void setPosition(const glm::vec3& position);
 	void setProjection(ProjectionType type, float fov, float aspectRatio, float nearPlane, float farPlane);

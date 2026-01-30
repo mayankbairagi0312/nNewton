@@ -82,7 +82,8 @@ void Input::BeginFrame() {
 }
 
 void Input::ProcessEvent(const SDL_Event* event)
-{
+{	
+	
 	switch (event->type)
 	{
 	case SDL_EVENT_KEY_DOWN: 
@@ -103,7 +104,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 		break;
 	}
 	case SDL_EVENT_MOUSE_BUTTON_DOWN: 
-	{
+	{	
 		Uint8 button = event->button.button;
 		int index = button - 1;
 		if (index >= 0 && index < 5)
@@ -117,7 +118,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 			//m_mouseState.pressedButtons[index] = false;
 		}
 		else {
-			//SDL_CaptureMouse(true); // Only capture for the game if ImGui doesn't want it
+			SDL_CaptureMouse(true); // Only capture for the game if ImGui doesn't want it
 		}
 	
 		break;
@@ -131,7 +132,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 			m_mouseState.buttons[index] = false;
 			m_mouseState.releasedButtons[index] = true;
 		}
-		//SDL_CaptureMouse(true);
+		SDL_CaptureMouse(true);
 		break;
 	}
 	case SDL_EVENT_MOUSE_MOTION: {
@@ -142,6 +143,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 	case SDL_EVENT_MOUSE_WHEEL: {
 		m_mouseState.scrollX += static_cast<int>(event->wheel.x);
 		m_mouseState.scrollY += static_cast<int>(event->wheel.y);
+		m_camera->ProcessMouseScroll(m_mouseState.scrollX , m_mouseState.scrollY);
 		break;
 	}
 	case SDL_EVENT_WINDOW_RESIZED:
@@ -156,23 +158,24 @@ void Input::ProcessEvent(const SDL_Event* event)
 
 void Input::ProcessInputKey(float deltaTime)
 {
+	
     if (IsKeyDown(SDL_SCANCODE_W)) {
         printf("W pressed!\n");
-        m_camera->ProccessKeyboard(m_camera->GetFront(), deltaTime);
+        m_camera->ProcessKeyboard(m_camera->GetFront(), deltaTime);
     }
     if (IsKeyDown(SDL_SCANCODE_S)) {
         printf("S pressed!\n");
-        m_camera->ProccessKeyboard(-m_camera->GetFront(), deltaTime);  
+        m_camera->ProcessKeyboard(-m_camera->GetFront(), deltaTime);  
     }
     if (IsKeyDown(SDL_SCANCODE_A)) {
         printf("A pressed!\n");
-        m_camera->ProccessKeyboard(-m_camera->GetRight(), deltaTime);  
+        m_camera->ProcessKeyboard(-m_camera->GetRight(), deltaTime);  
     }
     if (IsKeyDown(SDL_SCANCODE_D)) {
         printf("D pressed!\n");
-        m_camera->ProccessKeyboard(m_camera->GetRight(), deltaTime);  
+        m_camera->ProcessKeyboard(m_camera->GetRight(), deltaTime);  
     }
-
+	
 }
 void Input::ProcessMosueInput()
 {	
@@ -185,10 +188,18 @@ void Input::ProcessMosueInput()
 	if (IsMouseButtonDown(1))
 	{
 
-		m_camera->ProccessMouseMove(xoffset, yoffset, true);
+		m_camera->ProcessMouseMove(xoffset, yoffset, true);
+	}
+	
+
+	if (IsMouseButtonDown(2))
+	{
+		m_camera->ProcessMousePan(xoffset, yoffset);
+		printf("===> Mid Mouse Down <===\n");
 	}
 	m_mouseState.prevX = m_mouseState.x;
 	m_mouseState.prevY = m_mouseState.y;
+
 }
 
 
