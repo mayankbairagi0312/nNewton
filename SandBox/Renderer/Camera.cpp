@@ -47,7 +47,7 @@ glm::mat4 Camera::GetProjectionMatrix()const
 
 void Camera::ProcessKeyboard(const glm::vec3& direction, float deltaTime)
 {
-	float cam_velocity = 4.0f * deltaTime;
+	float cam_velocity = 5.0f * deltaTime;
 	printf("Velocity: %.6f, Direction: %.2f %.2f %.2f\n",
 		cam_velocity, direction.x, direction.y, direction.z);
 	m_Position += direction * cam_velocity;
@@ -74,13 +74,18 @@ void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch 
 }
 void Camera::ProcessMousePan(float xOffset, float yOffset)
 {
-	xOffset *= 0.01f;
-	yOffset *= 0.01f;
-	glm::vec3 x_Offset (xOffset,xOffset,0.0f);
-	glm::vec3 y_Offset(yOffset, yOffset, 0.0f); 
-		
-	m_Position.x += xOffset;
-	m_Position.y -= yOffset;
+	float panSpeed = 0.0045f;
+	xOffset *= panSpeed;
+	yOffset *= panSpeed;
+
+	
+	glm::vec3 right = glm::normalize(glm::cross(m_Front, m_Up));
+	glm::vec3 up = m_Up;  
+
+	
+	m_Position -= right * xOffset;   
+	m_Position += up * yOffset;      
+
 	std::cout << "Camera Position: " << m_Position.x << ", " << m_Position.y << ", " << m_Position.z << "\n";
 	MarkViewDirty();
 }

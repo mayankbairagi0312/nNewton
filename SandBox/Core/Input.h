@@ -23,6 +23,7 @@ public:
 	void GetMouseScroll(int* x, int* y)const;
 	void ProcessInputKey(float deltaTime);
 	void ProcessMosueInput();
+	void HandleWindowEvent(const SDL_WindowEvent& windowEvent);
 	void BeginFrame();
 	void ProcessEvent(const SDL_Event* event);
 	void EndFrame();

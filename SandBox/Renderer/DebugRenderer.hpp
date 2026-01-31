@@ -60,6 +60,7 @@ public:
 	DebugRenderer();
 	~DebugRenderer();
 	
+	int GetLineCount() const { return m_LineCount; }
 
 	
 	void DrawLine(const glm::vec3& from , const glm::vec3& to ,const glm::vec4& Color );
@@ -98,6 +99,7 @@ public:
 	}
 
 private:
+	int m_LineCount;
 	IDebugRenderer* m_Drawer;
 	std::unique_ptr<flags> m_flag;
 	bool m_enabled;

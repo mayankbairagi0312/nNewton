@@ -4,8 +4,13 @@
 DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false) ,m_Drawer(nullptr){};
 DebugRenderer::~DebugRenderer(){}
 
+
+
 void DebugRenderer::BeginFrame()
-{
+{   
+    
+    m_LineCount = 0;
+    
 	m_Inframe = true;
 	if (m_Drawer == nullptr) {
 		std::cerr << "ERROR: m_Drawer is null in BeginFrame()!" << std::endl;
@@ -65,7 +70,9 @@ void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, 
 }
 
 void DebugRenderer::DrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color) {
-	m_Drawer->DrawLine(from, to, Color);
+    m_LineCount++;
+    m_Drawer->DrawLine(from, to, Color);
+    
 }
 void DebugRenderer::DrawPoint(const glm::vec3 Position, const glm::vec4 Color, const float size )
 {

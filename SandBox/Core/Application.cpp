@@ -62,6 +62,7 @@ void Application::Run() {
     std::cout << "Application starting main loop...\n";
 	while (m_running)
 	{   
+
         m_CurrTime = SDL_GetPerformanceCounter();
         m_DeltaTime = (double)((m_CurrTime - m_PrevTime)  / (double)SDL_GetPerformanceFrequency());
         m_PrevTime = m_CurrTime;
@@ -79,11 +80,13 @@ void Application::Run() {
         m_input.BeginFrame();
         m_DebugUI->BeginUIFrame();
 
+        
+
         bool pauseGameInput = ImGui::GetIO().WantCaptureMouse;
 
         static bool demo = true;
-        ImGui::ShowDemoWindow(&demo);
-
+        //ImGui::ShowDemoWindow(&demo);
+        m_DebugUI->Stats_Overlay(&demo,&m_TestDebugRenderer);
         
         m_input.ProcessInputKey(m_DeltaTime);
         if (!pauseGameInput) {
@@ -91,7 +94,7 @@ void Application::Run() {
         }
         
         TRender();
-
+        
         
         m_DebugUI->EndUIFrame();
         SDL_GL_SwapWindow(m_testWindow->GetNativeHandle());
@@ -128,8 +131,8 @@ void Application::TRender()
 }
 
 void Application::Shutdown() {
-    std::cout << "Application shutting down...\n";
-    
+    std::cout << "Application shutting down\n";
+    std::cout << "data khatam, khel khatam. beta!!!!\n";
     m_TestDebugRenderer.clear();
     if (m_testWindow) {
         

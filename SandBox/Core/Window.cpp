@@ -1,6 +1,6 @@
 #include "Window.h"
 
-Window::Window() : m_window(nullptr), m_glContext(nullptr),m_windowWidth(1200), m_windowHeight(800), m_isFullscreen(false), m_isInitialized(false),m_isCreated(false){
+Window::Window() : m_window(nullptr), m_glContext(nullptr),m_windowWidth(1600), m_windowHeight(1200), m_isFullscreen(false), m_isInitialized(false),m_isCreated(false){
 
 }
 
@@ -107,24 +107,15 @@ void Window::Shutdown() {
         std::cout << "SDL shutdown complete.\n";
     }
 }
+void Window::setWindow(const Sint32& width, const Sint32& height)
+{
+    m_windowWidth = width;
+    m_windowHeight = height;
 
+    glViewport(0, 0, width, height);
+
+    printf("Window Resized -> Update Viewport: %d x %d\n", m_windowWidth, m_windowHeight);
+}
 bool Window:: IsValid() const { return m_window != nullptr; }
 bool Window:: IsInitialized() const { return m_isInitialized; }
 bool Window::IsCreated() const { return m_isCreated; }
-
-void Window::HandleWindowEvent(const SDL_WindowEvent& windowEvent) {
-    switch (windowEvent.type) {
-    case SDL_EVENT_WINDOW_RESIZED:
-        m_windowWidth = windowEvent.data1;
-        m_windowHeight = windowEvent.data2;
-        glViewport(0, 0, m_windowWidth, m_windowHeight);
-        //m_camera.SetAspectRatio(static_cast<float>(m_windowWidth) / static_cast<float>(m_windowHeight));
-        break;
-    case SDL_EVENT_WINDOW_MINIMIZED:
-        
-        break;
-    case SDL_EVENT_WINDOW_RESTORED:
-        
-        break;
-    }
-}

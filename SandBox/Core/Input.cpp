@@ -112,15 +112,7 @@ void Input::ProcessEvent(const SDL_Event* event)
 			m_mouseState.buttons[index] = true;
 			m_mouseState.pressedButtons[index] = true;
 		}
-
-		if (ImGui::GetIO().WantCaptureMouse) {
-			// Optional: Reset your game-specific "pressed" flags so the camera doesn't jump
-			//m_mouseState.pressedButtons[index] = false;
-		}
-		else {
-			SDL_CaptureMouse(true); // Only capture for the game if ImGui doesn't want it
-		}
-	
+		SDL_CaptureMouse(true);
 		break;
 	}
 	case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -141,17 +133,22 @@ void Input::ProcessEvent(const SDL_Event* event)
 		break;
 	}
 	case SDL_EVENT_MOUSE_WHEEL: {
-		m_mouseState.scrollX += static_cast<int>(event->wheel.x);
-		m_mouseState.scrollY += static_cast<int>(event->wheel.y);
-		m_camera->ProcessMouseScroll(m_mouseState.scrollX , m_mouseState.scrollY);
+
+		ImGuiIO& io = ImGui::GetIO();
+
+		if (!io.WantCaptureMouse) {
+			m_mouseState.scrollX += static_cast<int>(event->wheel.x);
+			m_mouseState.scrollY += static_cast<int>(event->wheel.y);
+			m_camera->ProcessMouseScroll(m_mouseState.scrollX, m_mouseState.scrollY);
+		}
 		break;
 	}
 	case SDL_EVENT_WINDOW_RESIZED:
-		testwindow.HandleWindowEvent(event->window);
+		HandleWindowEvent(event->window);
 		break;
 	case SDL_EVENT_WINDOW_MINIMIZED:
 	case SDL_EVENT_WINDOW_RESTORED:
-		testwindow.HandleWindowEvent(event->window);
+		HandleWindowEvent(event->window);
 		break;
 	}
 }
@@ -202,6 +199,29 @@ void Input::ProcessMosueInput()
 
 }
 
+
+void Input::HandleWindowEvent(const SDL_WindowEvent& windowEvent) {
+	int Width;
+		int Height;
+	switch (windowEvent.type) {
+
+	case SDL_EVENT_WINDOW_RESIZED:
+
+		Width = windowEvent.data1;
+		Height = windowEvent.data2;
+		testwindow.setWindow(Width, Height);
+
+		glViewport(0, 0, Width, Height);
+		m_camera->setAspectRatio(static_cast<float>(Width) / static_cast<float>(Height));
+		break;
+	case SDL_EVENT_WINDOW_MINIMIZED:
+
+		break;
+	case SDL_EVENT_WINDOW_RESTORED:
+
+		break;
+	}
+}
 
 void Input::EndFrame() {
 	for (int i = 0; i < 5; ++i)
