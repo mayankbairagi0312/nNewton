@@ -8,8 +8,8 @@ endif()
 # Source files (explicit listing)
 
 set(NNEWTON_SOURCES
-    math/vec3.cpp
-    math/mat3.cpp
+
+"math/math.cpp"  
 
     
 

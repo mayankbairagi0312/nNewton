@@ -42,8 +42,8 @@ bool Application::Initialize() {
     m_camera.setPosition(glm::vec3(0.0f, 0.0f, 15.0f));
     
     m_running = true;
+   
 
-    
 
     std::cout << "Application initialized successfully.\n";
 
@@ -145,6 +145,6 @@ void Application::Shutdown() {
 }
 
 Application::~Application() {
-    Shutdown();  
+    //Shutdown();  
 
 }

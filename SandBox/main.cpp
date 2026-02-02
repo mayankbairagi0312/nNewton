@@ -6,6 +6,6 @@ int main()
 	if (DemoTest.Initialize()) {
 		DemoTest.Run();
 	}
-	//DemoTest.Shutdown();
+	DemoTest.Shutdown();
 	return 0;
 }

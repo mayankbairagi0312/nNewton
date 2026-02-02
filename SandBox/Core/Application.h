@@ -7,6 +7,7 @@
 #include "Renderer/DebugRenderer.hpp"
 #include"Renderer/GL_Debug_Renderer.cpp"
 #include "DebugUI/DebugUI.cpp"
+#include <nNewton/math.hpp>
 
 class Application {
 private :
