@@ -11,7 +11,7 @@
 
 class Application {
 private :
-
+	
 	std::unique_ptr<Window> m_testWindow;
 	Input m_input;
 	bool m_running;

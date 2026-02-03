@@ -1,7 +1,7 @@
 #include <initializer_list>
-#include <cmath>
 
-namespace nNewton::nMath
+
+namespace nNewton
 {
 //>>>========================== |  MATH UTILITIES | =============================<<<<///
 
@@ -48,11 +48,11 @@ namespace nNewton::nMath
 
 		constexpr nVector2 operator+(const nVector2& otr)const;
 		constexpr nVector2 operator-(const nVector2& otr)const;
-		constexpr nVector2 operator*(const nVector2& otr)const;
 		constexpr nVector2 operator-() const;
 
 		constexpr nVector2& operator+=(const nVector2& otr);
 		constexpr nVector2& operator-=(const nVector2& otr);
+		// component wise multi
 		constexpr nVector2& operator*=(const nVector2& otr);
 
 		constexpr nVector2 operator*(float scalar) const;
@@ -86,7 +86,6 @@ namespace nNewton::nMath
 
 		constexpr nVector3 operator+(const nVector3& otr)const;
 		constexpr nVector3 operator-(const nVector3& otr)const;
-		constexpr nVector3 operator*(const nVector3& otr)const;
 		constexpr nVector3 operator-() const;
 
 		constexpr nVector3& operator+=(const nVector3& otr);
@@ -120,7 +119,7 @@ namespace nNewton::nMath
 
 		constexpr nVector4 operator+(const nVector4& otr)const;
 		constexpr nVector4 operator-(const nVector4& otr)const;
-		constexpr nVector4 operator*(const nVector4& otr)const;
+	
 		constexpr nVector4 operator-() const;
 
 		constexpr nVector4& operator+=(const nVector4& otr);
@@ -165,16 +164,16 @@ namespace nNewton::nMath
 	  constexpr	nMatrix4 Identity	();
 				float	 Determinant(const nMatrix4& otr);
 
-				nMatrix4 RotationX	(float rad);
-				nMatrix4 RotationY	(float rad);
-				nMatrix4 RotationZ	(float rad);
-				nMatrix4 Translation(const nVector3& t);
+				nMatrix4 RotateX	(float rad);
+				nMatrix4 RotateY	(float rad);
+				nMatrix4 RotateZ	(float rad);
+				nMatrix4 Translate(const nVector3& t);
 				nMatrix4 Scale		(const nVector3& s);
 
 				nMatrix4 Transpose	(const nMatrix4& otr);
 				nMatrix4 Inverse	(const nMatrix4& otr);
 
-				nMatrix4 Rotation	(float rad, const nVector3& axis);
+				nMatrix4 Rotate	(float rad, const nVector3& axis);
 
 	
 
