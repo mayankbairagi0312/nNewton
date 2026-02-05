@@ -485,12 +485,192 @@ namespace nNewton
 
 
 		return nMatrix4{
-		c+X*X*(1-c),   X*Y*(1-c)-Z*s,  X*Z*(1-c)+Y*s, 0,
-		Y*X*(1-c)+Z*s, c+Y*Y*(1-c),   Y*Z*(1-c)-X*s,  0,
-		Z*X*(1-c)-Y*s, Z*Y*(1-c)+X*s,   c+Z*Z*(1-c),  0,
-		0,			   0,				0,			  1
+			c + X * X * (1 - c),
+			Y* X* (1 - c) + Z * s,
+			Z* X* (1 - c) - Y * s,
+			0,
+
+			X* Y* (1 - c) - Z * s,
+			c + Y * Y * (1 - c),
+			Z* Y* (1 - c) + X * s,
+			0,
+
+			X* Z* (1 - c) + Y * s,
+			Y* Z* (1 - c) - X * s,
+			c + Z * Z * (1 - c),
+			0,
+
+			0, 0, 0, 1
 		};
 
 	}
+
+
+// Quaternions ===========>>>>>>>>>>>
+
+	//Ctors
+	constexpr nQuaternion::nQuaternion(): w(1),x(0),y(0), z(0){}
+	constexpr nQuaternion::nQuaternion(float w_):w(w_), x(0), y(0), z(0) {}
+	constexpr nQuaternion::nQuaternion(float w_, float x_, float y_, float z_): w(w_), x(x_), y(y_), z(z_){}
+
+	nQuaternion nQuaternion::operator*(const nQuaternion& otr)const
+	{
+		return { 
+			w * otr.w - x * otr.x - y * otr.y - z * otr.z,
+			w * otr.x + x * otr.w + y * otr.z - z * otr.y,
+			w * otr.y - x * otr.z + y * otr.w + z * otr.x,
+			w * otr.z + x * otr.y - y * otr.x + z * otr.w 
+		};
+	}
+
+	nQuaternion nQuaternion::operator*(float scalar_) const
+	{
+		return { scalar_ * w, scalar_ * x, scalar_ * y, scalar_ * z };
+	}
+
+	nQuaternion operator* (float scalar_, const nQuaternion& Quat_)
+	{
+		return { scalar_ * Quat_.w, scalar_ * Quat_.x, scalar_ * Quat_.y, scalar_ * Quat_.z };
+
+	}
+
+	float nQuaternion::Length()const
+	{
+		return sqrt(w * w + x * x + y * y + z * z);
+	}
+
+
+
+	nQuaternion QNormalize(const nQuaternion& Quat_)
+	{
+		float len = Quat_.Length();
+		if (len == 0.0f)
+			return nQuaternion(1, 0, 0, 0);
+		float mag = Quat_.Length();
+		return { Quat_.w / mag ,Quat_.x / mag, Quat_.y / mag, Quat_.z / mag };
+	}
+	nQuaternion Conjugate(const nQuaternion& Quat_)
+	{
+		return { Quat_.w,-Quat_.x,-Quat_.y ,-Quat_.z };
+	}
+	nQuaternion QInverse(const nQuaternion& Quat_)
+	{
+		
+		float lensq = Quat_.w * Quat_.w + Quat_.x * Quat_.x + Quat_.y * Quat_.y + Quat_.z * Quat_.z;
+
+		if (lensq == 0.0f)
+			return nQuaternion(1, 0, 0, 0);
+
+		nQuaternion conj_ = Conjugate(Quat_);
+		
+		if (fabsf(lensq - 1.0f) < 1e-6f)
+			return conj_;
+		
+		return { conj_.w / lensq, conj_.x / lensq, conj_.y / lensq, conj_.z / lensq };
+	}
+
+	float QDotProduct(const nQuaternion& Quat1_, const nQuaternion& Quat2_)
+	{
+		return Quat1_.w * Quat2_.w +
+			Quat1_.x * Quat2_.x +
+			Quat1_.y * Quat2_.y +
+			Quat1_.z * Quat2_.z;
+	}
+
+	nQuaternion from_AxisAngle(const nVector3& Axis_, float AngleRad_)
+	{	
+		nVector3 axis = Axis_;
+
+		float lensq = Axis_.x * Axis_.x + Axis_.y * Axis_.y + Axis_.z * Axis_.z;
+		if (lensq == 0.0f)
+			return nQuaternion(1, 0, 0, 0);
+
+		if (fabsf(lensq - 1.0f) > 1e-6f)
+			axis = Normalized(Axis_);
+
+
+		auto half_angle = AngleRad_ / 2;
+		auto s = sin(half_angle);
+
+		return { cos(half_angle), axis.x * s,
+			axis.y * s, axis.z * s };
+
+	}
+
+	nQuaternion from_AngularVelocity(const nVector3& omega_, float dt_)
+	{
+		float lensq = omega_.x * omega_.x + omega_.y * omega_.y + omega_.z * omega_.z;
+		if (lensq == 0.0f)
+			return nQuaternion(1, 0, 0, 0);
+
+		auto len = omega_.Length();
+		
+
+		auto omega = omega_ /len;
+		auto angle = len * dt_;
+		auto half_angle_ = angle / 2;
+		auto s = sin(half_angle_);
+
+		return { cos(half_angle_), omega.x * s,
+			omega.y * s, omega.z * s };
+	}
+
+	nMatrix4 to_nMatrix4(const nQuaternion& Quat_)
+	{
+		float w = Quat_.w;
+		float x = Quat_.x;
+		float y = Quat_.y;
+		float z = Quat_.z;
+
+		float xx = x * x;
+		float yy = y * y;
+		float zz = z * z;
+		float xy = x * y;
+		float xz = x * z;
+		float yz = y * z;
+		float wx = w * x;
+		float wy = w * y;
+		float wz = w * z;
+
+		return nMatrix4{
+			1-2*(yy + zz), 2 *(xy + wz), 2 * (xz - wy), 0,
+			2*(xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
+			2*(xz + wy), 2 * (yz - wx),1 - 2 * (xx + yy), 0,
+			0, 0, 0,1
+		};
+	}
+
+	nVector3 Vec_Rotate(const nQuaternion& Quat_, const nVector3& Vec3_)
+	{	
+		auto inv_ = QInverse(Quat_);
+		nVector3 v(Quat_.x, Quat_.y, Quat_.z);
+
+		nQuaternion ro(0, Vec3_.x, Vec3_.y, Vec3_.z);
+		nQuaternion q( Quat_ * ro * inv_ );
+
+		return nVector3(q.x, q.y, q.z);
+	}
+
+	nQuaternion QIntegrate(nQuaternion orientation_, const nVector3& angularV_, float dt_)
+	{	
+		float Lensq = DotProduct(angularV_, angularV_);
+		if (Lensq < 1e-8f)
+			return orientation_;
+
+		float Len = sqrt(Lensq);
+		auto axis = angularV_/ Len;
+
+		auto dq = from_AxisAngle( axis,Len*dt_);
+
+		orientation_ = orientation_ * dq;
+
+		return orientation_;
+	}
+
+	/*nQuaternion QSlerp(nQuaternion Quat1_, nQuaternion Quat2_, float t_)
+	{
+		
+		return Quat;
+	}*/
 
 }

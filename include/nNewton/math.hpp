@@ -167,17 +167,49 @@ namespace nNewton
 				nMatrix4 RotateX	(float rad);
 				nMatrix4 RotateY	(float rad);
 				nMatrix4 RotateZ	(float rad);
-				nMatrix4 Translate(const nVector3& t);
+				nMatrix4 Translate  (const nVector3& t);
 				nMatrix4 Scale		(const nVector3& s);
 
 				nMatrix4 Transpose	(const nMatrix4& otr);
 				nMatrix4 Inverse	(const nMatrix4& otr);
 
-				nMatrix4 Rotate	(float rad, const nVector3& axis);
+				nMatrix4 Rotate	    (float rad, const nVector3& axis);
 
 	
 
 //++============================ QUATERNION ===================================++//
 
-				/// TODO :) 
+	struct nQuaternion
+	{
+		float w, x, y, z;
+
+		//Ctors
+		constexpr		    nQuaternion();
+		constexpr explicit  nQuaternion(float w_);
+		constexpr			nQuaternion(float w_, float x_, float y_, float z_);
+		constexpr			nQuaternion(const nQuaternion& otr) = default;
+
+		nQuaternion operator*(const nQuaternion& otr)const;
+		nQuaternion operator*(float scalar_) const;
+
+		float Length()const;
+	};
+
+	nQuaternion operator* (float scalar_, const nQuaternion& Quat_);
+
+	nQuaternion QNormalize(const nQuaternion& Quat_);
+	nQuaternion Conjugate(const nQuaternion& Quat_);
+	nQuaternion QInverse(const nQuaternion& Quat_);
+
+	float QDotProduct(const nQuaternion& Quat1_, const nQuaternion& Quat2_);
+
+	nQuaternion from_AxisAngle(nVector3& Axis_, float AngleRad_);
+	nQuaternion from_AngularVelocity(const nVector3& omega_, float dt_);
+
+	nMatrix4 to_nMatrix4(const nQuaternion& Quat_);
+	nVector3 Vec_Rotate(const nQuaternion& Quat_,const nVector3& Vec3_);
+
+	nQuaternion QIntegrate(nQuaternion orientation_, const nVector3& angularV_, float dt_);
+	/*nQuaternion QSlerp(nQuaternion Quat1_, nQuaternion Quat2_, float t_);*/
+
 }
