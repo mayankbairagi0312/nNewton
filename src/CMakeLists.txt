@@ -9,7 +9,7 @@ endif()
 
 set(NNEWTON_SOURCES
 
-"math/math.cpp"  
+"math/nMath.cpp"  
 
     
 
