@@ -1,7 +1,4 @@
-#include <nNewton/math.hpp>
-#include<glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
+#include <nNewton/nMath.hpp>
 #include <cassert>
 #include <cmath>
 
@@ -513,7 +510,17 @@ namespace nNewton
 	constexpr nQuaternion::nQuaternion(float w_):w(w_), x(0), y(0), z(0) {}
 	constexpr nQuaternion::nQuaternion(float w_, float x_, float y_, float z_): w(w_), x(x_), y(y_), z(z_){}
 
-	nQuaternion nQuaternion::operator*(const nQuaternion& otr)const
+	constexpr nQuaternion nQuaternion::operator+(const nQuaternion& otr)const
+	{
+		return nQuaternion(this->w + otr.w,this->x + otr.x, this->y + otr.y, this->z + otr.z);
+	}
+
+	constexpr nQuaternion nQuaternion::operator-(const nQuaternion& otr)const
+	{
+		return nQuaternion(this->w - otr.w, this->x - otr.x, this->y - otr.y, this->z - otr.z);
+	}
+
+	constexpr nQuaternion nQuaternion::operator*(const nQuaternion& otr)const
 	{
 		return { 
 			w * otr.w - x * otr.x - y * otr.y - z * otr.z,
@@ -523,7 +530,7 @@ namespace nNewton
 		};
 	}
 
-	nQuaternion nQuaternion::operator*(float scalar_) const
+	constexpr nQuaternion nQuaternion::operator*(float scalar_) const
 	{
 		return { scalar_ * w, scalar_ * x, scalar_ * y, scalar_ * z };
 	}
@@ -658,19 +665,52 @@ namespace nNewton
 			return orientation_;
 
 		float Len = sqrt(Lensq);
-		auto axis = angularV_/ Len;
+		///auto axis = angularV_/ Len;
+		//auto dq = from_AxisAngle( axis,Len*dt_);
 
-		auto dq = from_AxisAngle( axis,Len*dt_);
+		auto dq = 0.5f * orientation_ * nQuaternion(0, angularV_.x, angularV_.y, angularV_.z)*dt_;
 
-		orientation_ = orientation_ * dq;
+		orientation_ = orientation_ +  dq;
 
-		return orientation_;
+		return QNormalize(orientation_);
 	}
 
-	/*nQuaternion QSlerp(nQuaternion Quat1_, nQuaternion Quat2_, float t_)
+	nQuaternion QSlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_)
 	{
-		
-		return Quat;
-	}*/
+		auto Q1 = QNormalize(Quat1_);
+		auto Q2 = QNormalize(Quat2_);
 
+		auto dot = QDotProduct(Quat1_, Quat2_);
+
+		if (dot < 0.0f)
+		{
+			Q2 = { -Q2.w , -Q2.x , -Q2.y , -Q2.z} ;
+
+			dot = -dot;
+		}
+
+		auto angle = acos(Clamp(dot, -1.0f, 1.0f));
+
+		if (dot > 1.0f - EPSILON) {
+			return QNormalize((1.0f - t_) * Q1 + t_ * Q2);
+		}
+
+		float s = sin(angle);
+
+		return (sin((1-t_)*angle)/s)*Quat1_  + (sin((t_) * angle) / s) * Quat2_;
+	}
+
+	nQuaternion QNlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_)
+	{
+		auto Q1 = QNormalize(Quat1_);
+		auto Q2 = QNormalize(Quat2_);
+
+		if (QDotProduct(Quat1_, Quat2_) < 0.0f)
+		{
+			Q2 = { -Q2.w , -Q2.x , -Q2.y , -Q2.z };
+
+		}
+
+		return QNormalize((1.0f - t_) * Q1 + t_ * Q2);
+	}
 }

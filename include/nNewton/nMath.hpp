@@ -9,6 +9,7 @@ namespace nNewton
 	inline constexpr float DegToRad = PI / 180;
 	inline constexpr float RadToDeg = 180 / PI;
 	inline constexpr float SQRT2 = 1.4142135f;
+	inline constexpr float EPSILON = 1e-6f;
 
 	constexpr float Radians(float deg)
 	{
@@ -189,8 +190,10 @@ namespace nNewton
 		constexpr			nQuaternion(float w_, float x_, float y_, float z_);
 		constexpr			nQuaternion(const nQuaternion& otr) = default;
 
-		nQuaternion operator*(const nQuaternion& otr)const;
-		nQuaternion operator*(float scalar_) const;
+		constexpr nQuaternion operator+(const nQuaternion& otr)const;
+		constexpr nQuaternion operator-(const nQuaternion& otr)const;
+		constexpr nQuaternion operator*(const nQuaternion& otr)const;
+		constexpr nQuaternion operator*(float scalar_) const;
 
 		float Length()const;
 	};
@@ -203,13 +206,14 @@ namespace nNewton
 
 	float QDotProduct(const nQuaternion& Quat1_, const nQuaternion& Quat2_);
 
-	nQuaternion from_AxisAngle(nVector3& Axis_, float AngleRad_);
+	nQuaternion from_AxisAngle(const nVector3& Axis_, float AngleRad_);
 	nQuaternion from_AngularVelocity(const nVector3& omega_, float dt_);
 
 	nMatrix4 to_nMatrix4(const nQuaternion& Quat_);
 	nVector3 Vec_Rotate(const nQuaternion& Quat_,const nVector3& Vec3_);
 
 	nQuaternion QIntegrate(nQuaternion orientation_, const nVector3& angularV_, float dt_);
-	/*nQuaternion QSlerp(nQuaternion Quat1_, nQuaternion Quat2_, float t_);*/
+	nQuaternion QSlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_);
+	nQuaternion QNlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_);
 
 }

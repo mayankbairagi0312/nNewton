@@ -20,7 +20,7 @@ set(NNEWTON_SOURCES
     
 )
 
-add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES})
+add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES} "math/nTransform.cpp")
 
 
 target_compile_features(nNewton PUBLIC cxx_std_20)
