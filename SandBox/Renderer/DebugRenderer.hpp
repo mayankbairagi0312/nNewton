@@ -1,5 +1,9 @@
 #pragma once
 
+#include<unordered_map>
+#include<nNewton/nDynamicsWorld.hpp>
+#include<nNewton/nTransform.hpp>
+#include<nNewton/nMath.hpp>
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -9,13 +13,13 @@ public:
 	
 	virtual ~IDebugRenderer() = default;
 
-	virtual void DrawLine(const glm::vec3& from,const glm::vec3& to,const glm::vec4& color) = 0;
-	void DrawPoint(const glm::vec3& position, const glm::vec4& color,const  float Size = 0.1f) {
-		glm::vec3 offset = glm::vec3(Size,0.0f,0.0f);
+	virtual void DrawLine(const  nNewton::nVector3& from,const nNewton::nVector3& to,const nNewton::nVector4& color) = 0;
+	void DrawPoint(const nNewton::nVector3& position, const nNewton::nVector4& color,const  float Size = 0.1f) {
+		nNewton::nVector3 offset = nNewton::nVector3(Size,0.0f,0.0f);
 		DrawLine(position+offset, position-offset,color);
-		offset = glm::vec3(0.0f,Size, 0.0f);
+		offset =  nNewton::nVector3(0.0f,Size, 0.0f);
 		DrawLine(position + offset, position - offset, color);
-		offset = glm::vec3(0.0f, 0.0f,Size);
+		offset = nNewton::nVector3(0.0f, 0.0f,Size);
 		DrawLine(position + offset, position - offset, color);
 	}
 	
@@ -63,14 +67,14 @@ public:
 	int GetLineCount() const { return m_LineCount; }
 
 	
-	void DrawLine(const glm::vec3& from , const glm::vec3& to ,const glm::vec4& Color );
-	void DrawPoint(const glm::vec3 Position, const glm::vec4 Color, const float size = 0.1);
-	void DrawBox(const glm::vec3& min, const glm::vec3& max, const glm::vec3& Center, const glm::vec4& Color);
-	void DrawSphere(const glm::vec3& Center, const glm::vec4& Color,const float Radius = 1, const uint8_t Segments = 32);
-	void DrawCapsule(const glm::vec3& Center,const float, const glm::vec4& Color, const float Radius = 1, const uint8_t Segments = 16);
-	void drawArrow(const glm::vec3& from, const glm::vec3& to,float headsize , const glm::vec4& Color);
-	void DrawGrid(const uint16_t camPOS);
-	void DrawAxis(const glm::vec3& camPOS, float);
+	void DrawLine(const nNewton::nVector3& from , const nNewton::nVector3& to ,const nNewton::nVector4& Color );
+	void DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size = 0.1);
+	void DrawBox(const nNewton::nVector3& min, const nNewton::nVector3& max, const nNewton::nVector3& Center, const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
+	void DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color,const float Radius = 1, const uint8_t Segments = 32);
+	void DrawCapsule(const nNewton::nVector3& Center,const float, const nNewton::nVector4& Color, const float Radius = 1, const uint8_t Segments = 16);
+	void drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to,float headsize , const nNewton::nVector4& Color);
+	void DrawGrid(const uint16_t GridLength);
+	void DrawAxis(const nNewton::nVector3& camPOS, float);
 	void BeginFrame();
 	void Endframe();
 
@@ -78,16 +82,16 @@ public:
 		m_Drawer = Drawer;
 	}
 	void SetFlag(flags& inflag) {
-		m_flag = std::make_unique<flags>(inflag);
+		m_flag =  inflag;
 	}
 	void SetFlagEnabled();
 	void SetDisableFlag();
 	
-	void IsFlagEnabled()const;
+	bool IsFlagEnabled(flags flag)const;
 
 	const IDebugRenderer* GetDrawer()const { return m_Drawer; }
-	const flags* GetFlag()const {
-		return m_flag.get();
+	const flags GetFlag()const {
+		return m_flag;
 	}
 
 	bool IsEnabled() const{
@@ -101,7 +105,7 @@ public:
 private:
 	int m_LineCount;
 	IDebugRenderer* m_Drawer;
-	std::unique_ptr<flags> m_flag;
+	flags m_flag;
 	bool m_enabled;
 	bool m_Inframe;
 	

@@ -4,8 +4,9 @@
 #pragma once
 #include <iostream>
 #include "Input.h"
-#include "Renderer/DebugRenderer.hpp"
-#include"Renderer/GL_Debug_Renderer.cpp"
+//#include "Renderer/DebugRenderer.hpp"
+//#include"Renderer/GL_Debug_Renderer.cpp"
+#include "Renderer/RenderSystem.cpp"
 #include "DebugUI/DebugUI.cpp"
 #include <nNewton/nMath.hpp>
 
@@ -16,9 +17,10 @@ private :
 	Input m_input;
 	bool m_running;
 
-	DebugRenderer m_TestDebugRenderer;
+	nRenderSystem m_Debug_Render;
+	//DebugRenderer m_TestDebugRenderer;
 	//OpneGLDebugRenderer* m_debugDrawer;
-	std::unique_ptr<OpneGLDebugRenderer> m_debugDrawer;
+	//std::unique_ptr<OpneGLDebugRenderer> m_debugDrawer;
 	std::unique_ptr<DebugUIEditor> m_DebugUI = std::make_unique<DebugUIEditor>();
 	Camera m_camera;
 

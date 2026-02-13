@@ -1,3 +1,4 @@
+#pragma once
 #include <initializer_list>
 
 
@@ -176,7 +177,9 @@ namespace nNewton
 
 				nMatrix4 Rotate	    (float rad, const nVector3& axis);
 
-	
+				nMatrix4 Look_At	(const nVector3& eye_, const nVector3& center_, const nVector3& up_);
+				nMatrix4 Perspective(float FOV_, float aspect_, float nearDisZ_, float farZ_);
+				nMatrix4 Ortho		(float Left_,float Right_, float Bottom_,float Top_,float nearZ_,float farZ_ );
 
 //++============================ QUATERNION ===================================++//
 
@@ -217,3 +220,6 @@ namespace nNewton
 	nQuaternion QNlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_);
 
 }
+
+
+#include "nMath.inl"

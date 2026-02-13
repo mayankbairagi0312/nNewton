@@ -9,7 +9,7 @@ class DebugUIEditor {
 
 private:
 	Window* SDL_Window; 
-	
+	DebugRenderer debugRenderer;
 public:
 	bool Init_DebugUIEditor(Window* window)
 	{	
@@ -58,7 +58,7 @@ public:
 		ImGui::DestroyContext();
 	}
 
-	void Stats_Overlay(bool* IsOverlay ,  DebugRenderer* debugRenderer)
+	void Stats_Overlay(bool* IsOverlay)
 	{
 		static int location = 0;
 		ImGuiIO& io = ImGui::GetIO();
@@ -104,7 +104,7 @@ public:
 		ImGui::Separator();
 
 		ImGui::Text("Numbers of Objects: %s\n","NA");
-		int lineCount = debugRenderer->GetLineCount() * 2;
+		int lineCount = debugRenderer.GetLineCount() * 2;
 		//printf("Stats_Overlay lineCount = %d\n", lineCount);
 		ImGui::Text("Numbers of Vertex: %d\n",lineCount);
 

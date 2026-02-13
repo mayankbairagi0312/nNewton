@@ -14,7 +14,9 @@ add_executable(nNewtonTest
  "Core/Input.cpp" 
  
  "Renderer/Camera.cpp"
- "Renderer/GL_Debug_Renderer.cpp")
+ "Renderer/GL_Debug_Renderer.cpp"
+"Renderer/RenderSystem.cpp"
+)
 
 #target_compile_features(nNewtonTest PRIVATE cxx_std_20)
 

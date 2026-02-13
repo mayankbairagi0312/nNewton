@@ -11,6 +11,7 @@ namespace nNewton {
 	{
 		nTransform transform;
 		nRigidBody();
-		explicit nRigidBody(const nRigidBodyInfo& Info_);	
+		explicit nRigidBody(const nRigidBodyInfo& Info_)
+		{ }
 	};
 }

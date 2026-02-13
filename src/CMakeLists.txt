@@ -8,8 +8,11 @@ endif()
 # Source files (explicit listing)
 
 set(NNEWTON_SOURCES
+"math/nMath.cpp" 
+"math/nTransform.cpp" 
+"dynamics/nDynamicsWorld.cpp" 
+"dynamics/nRigidBody.cpp"
 
-"math/nMath.cpp"  
 
     
 
@@ -20,7 +23,7 @@ set(NNEWTON_SOURCES
     
 )
 
-add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES} "math/nTransform.cpp" "dynamics/nDynamicsWorld.cpp" "dynamics/nRigidBody.cpp")
+add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES} )
 
 
 target_compile_features(nNewton PUBLIC cxx_std_20)

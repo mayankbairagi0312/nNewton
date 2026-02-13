@@ -18,7 +18,7 @@ void DebugRenderer::BeginFrame()
 	}
 	m_Drawer->BeginFrameRenderer();
 }
-void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, const float Radius ,const uint8_t Segments )
+void DebugRenderer::DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color, const float Radius , const uint8_t Segments )
 {
 
     float PI = 3.1459265f;
@@ -26,7 +26,7 @@ void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, 
     uint8_t lati = Segments;
     uint8_t longi = Segments;
     float longiAngle, latiAngle;
-    std::vector <glm::vec3> PointsOnSphere;
+    std::vector <nNewton::nVector3> PointsOnSphere;
     for (int i = 0; i <= lati; ++i)
     {
         latiAngle = i*PI/ lati ;
@@ -38,8 +38,9 @@ void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, 
             x = Center.x + (Radius * sin(latiAngle)) * cos(longiAngle);
             y = Center.y + Radius * cos(latiAngle); 
             z = Center.z + (Radius * sin(longiAngle)) * sin(latiAngle);
-
-            PointsOnSphere.push_back(glm::vec3(x, y, z));
+            
+            auto vert_ = model_mat * nNewton::nVector4(x, y, z, 1.0f);
+            PointsOnSphere.emplace_back(vert_.x,vert_.y,vert_.z);
 
         }
 
@@ -69,65 +70,74 @@ void DebugRenderer::DrawSphere(const glm::vec3& Center, const glm::vec4& Color, 
     DrawPoint(Center, Color);
 }
 
-void DebugRenderer::DrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& Color) {
+void DebugRenderer::DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const nNewton::nVector4& Color) {
     m_LineCount++;
     m_Drawer->DrawLine(from, to, Color);
     
 }
-void DebugRenderer::DrawPoint(const glm::vec3 Position, const glm::vec4 Color, const float size )
+void DebugRenderer::DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size )
 {
 	m_Drawer->DrawPoint(Position, Color, size);
 }
-void DebugRenderer::DrawBox(const glm::vec3& min, const glm::vec3& max, const glm::vec3& Center, const glm::vec4& Color)
+void DebugRenderer::DrawBox(const nNewton::nVector3& min, const nNewton::nVector3& max, const nNewton::nVector3& Center, const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)
 {
-    glm::vec3 b0 = glm::vec3(min.x, min.y, min.z);
-    glm::vec3 b1 = glm::vec3(max.x, min.y, min.z);
-    glm::vec3 b2 = glm::vec3(max.x, min.y, max.z);
-    glm::vec3 b3 = glm::vec3(min.x, min.y, max.z);
-    
-    glm::vec3 t0 = glm::vec3(min.x, max.y, min.z);
-    glm::vec3 t1 = glm::vec3(max.x, max.y, min.z);
-    glm::vec3 t2 = glm::vec3(max.x, max.y, max.z);
-    glm::vec3 t3 = glm::vec3(min.x, max.y, max.z);
+    nNewton::nVector3 vert_[8] =
+    {
+        nNewton::nVector3(min.x, min.y, min.z),
+        nNewton::nVector3(max.x, min.y, min.z),
+        nNewton::nVector3(max.x, min.y, max.z),
+        nNewton::nVector3(min.x, min.y, max.z),
 
-    DrawLine(b0, b1, Color);
-    DrawLine(b1, b2, Color);
-    DrawLine(b2, b3, Color);
-    DrawLine(b3, b0, Color);
+        nNewton::nVector3(min.x, max.y, min.z),
+        nNewton::nVector3(max.x, max.y, min.z),
+        nNewton::nVector3(max.x, max.y, max.z),
+        nNewton::nVector3(min.x, max.y, max.z)
+    };
 
-    DrawLine(t0, t1, Color);
-    DrawLine(t1, t2, Color);
-    DrawLine(t2, t3, Color);
-    DrawLine(t3, t0, Color);
+    for(int i = 0; i < 8; ++i)
+    {
+        nNewton::nVector4 world = model_mat * nNewton::nVector4(vert_[i].x, vert_[i].y, vert_[i].z, 1.0f);
+        vert_[i] = nNewton::nVector3(world.x, world.y, world.z);
+    }
 
-    DrawLine(b0, t0, Color);
-    DrawLine(b1, t1, Color);
-    DrawLine(b2, t2, Color);
-    DrawLine(b3, t3, Color);
+    DrawLine(vert_[0], vert_[1], Color);
+    DrawLine(vert_[1], vert_[2], Color);
+    DrawLine(vert_[2], vert_[3], Color);
+    DrawLine(vert_[3], vert_[0], Color);
+
+    DrawLine(vert_[4], vert_[5], Color);
+    DrawLine(vert_[5], vert_[6], Color);
+    DrawLine(vert_[6], vert_[7], Color);
+    DrawLine(vert_[7], vert_[4], Color);
+
+    DrawLine(vert_[0], vert_[4], Color);
+    DrawLine(vert_[1], vert_[5], Color);
+    DrawLine(vert_[2], vert_[6], Color);
+    DrawLine(vert_[3], vert_[7], Color);
 
 	DrawPoint(Center, Color);
 }
 
-void DebugRenderer::drawArrow(const glm::vec3& from, const glm::vec3& to,float headsize , const glm::vec4& Color)
+void DebugRenderer::drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to, float headsize, const nNewton::nVector4& Color)
 {
     DrawLine(from, to, Color);
 
-    glm::vec3 dir = glm::normalize(to - from);
+    nNewton::nVector3 dir = nNewton::Normalized(to - from);
 
-    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    nNewton::nVector3 up(0.0f, 1.0f, 0.0f);
 
-    if (abs(glm::dot(up, dir)) > 0.99)
+    if (abs(nNewton::DotProduct(up, dir)) > 0.99)
     {
-        up = glm::vec3(1, 0, 0);
+        up = nNewton::nVector3(1, 0, 0);
     }
 
-    glm::vec3 right = glm::normalize(glm::cross(dir, up));
+    nNewton::nVector3 right = nNewton::Normalized(nNewton::CrossProduct(dir, up));
     //up = glm::cross(right, dir);
 
-    glm::vec3 arrowbase = to - dir * headsize;
+    nNewton::nVector3 arrowbase = to - dir * headsize;
 
-    glm::vec3 point1 = arrowbase + right * headsize * 0.3f;
-    glm::vec3 point2 = arrowbase - right * headsize * 0.3f;
+    nNewton::nVector3 point1 = arrowbase + right * headsize * 0.3f;
+    nNewton::nVector3 point2 = arrowbase - right * headsize * 0.3f;
 
     DrawLine(to , point1, Color);
     DrawLine(to, point2, Color);
@@ -139,14 +149,14 @@ void DebugRenderer::DrawGrid(const uint16_t GridLength)
     {   
         if(i%2==0)
         {
-            auto xfrom = glm::vec3(i, 0, GridLength);
-            auto xto = glm::vec3(i, 0, -GridLength);
-            DrawLine(xfrom, xto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+            auto xfrom = nNewton::nVector3(i, 0, GridLength);
+            auto xto = nNewton::nVector3(i, 0, -GridLength);
+            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
 
-            auto zfrom = glm::vec3(GridLength, 0, i);
-            auto zto = glm::vec3(-GridLength, 0, i);
+            auto zfrom = nNewton::nVector3(GridLength, 0, i);
+            auto zto = nNewton::nVector3(-GridLength, 0, i);
 
-            DrawLine(zfrom, zto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
         }
 
     }
@@ -154,38 +164,38 @@ void DebugRenderer::DrawGrid(const uint16_t GridLength)
     {
         if (i % 2 == 0)
         {
-            auto xfrom = glm::vec3(-i, 0, GridLength);
-            auto xto = glm::vec3(-i, 0, -GridLength);
-            DrawLine(xfrom, xto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+            auto xfrom = nNewton::nVector3(-i, 0, GridLength);
+            auto xto = nNewton::nVector3(-i, 0, -GridLength);
+            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
 
-            auto zfrom = glm::vec3(GridLength, 0, -i);
-            auto zto = glm::vec3(-GridLength, 0, -i);
+            auto zfrom = nNewton::nVector3(GridLength, 0, -i);
+            auto zto = nNewton::nVector3(-GridLength, 0, -i);
 
-            DrawLine(zfrom, zto, glm::vec4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
         }
     }
 
 }
 
-void DebugRenderer::DrawAxis(const glm::vec3& camPOS , float MaxLength)
+void DebugRenderer::DrawAxis(const nNewton::nVector3& camPOS, float MaxLength )
 {
     // X Axis
-    glm::vec3 xfrom(camPOS.x - MaxLength, 0, 0);
-    glm::vec3 xto(camPOS.x + MaxLength, 0, 0);
-    DrawLine(xfrom, xto, glm::vec4(.7f, .2f, .18f, 0.3f));
+    nNewton::nVector3 xfrom(camPOS.x - MaxLength, 0, 0);
+    nNewton::nVector3 xto(camPOS.x + MaxLength, 0, 0);
+    DrawLine(xfrom, xto, nNewton::nVector4(.7f, .2f, .18f, 0.3f));
 
     //Y AXIS    
-    glm::vec3 yfrom(0,  camPOS.y - MaxLength,0);
-    glm::vec3 yto(0, camPOS.y + MaxLength,0);
-    DrawLine(yfrom, yto, glm::vec4(.2f, .2f, .6f, 0.3f));
+    nNewton::nVector3 yfrom(0,  camPOS.y - MaxLength,0);
+    nNewton::nVector3 yto(0, camPOS.y + MaxLength,0);
+    DrawLine(yfrom, yto, nNewton::nVector4(.2f, .2f, .6f, 0.3f));
 
     //Z AXIS
-    glm::vec3 zfrom(0, 0, camPOS.z - MaxLength);
-    glm::vec3 zto(0, 0, camPOS.z + MaxLength);
-    DrawLine(zfrom, zto, glm::vec4(.4f, .7f, .2f, 0.3f));
+    nNewton::nVector3 zfrom(0, 0, camPOS.z - MaxLength);
+    nNewton::nVector3 zto(0, 0, camPOS.z + MaxLength);
+    DrawLine(zfrom, zto, nNewton::nVector4(.4f, .7f, .2f, 0.3f));
 }
 
-void DebugRenderer::DrawCapsule(const glm::vec3& Center,const float height, const glm::vec4& Color, const float Radius , const uint8_t Segments )
+void DebugRenderer::DrawCapsule(const nNewton::nVector3& Center,const float height,const nNewton::nVector4& Color, const float Radius , const uint8_t Segments )
 {
    
     float PI = 3.1459265f;
@@ -193,7 +203,7 @@ void DebugRenderer::DrawCapsule(const glm::vec3& Center,const float height, cons
     uint8_t lati = Segments;
     uint8_t longi = Segments;
     float longiAngle, latiAngle;
-    std::vector <glm::vec3> PointsOnSphere;
+    std::vector <nNewton::nVector3> PointsOnSphere;
 
     for (int i = 0; i <= lati/2; ++i)
     {
@@ -207,7 +217,7 @@ void DebugRenderer::DrawCapsule(const glm::vec3& Center,const float height, cons
             y = Center.y + height/2 + Radius * cos(latiAngle);
             z = Center.z + (Radius * sin(longiAngle)) * sin(latiAngle);
 
-            PointsOnSphere.emplace_back(glm::vec3(x, y, z));
+            PointsOnSphere.emplace_back(nNewton::nVector3(x, y, z));
 
         }
 
@@ -224,7 +234,7 @@ void DebugRenderer::DrawCapsule(const glm::vec3& Center,const float height, cons
             y = Center.y  - height/2 + Radius * cos(latiAngle);
             z = Center.z   + (Radius * sin(longiAngle)) * sin(latiAngle);
 
-            PointsOnSphere.emplace_back(glm::vec3(x, y, z));
+            PointsOnSphere.emplace_back(nNewton::nVector3(x, y, z));
 
         }
 
@@ -270,8 +280,8 @@ void DebugRenderer::SetDisableFlag()
 
 }
 
-void DebugRenderer::IsFlagEnabled()const {
-
+bool DebugRenderer::IsFlagEnabled(flags flag)const {
+    return static_cast<uint32_t>(m_flag & flag) != 0;
 }
 
 

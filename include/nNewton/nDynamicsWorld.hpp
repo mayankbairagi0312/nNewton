@@ -34,7 +34,7 @@ namespace nNewton {
 		return id_ >> 16;
 	}
 
-	class nPhysicsWorld
+	class nDynamicsWorld
 	{
 	public:
 
@@ -46,13 +46,13 @@ namespace nNewton {
 		const nRigidBody* GetBody(nEntity_ID id) const;
 
 		const nTransform* GetTransform(nEntity_ID id) const;
-
+		bool IsValid(nEntity_ID id_) const;
 
 	private:
 		std::vector<nEntity> m_Entity;
 		std::vector<uint32_t> m_FreeList;
 
-		bool IsValid(nEntity_ID id_) const;
+		
 
 	};
 

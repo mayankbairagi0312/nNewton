@@ -4,7 +4,7 @@ namespace nNewton
 {
 
 	
-	nEntity_ID nPhysicsWorld::Create_Entity(const nRigidBodyInfo& info_)
+	nEntity_ID nDynamicsWorld::Create_Entity(const nRigidBodyInfo& info_)
 	{
 		nEntity_ID index_;
 
@@ -25,7 +25,7 @@ namespace nNewton
 		return MAKE_ID(index_, entity.Gen);
 	}
 
-	void nPhysicsWorld::DestroyEntity(nEntity_ID id)
+	void nDynamicsWorld::DestroyEntity(nEntity_ID id)
 	{	
 		auto index = INDEX_FROM_ID(id);
 		auto gen = GEN_FROM_ID(id);
@@ -43,7 +43,7 @@ namespace nNewton
 		m_FreeList.push_back(index);
 	}
 
-	nRigidBody* nPhysicsWorld::GetBody(nEntity_ID id)
+	nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id)
 	{
 		auto index = INDEX_FROM_ID(id);
 		auto gen = GEN_FROM_ID(id);
@@ -59,7 +59,7 @@ namespace nNewton
 		return &e.Entity;
 	}
 
-	const nRigidBody* nPhysicsWorld::GetBody(nEntity_ID id) const
+	const nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id) const
 	{
 		auto index = INDEX_FROM_ID(id);
 		auto gen = GEN_FROM_ID(id);
@@ -75,7 +75,7 @@ namespace nNewton
 		return &e.Entity;
 	}
 
-	const nTransform* nPhysicsWorld::GetTransform(nEntity_ID id) const
+	const nTransform* nDynamicsWorld::GetTransform(nEntity_ID id) const
 	{
 		auto index = INDEX_FROM_ID(id);
 		auto gen = GEN_FROM_ID(id);
@@ -91,7 +91,7 @@ namespace nNewton
 		return &e.Entity.transform;
 	}
 
-	bool nPhysicsWorld::IsValid(nEntity_ID id_) const {
+	bool nDynamicsWorld::IsValid(nEntity_ID id_) const {
 		auto index = INDEX_FROM_ID(id_);
 		auto gen = GEN_FROM_ID(id_);
 

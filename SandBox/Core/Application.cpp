@@ -1,18 +1,20 @@
 #include "Application.h"
 
 Application::Application()
-	: m_testWindow(nullptr),m_debugDrawer(nullptr), m_running(false), m_CurrTime(0), m_PrevTime(SDL_GetPerformanceCounter()), m_DeltaTime(0.0f) { }
+	: m_testWindow(nullptr), m_running(false), m_CurrTime(0), m_PrevTime(SDL_GetPerformanceCounter()), m_DeltaTime(0.0f) { }
 
 bool Application::Initialize() {
 
     std::cout << ">>>===================================================================<<<\n >>       nNEWTON TEST BUILD       <<\n>>>===================================================================<<<\n>>        VERSION 0.1.0       <<\n"
         <<">>>===================================================================<<<\n" <<std::endl;
+   
+    
     m_testWindow = std::make_unique<Window>();
     
 
     //m_debugDrawer = new OpneGLDebugRenderer();
-    m_debugDrawer = std::make_unique<OpneGLDebugRenderer>();
-    m_TestDebugRenderer.SetDrawer(m_debugDrawer.get());
+   /* m_debugDrawer = std::make_unique<OpneGLDebugRenderer>();
+    m_TestDebugRenderer.SetDrawer(m_debugDrawer.get());*/
 
     // Initialize window 
     if (!m_testWindow->Init()) {
@@ -20,7 +22,7 @@ bool Application::Initialize() {
         return false;
     }
 
-    // Create window
+    //  window init
     if (!m_testWindow->CreateWindow()) {  
         std::cerr << "Failed to create window!" << std::endl;
         return false;
@@ -34,13 +36,19 @@ bool Application::Initialize() {
         std::cerr << "UI : kya cheda bosdi \n" << std::endl;
     }
     
+    // cam for input
     m_input.SetCamera(m_camera);
-    if (!m_debugDrawer->init_renderer(&m_camera))
+    
+
+    //init debug render
+    if (!m_Debug_Render.INIT_DEBUG_RENDER(&m_camera))
     {
         std::cerr << "camera ki MKC" << std::endl;
     }
-    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 15.0f));
+
     
+    m_camera.setPosition(nNewton::nVector3(0.0f, 5.0f, 15.0f));
+    //m_camera.setProjection(Camera::ProjectionType::Orthographic,100,(float)(m_testWindow->getWidth()/ m_testWindow->getHeight()),0,150.5);
     m_running = true;
    
 
@@ -86,7 +94,7 @@ void Application::Run() {
 
         static bool demo = true;
         //ImGui::ShowDemoWindow(&demo);
-        m_DebugUI->Stats_Overlay(&demo,&m_TestDebugRenderer);
+        m_DebugUI->Stats_Overlay(&demo);
         
         m_input.ProcessInputKey(m_DeltaTime);
         if (!pauseGameInput) {
@@ -106,34 +114,17 @@ void Application::Run() {
 
 void Application::TRender()
 {   
-    auto min = glm::vec3(-1.5f, -1.5f, -1.5f);  
-    auto max = glm::vec3(1.5f, 1.5f, 1.5f);
-    auto min1 = glm::vec3(2.0f, 2.0f, 2.0f);
-    auto max1 = glm::vec3(4.5f, 4.5f, 4.5f);
-    auto center = (min + max) * 0.5f;
-    auto center2 = (min1 + max1) * 0.5f;
-    auto color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-    auto color2 = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    m_TestDebugRenderer.BeginFrame();
-    m_TestDebugRenderer.DrawGrid(64);
-    m_TestDebugRenderer.DrawAxis(m_camera.GetPosition(), 256);
-    auto centerCapsule = glm::vec3(17.5f, -7.5f, 7.5f);
-    m_TestDebugRenderer.DrawCapsule(centerCapsule,4, color,2);
-    //m_TestDebugRenderer.DrawLine(from,to ,color);
-    //m_TestDebugRenderer.DrawLine(from, to1, color);
-    m_TestDebugRenderer.drawArrow(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 5.0f, 0.0f), 0.4,color2);
-    m_TestDebugRenderer.DrawBox(min, max, center, color);
-    m_TestDebugRenderer.DrawSphere(center, color);
-    m_TestDebugRenderer.DrawSphere(center2, color);
-    m_TestDebugRenderer.DrawBox(min1, max1, center2, color2);
-    m_TestDebugRenderer.Endframe();
-    
+    m_Debug_Render.Start_Debug_Draw();
+   
+    m_Debug_Render.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
+    m_Debug_Render.Debug_Render();
+    m_Debug_Render.End_Debug_Draw();
 }
 
 void Application::Shutdown() {
     std::cout << "Application shutting down\n";
     std::cout << "data khatam, khel khatam. beta!!!!\n";
-    m_TestDebugRenderer.clear();
+    m_Debug_Render.ShutDown_DebugRender();
     if (m_testWindow) {
         
         m_testWindow->Shutdown();

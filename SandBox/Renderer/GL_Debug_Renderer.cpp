@@ -1,5 +1,6 @@
 #include "DebugRenderer.hpp"
 #include "Shader.hpp"
+
 #include "Camera.hpp"
 #include<vector>
 
@@ -48,8 +49,8 @@ public:
 		else
 			std::cout << "Shader failed to load" << std::endl;
 
-		glm::mat4 view = m_Camera->GetViewMatrix();
-		glm::mat4 projection = m_Camera->GetProjectionMatrix();
+		nNewton::nMatrix4 view = m_Camera->GetViewMatrix();
+		nNewton::nMatrix4 projection = m_Camera->GetProjectionMatrix();
 
 		m_Shader->Set_Mat4("uView", view);
 		m_Shader->Set_Mat4("uProjection", projection);
@@ -74,15 +75,15 @@ public:
 
 	}
 
-	void DrawLine(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color)override {
+	void DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const  nNewton::nVector4& color)override {
 		
-		assert(m_Camera && "GLDebugRenderer: Camera not set");
+		assert(m_Camera && "GL_DebugRenderer: Camera not set");
 
 		
 
 		
-		m_lines.push_back({ glm::vec4(from, 1.0f), color });
-		m_lines.push_back({ glm::vec4(to,   1.0f), color });
+		m_lines.push_back({ nNewton::nVector4(from.x,from.y,from.z, 1.0f), color });
+		m_lines.push_back({ nNewton::nVector4(to.x,to.y,to.z, 1.0f), color });
 
 	}
 	void InitialzedBuf() {
@@ -120,9 +121,9 @@ public:
 	}
 private:
 	struct vertex {
-		glm::vec3 from;
+		nNewton::nVector4 from;
 	
-		glm::vec4 color;
+		nNewton::nVector4 color;
 	};
 	std::vector<vertex> m_lines;
 
