@@ -12,9 +12,9 @@ set(NNEWTON_SOURCES
 "math/nTransform.cpp" 
 "dynamics/nDynamicsWorld.cpp" 
 "dynamics/nRigidBody.cpp"
-
-
-    
+"collision/nCollisionShapes.hpp"
+"collision/nBoxShape.hpp"
+"collision/nSphereShape.hpp" 
 
     
 
