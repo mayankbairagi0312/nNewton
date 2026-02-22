@@ -15,8 +15,8 @@ namespace nNewton {
 	struct nEntity
 	{
 		nRigidBody Entity;
-		uint32_t Gen;
-		bool      alive;
+		uint32_t Gen = 0;
+		bool      alive = false;
 	};
 
 	inline nEntity_ID MAKE_ID(uint32_t index_, uint32_t gen_)

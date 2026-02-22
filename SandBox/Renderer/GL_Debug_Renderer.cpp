@@ -63,7 +63,8 @@ public:
 		glBufferData(GL_ARRAY_BUFFER, m_lines.size() * sizeof(vertex), m_lines.data(), GL_DYNAMIC_DRAW);
 
 		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_LINE_SMOOTH);
 		glDisable(GL_FRAMEBUFFER_SRGB);
 

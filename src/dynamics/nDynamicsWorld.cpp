@@ -38,7 +38,7 @@ namespace nNewton
 			return;
 
 		e.alive = false;
-		e.Entity = nRigidBody() ;
+		e.Entity = nRigidBody();
 		e.Gen++;
 		m_FreeList.push_back(index);
 	}
@@ -88,7 +88,7 @@ namespace nNewton
 		if (!e.alive || e.Gen != gen)
 			return nullptr;
 
-		return &e.Entity.transform;
+		return &e.Entity.TRANSFORM_;
 	}
 
 	bool nDynamicsWorld::IsValid(nEntity_ID id_) const {

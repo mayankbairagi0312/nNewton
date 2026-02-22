@@ -151,12 +151,12 @@ void DebugRenderer::DrawGrid(const uint16_t GridLength)
         {
             auto xfrom = nNewton::nVector3(i, 0, GridLength);
             auto xto = nNewton::nVector3(i, 0, -GridLength);
-            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, 0.1f));
 
             auto zfrom = nNewton::nVector3(GridLength, 0, i);
             auto zto = nNewton::nVector3(-GridLength, 0, i);
 
-            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, 0.1f));
         }
 
     }
@@ -166,12 +166,12 @@ void DebugRenderer::DrawGrid(const uint16_t GridLength)
         {
             auto xfrom = nNewton::nVector3(-i, 0, GridLength);
             auto xto = nNewton::nVector3(-i, 0, -GridLength);
-            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(xfrom, xto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .1f));
 
             auto zfrom = nNewton::nVector3(GridLength, 0, -i);
             auto zto = nNewton::nVector3(-GridLength, 0, -i);
 
-            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .08f));
+            DrawLine(zfrom, zto, nNewton::nVector4(0.7f, 0.7f, 0.7f, .1f));
         }
     }
 
@@ -182,17 +182,17 @@ void DebugRenderer::DrawAxis(const nNewton::nVector3& camPOS, float MaxLength )
     // X Axis
     nNewton::nVector3 xfrom(camPOS.x - MaxLength, 0, 0);
     nNewton::nVector3 xto(camPOS.x + MaxLength, 0, 0);
-    DrawLine(xfrom, xto, nNewton::nVector4(.7f, .2f, .18f, 0.3f));
+    DrawLine(xfrom, xto, nNewton::nVector4(.7f, .2f, .18f, 0.5f));
 
     //Y AXIS    
     nNewton::nVector3 yfrom(0,  camPOS.y - MaxLength,0);
     nNewton::nVector3 yto(0, camPOS.y + MaxLength,0);
-    DrawLine(yfrom, yto, nNewton::nVector4(.2f, .2f, .6f, 0.3f));
+    DrawLine(yfrom, yto, nNewton::nVector4(.2f, .2f, .6f, 0.5f));
 
     //Z AXIS
     nNewton::nVector3 zfrom(0, 0, camPOS.z - MaxLength);
     nNewton::nVector3 zto(0, 0, camPOS.z + MaxLength);
-    DrawLine(zfrom, zto, nNewton::nVector4(.4f, .7f, .2f, 0.3f));
+    DrawLine(zfrom, zto, nNewton::nVector4(.4f, .7f, .2f, 0.5f));
 }
 
 void DebugRenderer::DrawCapsule(const nNewton::nVector3& Center,const float height,const nNewton::nVector4& Color, const float Radius , const uint8_t Segments )

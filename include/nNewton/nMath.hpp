@@ -105,7 +105,8 @@ namespace nNewton
 	constexpr float DotProduct(const nVector3& b, const nVector3& c);
 	constexpr nVector3 CrossProduct(const nVector3& b, const nVector3& c);
 	nVector3 Normalized(const nVector3& a);
-
+	nVector3 Min(const nVector3& a, const nVector3& b);
+	nVector3 Max(const nVector3& a, const nVector3& b);
 
 
 //======================VECTOR 4=======================//
