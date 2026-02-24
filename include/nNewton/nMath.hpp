@@ -89,6 +89,8 @@ namespace nNewton
 		constexpr nVector3 operator+(const nVector3& otr)const;
 		constexpr nVector3 operator-(const nVector3& otr)const;
 		constexpr nVector3 operator-() const;
+		//component wise mult
+		constexpr nVector3 operator*(const nVector3& otr) const;
 
 		constexpr nVector3& operator+=(const nVector3& otr);
 		constexpr nVector3& operator-=(const nVector3& otr);

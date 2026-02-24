@@ -87,10 +87,15 @@ namespace nNewton
 	}
 	nMatrix4 nMatrix4::operator*(const nMatrix4& otr)const {
 		nMatrix4 res;
-		for (int i = 0; i < 16; ++i)
-		{
-			res.A[i] = this->A[i] * otr.A[i];
-		}
+		for (int col = 0; col < 4; col++)
+			for (int row = 0; row < 4; row++)
+			{
+				res.A[col * 4 + row] =
+					A[0 * 4 + row] * otr.A[col * 4 + 0] +
+					A[1 * 4 + row] * otr.A[col * 4 + 1] +
+					A[2 * 4 + row] * otr.A[col * 4 + 2] +
+					A[3 * 4 + row] * otr.A[col * 4 + 3];
+			}
 		return res;
 	}
 

@@ -13,7 +13,8 @@ namespace nNewton
 		{
 			nAABB aabb;
 			nVector3 center = transform_.GetPosition();
-			nVector3 e = m_HalfExtents * transform_.GetScale();
+
+			nVector3 e = m_HalfExtents* transform_.GetScale();
 			nVector3 corn[8] = {
 			{ -e.x, -e.y, -e.z },
 			{  e.x, -e.y, -e.z },
@@ -26,7 +27,7 @@ namespace nNewton
 				};
 
 			aabb.min = aabb.max = center + transform_.TransformVec(corn[0]);
-			for (size_t i = 0; i < 8; i++)
+			for (size_t i = 1; i < 8; i++)
 			{
 				nVector3 worldCorner = center + transform_.TransformVec(corn[i]);
 				aabb.min = Min(aabb.min, worldCorner);

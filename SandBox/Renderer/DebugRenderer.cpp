@@ -1,7 +1,7 @@
 #include "DebugRenderer.hpp"
 #include <iostream>
 #include <cmath>
-DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false) ,m_Drawer(nullptr){};
+DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false), m_Drawer(nullptr), m_flag(flags::All) {}
 DebugRenderer::~DebugRenderer(){}
 
 
@@ -10,7 +10,6 @@ void DebugRenderer::BeginFrame()
 {   
     
     m_LineCount = 0;
-    
 	m_Inframe = true;
 	if (m_Drawer == nullptr) {
 		std::cerr << "ERROR: m_Drawer is null in BeginFrame()!" << std::endl;
@@ -98,6 +97,7 @@ void DebugRenderer::DrawBox(const nNewton::nVector3& min, const nNewton::nVector
     {
         nNewton::nVector4 world = model_mat * nNewton::nVector4(vert_[i].x, vert_[i].y, vert_[i].z, 1.0f);
         vert_[i] = nNewton::nVector3(world.x, world.y, world.z);
+        //std::cout << "vert " << i << ": " << vert_[i].x << " " << vert_[i].y << " " << vert_[i].z << std::endl;
     }
 
     DrawLine(vert_[0], vert_[1], Color);
@@ -271,13 +271,15 @@ void DebugRenderer::Endframe()
 }
 
 
-void DebugRenderer::SetFlagEnabled()
+void DebugRenderer::SetFlagEnabled(flags flag)
 {
-
+	m_flag = m_flag | flag;
 }
-void DebugRenderer::SetDisableFlag()
+void DebugRenderer::SetDisableFlag(flags flag)
 {
-
+    m_flag = static_cast<flags>(
+        static_cast<uint32_t>(m_flag) & ~static_cast<uint32_t>(flag)
+        );
 }
 
 bool DebugRenderer::IsFlagEnabled(flags flag)const {

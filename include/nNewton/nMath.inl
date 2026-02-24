@@ -115,6 +115,16 @@ namespace nNewton
 		return nVector3(-(this->x), -(this->y), -(this->z));
 	}
 
+
+	//comp wise mult
+	constexpr nVector3 nVector3::operator*(const nVector3& otr) const
+	{
+		return {
+			x * otr.x,
+			y * otr.y,
+			z * otr.z
+		};
+	}
 	constexpr nVector3& nVector3::operator+=(const nVector3& otr) {
 		this->x = this->x + otr.x;
 		this->y = this->y + otr.y;

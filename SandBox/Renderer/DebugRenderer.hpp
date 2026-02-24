@@ -81,11 +81,9 @@ public:
 	void SetDrawer(IDebugRenderer* Drawer) {
 		m_Drawer = Drawer;
 	}
-	void SetFlag(flags& inflag) {
-		m_flag =  inflag;
-	}
-	void SetFlagEnabled();
-	void SetDisableFlag();
+	
+	void SetFlagEnabled(flags flag);
+	void SetDisableFlag(flags flag);
 	
 	bool IsFlagEnabled(flags flag)const;
 

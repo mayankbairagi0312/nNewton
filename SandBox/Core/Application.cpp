@@ -11,7 +11,7 @@ bool Application::Initialize() {
     
     m_testWindow = std::make_unique<Window>();
     
-
+	m_Debug_Renderer = std::make_shared<DebugRenderer>();
     //m_debugDrawer = new OpneGLDebugRenderer();
    /* m_debugDrawer = std::make_unique<OpneGLDebugRenderer>();
     m_TestDebugRenderer.SetDrawer(m_debugDrawer.get());*/
@@ -31,7 +31,7 @@ bool Application::Initialize() {
     glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
 
     // init UI
-    if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get()))
+    if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer))
     {
         std::cerr << "UI : kya cheda bosdi \n" << std::endl;
     }
@@ -41,18 +41,20 @@ bool Application::Initialize() {
     
 
     //init debug render
-    if (!m_Debug_Render.INIT_DEBUG_RENDER(&m_camera))
+    if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer))
     {
         std::cerr << "camera ki MKC" << std::endl;
     }
 
+	//default scene setup
+    m_Render_System.defaultScene();
     
+
+
     m_camera.setPosition(nNewton::nVector3(0.0f, 5.0f, 15.0f));
     //m_camera.setProjection(Camera::ProjectionType::Orthographic,100,(float)(m_testWindow->getWidth()/ m_testWindow->getHeight()),0,150.5);
     m_running = true;
    
-
-
     std::cout << "Application initialized successfully.\n";
 
     return true;
@@ -114,17 +116,20 @@ void Application::Run() {
 
 void Application::TRender()
 {   
-    m_Debug_Render.Start_Debug_Draw();
-   
-    m_Debug_Render.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
-    m_Debug_Render.Debug_Render();
-    m_Debug_Render.End_Debug_Draw();
+    m_Render_System.Start_Debug_Draw();
+    m_Render_System.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
+
+	m_Debug_Renderer->SetFlagEnabled(flags::Shapes);
+	
+    m_Render_System.Debug_Render();
+
+    m_Render_System.End_Debug_Draw();
 }
 
 void Application::Shutdown() {
     std::cout << "Application shutting down\n";
     std::cout << "data khatam, khel khatam. beta!!!!\n";
-    m_Debug_Render.ShutDown_DebugRender();
+    m_Render_System.ShutDown_DebugRender();
     if (m_testWindow) {
         
         m_testWindow->Shutdown();

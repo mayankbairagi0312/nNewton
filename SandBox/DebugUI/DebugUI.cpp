@@ -9,12 +9,14 @@ class DebugUIEditor {
 
 private:
 	Window* SDL_Window; 
-	DebugRenderer debugRenderer;
+	std::shared_ptr<DebugRenderer>  debugRenderer;
 public:
-	bool Init_DebugUIEditor(Window* window)
+	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render)
 	{	
 		SDL_Window = window;
-
+		debugRenderer = render;
+		std::cout << "debug render this=" << debugRenderer.get() << std::endl;
+		
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
@@ -104,9 +106,9 @@ public:
 		ImGui::Separator();
 
 		ImGui::Text("Numbers of Objects: %s\n","NA");
-		int lineCount = debugRenderer.GetLineCount() * 2;
+		int vertCount = debugRenderer->GetLineCount() * 2;
 		//printf("Stats_Overlay lineCount = %d\n", lineCount);
-		ImGui::Text("Numbers of Vertex: %d\n",lineCount);
+		ImGui::Text("Numbers of Vertex: %d\n",vertCount);
 
 		ImGui::Separator();
 
