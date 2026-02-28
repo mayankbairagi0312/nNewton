@@ -34,13 +34,10 @@ public:
 		return true;
 	}
 	void BeginFrameRenderer()override {
-		//std::cout << "BeginFrame clearing :" << m_lines.size() << " lines" << std::endl;
 		m_lines.clear();
-		//std::cout << "after line clearing count :" << m_lines.size() << " lines" << std::endl;
 		
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 	}
 	void EndFrameRenderer()override {

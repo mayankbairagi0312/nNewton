@@ -23,7 +23,7 @@ set(NNEWTON_SOURCES
     
 )
 
-add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES} )
+add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}  "collision/Collision_Broadphase/nAABBTree.cpp")
 
 
 target_compile_features(nNewton PUBLIC cxx_std_20)

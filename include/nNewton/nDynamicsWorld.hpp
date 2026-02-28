@@ -48,6 +48,9 @@ namespace nNewton {
 		const nTransform* GetTransform(nEntity_ID id) const;
 		bool IsValid(nEntity_ID id_) const;
 
+		void Step(float deltaT_);
+
+
 	private:
 		std::vector<nEntity> m_Entity;
 		std::vector<uint32_t> m_FreeList;

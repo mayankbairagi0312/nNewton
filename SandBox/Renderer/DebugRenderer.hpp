@@ -73,6 +73,8 @@ public:
 	void DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color,const float Radius = 1, const uint8_t Segments = 32);
 	void DrawCapsule(const nNewton::nVector3& Center,const float, const nNewton::nVector4& Color, const float Radius = 1, const uint8_t Segments = 16);
 	void drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to,float headsize , const nNewton::nVector4& Color);
+	void DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size = 1.0f);
+	void DrawCircle(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float Radius = 1.0f, uint8_t Segments = 32);
 	void DrawGrid(const uint16_t GridLength);
 	void DrawAxis(const nNewton::nVector3& camPOS, float);
 	void BeginFrame();
@@ -82,6 +84,7 @@ public:
 		m_Drawer = Drawer;
 	}
 	
+	void SetFlag(flags flag);
 	void SetFlagEnabled(flags flag);
 	void SetDisableFlag(flags flag);
 	

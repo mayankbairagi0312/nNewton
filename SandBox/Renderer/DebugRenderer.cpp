@@ -118,6 +118,51 @@ void DebugRenderer::DrawBox(const nNewton::nVector3& min, const nNewton::nVector
 	DrawPoint(Center, Color);
 }
 
+void DebugRenderer::DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size)
+{
+    nNewton::nVector3 up(0.0f, 1.0f, 0.0f);
+    if(abs(nNewton::DotProduct(up, Normal)) > 0.99)
+    {
+        up = nNewton::nVector3(1, 0, 0);
+	}
+	auto right = nNewton::Normalized(nNewton::CrossProduct(Normal, up));
+    up = nNewton::Normalized(nNewton::CrossProduct(right, Normal));
+    nNewton::nVector3 corner1 = Center + (right + up) * size;
+    nNewton::nVector3 corner2 = Center + (right - up) * size;
+    nNewton::nVector3 corner3 = Center + (-right - up) * size;
+    nNewton::nVector3 corner4 = Center + (-right + up) * size;
+    DrawLine(corner1, corner2, Color);
+    DrawLine(corner2, corner3, Color);
+    DrawLine(corner3, corner4, Color);
+	DrawLine(corner4, corner1, Color);
+	DrawLine(corner1, corner3, Color);
+	DrawLine(corner2, corner4, Color);
+	DrawPoint(Center, Color);
+}
+
+void DebugRenderer::DrawCircle(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float Radius, uint8_t Segments)
+{
+    nNewton::nVector3 up(0.0f, 1.0f, 0.0f);
+    if (abs(nNewton::DotProduct(up, Normal)) > 0.99)
+    {
+        up = nNewton::nVector3(1, 0, 0);
+    }
+    auto right = nNewton::Normalized(nNewton::CrossProduct(Normal, up));
+    up = nNewton::Normalized(nNewton::CrossProduct(right, Normal));
+    std::vector<nNewton::nVector3> points;
+    for (uint8_t i = 0; i < Segments; ++i)
+    {
+        float angle = (2 * nNewton::PI * i) / Segments;
+        nNewton::nVector3 point = Center + right * cos(angle) * Radius + up * sin(angle) * Radius;
+        points.push_back(point);
+    }
+    for (uint8_t i = 0; i < Segments; ++i)
+    {
+        DrawLine(points[i], points[(i + 1) % Segments], Color);
+    }
+    DrawPoint(Center, Color);
+}
+
 void DebugRenderer::drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to, float headsize, const nNewton::nVector4& Color)
 {
     DrawLine(from, to, Color);
@@ -269,7 +314,10 @@ void DebugRenderer::Endframe()
 	m_Inframe = false;
 	m_Drawer->EndFrameRenderer();
 }
-
+void DebugRenderer::SetFlag(flags flag)
+{
+    m_flag = flag;
+}
 
 void DebugRenderer::SetFlagEnabled(flags flag)
 {

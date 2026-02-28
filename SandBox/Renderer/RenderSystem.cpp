@@ -1,10 +1,9 @@
 
-#include<unordered_map>
+#include <unordered_map>
 #include "DebugRenderer.hpp"
 #include<nNewton/nDynamicsWorld.hpp>
 #include<nNewton/nTransform.hpp>
 #include<nNewton/nMath.hpp>
-#include <glm/glm.hpp>
 #include "GL_Debug_Renderer.cpp"
 #include <memory>
 
@@ -18,7 +17,8 @@ private:
 	{
 		DEBUG_BOX,
 		DEBUG_SPHERE,
-		DEBUG_CAPSULE
+		DEBUG_CAPSULE,
+		DEBUG_PLANE
 	};
 	struct RenderObject
 	{
@@ -67,11 +67,11 @@ public:
 
 	void Debug_Render()
 	{
-		//std::cout << "render_Map size: " << render_Map.size() << std::endl;
+		
 		m_Renderer->DrawGrid(128);
 		auto IsShapes = m_Renderer->IsFlagEnabled(flags::Shapes);
 		auto IsAABB = m_Renderer->IsFlagEnabled(flags::AABB);
-		//std::cout << "IsShapes: " << IsShapes << std::endl;
+		auto IsContacts = m_Renderer->IsFlagEnabled(flags::Contacts);
 
 		for (auto& [id, ro] : render_Map)
 		{
@@ -83,14 +83,18 @@ public:
 			auto model = nNewton::Translate(tr->GetPosition()) *
 				nNewton::to_nMatrix4(tr->GetRotation())*nNewton::Scale(tr->GetScale());
 
-			//std::cout<< "position : " << tr->GetPosition().x << " " << tr->GetPosition().y << " " << tr->GetPosition().z << std::endl;
+			
 			if (IsShapes)
 			{
 				Debug_DrawShape(ro.objType, model, ro.color);
 			}
 			if (IsAABB)
 			{
-				//Debug_DrawAABB( model, color);
+			
+			}
+			if (IsContacts)
+			{
+
 			}
 		}
 	}
@@ -100,9 +104,17 @@ public:
 	{
 		m_Renderer->DrawAxis(camPOS,128);
 	}
-	void Debug_DrawAABB(const nNewton::nMatrix4& model, const nNewton::nVector4& color)
+	void Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color)
 	{
+
 	}
+	void Debug_DrawContactPoint(const nNewton::nVector3& position, const nNewton::nVector3& normal, const nNewton::nVector4& color)
+	{
+		m_Renderer->DrawPoint(position, color, 0.1f);
+		m_Renderer->drawArrow(position, position + normal, 0.3f,
+			color);
+	}
+
 	void Debug_DrawShape(const RenderObjectType& objType, const nNewton::nMatrix4& model, const nNewton::nVector4& color)
 	{
 		switch (objType)
@@ -125,6 +137,13 @@ public:
 		{
 			break;
 		}
+		case RenderObjectType::DEBUG_PLANE:
+		{
+			nNewton::nVector3 p_center(0, 0, 0);
+			nNewton::nVector3 normal(0, 1, 0);
+			m_Renderer->DrawPlane(p_center, normal, color,5);
+			break;
+		}
 		}
 	}
 
@@ -133,16 +152,24 @@ public:
 	{	
 		//render_Map.clear();
 
-
+		// Create a box 
 		nNewton::nRigidBodyInfo DefaultBoxInfo;
 		DefaultBoxInfo.MASS_ = 1;
 		DefaultBoxInfo.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-		DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0.5f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
-		DefaultBoxInfo.IS_STATIC_ = true;
+		DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
+		DefaultBoxInfo.IS_STATIC_ = false;
+
+		//Plane
+		nNewton::nRigidBodyInfo DefaultPlaneInfo;
+		DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
+		DefaultPlaneInfo.IS_STATIC_ = true;
 
 		nNewton::nEntity_ID boxID = m_physics.Create_Entity(DefaultBoxInfo);
+		nNewton::nEntity_ID planeID = m_physics.Create_Entity(DefaultPlaneInfo);
+
 
 		render_Map.insert({ boxID, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f)} });
+		render_Map.insert({ planeID, {RenderObjectType::DEBUG_PLANE, nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f)} });
 	}
 };
 
