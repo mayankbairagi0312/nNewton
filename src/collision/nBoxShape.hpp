@@ -39,6 +39,7 @@ namespace nNewton
 		virtual nVector3 getSupportPoint(const nVector3& direction) const override
 		{
 			nVector3 supportPoint;
+			//GJK/collision code transforms the support point to world space afterward and applies scale 
 			supportPoint.x = (direction.x >= 0) ? m_HalfExtents.x : -m_HalfExtents.x;
 			supportPoint.y = (direction.y >= 0) ? m_HalfExtents.y : -m_HalfExtents.y;
 			supportPoint.z = (direction.z >= 0) ? m_HalfExtents.z : -m_HalfExtents.z;

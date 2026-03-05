@@ -143,6 +143,26 @@ namespace nNewton
 	constexpr	nVector4	CrossProduct(const nVector4& b, const nVector4& c);
 				nVector4	Normalized	(const nVector4& a);
 
+//========>>MAT 3X3<<======//
+
+	struct nMatrix3
+	{
+		float A[9];
+
+		constexpr nMatrix3();
+		constexpr explicit nMatrix3(float m);
+		constexpr nMatrix3(std::initializer_list<float> values);
+		constexpr nMatrix3(const nMatrix3& otr) = default;
+
+		nMatrix3 operator+(const nMatrix3& otr)const;
+		nMatrix3 operator-(const nMatrix3& otr)const;
+		nMatrix3 operator*(const nMatrix3& otr)const;
+
+		nVector3 operator*(const nVector3& v) const;
+
+		constexpr	nMatrix3 Identity();
+	};
+	
 
 //++============================ MATRIX 4X4 ===================================++//
 // 
@@ -162,11 +182,10 @@ namespace nNewton
 					nMatrix4 operator*(const nMatrix4& otr)const;
 
 					nVector4 operator*(const nVector4& v) const;
-
+					constexpr	nMatrix4 Identity();
 	};
 
-	
-	  constexpr	nMatrix4 Identity	();
+
 				float	 Determinant(const nMatrix4& otr);
 
 				nMatrix4 RotateX	(float rad);

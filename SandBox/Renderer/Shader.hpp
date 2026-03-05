@@ -28,7 +28,7 @@ public:
 	void Set_Vec2(const std::string& name, const nNewton::nVector2& value);
 	void Set_Vec3(const std::string& name, const nNewton::nVector3& value);
 	void Set_Vec4(const std::string& name, const nNewton::nVector4& value);
-	//void Set_Mat3(const std::string& name, const glm::mat3& value);
+	void Set_Mat3(const std::string& name, const nNewton::nMatrix3& value);
 	void Set_Mat4(const std::string& name, const nNewton::nMatrix4& value);;
 
 	GLuint getID() const { return m_programID; }

@@ -294,6 +294,39 @@ namespace nNewton
 		);
 	}
 
+	//==== Matrix 3
+
+	constexpr nMatrix3::nMatrix3()
+	{
+		for (int i = 0; i < 9; ++i)
+		{
+			A[i] = 0;
+		}
+	}
+	constexpr  nMatrix3::nMatrix3(float m)
+	{
+		for (int i = 0; i < 16; ++i)
+		{
+			A[i] = m;
+		}
+	}
+	constexpr nMatrix3::nMatrix3(std::initializer_list<float> values)
+	{
+		assert(values.size() == 9);
+		int i = 0;
+		for (float v : values)
+			A[i++] = v;
+	}
+
+	constexpr nMatrix3 nMatrix3::Identity()
+	{
+		return nMatrix3{
+
+			1.0f, 0.0f, 0.0f, 
+			0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 1.0f
+		};
+	}
 
 	//=====    MATRIX 4 
 
@@ -318,7 +351,7 @@ namespace nNewton
 		for (float v : values)
 			A[i++] = v;
 	}
-	constexpr nMatrix4 Identity()
+	constexpr nMatrix4 nMatrix4::Identity()
 	{
 		return nMatrix4{
 
