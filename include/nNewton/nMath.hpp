@@ -160,9 +160,10 @@ namespace nNewton
 
 		nVector3 operator*(const nVector3& v) const;
 
-		constexpr	nMatrix3 Identity();
+		
 	};
 	
+	constexpr	nMatrix3 Identity3();
 
 //++============================ MATRIX 4X4 ===================================++//
 // 
@@ -182,10 +183,10 @@ namespace nNewton
 					nMatrix4 operator*(const nMatrix4& otr)const;
 
 					nVector4 operator*(const nVector4& v) const;
-					constexpr	nMatrix4 Identity();
+					
 	};
 
-
+	constexpr	nMatrix4 Identity4();
 				float	 Determinant(const nMatrix4& otr);
 
 				nMatrix4 RotateX	(float rad);

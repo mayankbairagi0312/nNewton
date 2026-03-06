@@ -106,8 +106,8 @@ namespace nNewton
 		return true;
 	}
 
-	void nDynamicsWorld::Step(float deltaT_)
+	/*void nDynamicsWorld::Step(float deltaT_)
 	{
 		
-	}
+	}*/
 }

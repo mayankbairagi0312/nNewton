@@ -318,7 +318,7 @@ namespace nNewton
 			A[i++] = v;
 	}
 
-	constexpr nMatrix3 nMatrix3::Identity()
+	constexpr nMatrix3 Identity3()
 	{
 		return nMatrix3{
 
@@ -351,7 +351,7 @@ namespace nNewton
 		for (float v : values)
 			A[i++] = v;
 	}
-	constexpr nMatrix4 nMatrix4::Identity()
+	constexpr nMatrix4 Identity4()
 	{
 		return nMatrix4{
 

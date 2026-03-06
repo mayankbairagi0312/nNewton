@@ -147,7 +147,7 @@ namespace nNewton
 	}
 	nMatrix4 Translate(const nVector3& t)
 	{
-		nMatrix4 m = Identity();
+		nMatrix4 m = Identity4();
 		m.A[12] = t.x;
 		m.A[13] = t.y;
 		m.A[14] = t.z;
