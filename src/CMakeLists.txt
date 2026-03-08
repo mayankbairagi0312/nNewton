@@ -12,7 +12,7 @@ set(NNEWTON_SOURCES
 "math/nTransform.cpp" 
 "dynamics/nDynamicsWorld.cpp" 
 "dynamics/nRigidBody.cpp"
-"collision/nCollisionShapes.hpp"
+#"collision/nCollisionShapes.hpp"
 "collision/nBoxShape.hpp"
 "collision/nSphereShape.hpp" 
 
@@ -23,7 +23,7 @@ set(NNEWTON_SOURCES
     
 )
 
-add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}  "collision/Collision_Broadphase/nAABB.cpp")
+add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}  )
 
 
 target_compile_features(nNewton PUBLIC cxx_std_20)

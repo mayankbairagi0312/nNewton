@@ -11,6 +11,9 @@ namespace nNewton
 		nVector3 max;
 	};
 
+	nAABB expand(const float marg_);
+	nAABB Merge(const nAABB& a, const nAABB& b);
+
 	class nCollisionShape
 	{
 	public:
