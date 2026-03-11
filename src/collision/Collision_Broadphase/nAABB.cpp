@@ -1,40 +1,38 @@
 #include <nNewton/nCollision.hpp>
+#include <nNewton/nCollisionTypes.hpp>
+#include <nNewton/nAABB.hpp>
 
 namespace nNewton
 {
-	struct nBVHNode
+	void nAABBTree::buildAABBTree(const std::vector<nCollisionEntity>& entities)
 	{
-		nAABB nodeAABB;
-		std::unique_ptr <nBVHNode> leftChild;
-		std::unique_ptr <nBVHNode> rightChild;
-		nBVHNode* parent;
-		nCollisionEntity* Entity;
-		bool isLeaf() const { return Entity != nullptr; }
-		nBVHNode() : leftChild(nullptr), rightChild(nullptr), Entity(nullptr),parent(nullptr)
+		for (const nCollisionEntity& ent : entities)
 		{
+			
 		}
+	}
 
-	};
-	class nAABBTree
+
+	void nAABBTree::UpdateEntity(nBVHNode* leaf)
 	{
-	public:
-		void InsertEntity(nCollisionEntity* Ent_);
-		void RemoveEntity(nBVHNode* leaf_);
-		void RefitNode(nBVHNode* node_);
-		void RefitUp(nBVHNode* leaf_);
-		nBVHNode* FindBestSib(const nAABB& lAABB_);
-		std::unique_ptr<nBVHNode> CreateLeafNode(nCollisionEntity* Ent_);
+		if (!leaf->isLeaf()) { return; }
+		
+		leaf->Entity->currentAABB = leaf->Entity->EntityShape->getAABB(leaf->Entity->EntityTransform);
 
-	private:
-		std::unique_ptr <nBVHNode> staticTree;
-		std::unique_ptr<nBVHNode> dynamicTree;
-		std::unique_ptr<nBVHNode> root;
-	};
+		if (!Contains(leaf->nodeAABB, leaf->Entity->currentAABB))
+		{
+			auto* entity = leaf->Entity;
+			entity->marginAABB = Expand(entity->currentAABB, FAT_MARGIN);
 
+			RemoveEntity(leaf);
+			InsertEntity(entity);
+		}
+	}
 
 	void nAABBTree::RefitNode(nBVHNode* node_)
 	{
-
+		node_->nodeAABB = Merge(node_->leftChild->nodeAABB,
+			node_->rightChild->nodeAABB);
 	}
 
 	void nAABBTree::RefitUp(nBVHNode* leaf_)
@@ -60,37 +58,37 @@ namespace nNewton
 			root = nullptr;
 			return;
 		}
-		auto* pitaji = leaf_->parent;
-		auto* dadaji = pitaji->parent;
+		auto* Parent = leaf_->parent;
+		auto* grandP = Parent->parent;
 		
 		std::unique_ptr<nBVHNode> sibling;
-		if (pitaji->rightChild.get() == leaf_)
+		if (Parent->rightChild.get() == leaf_)
 		{
-			sibling = std::move(pitaji->leftChild);
+			sibling = std::move(Parent->leftChild);
 		}
 		else
 		{
-			sibling = std::move(pitaji->rightChild);
+			sibling = std::move(Parent->rightChild);
 		}
 
-		if (dadaji == nullptr)
+		if (grandP == nullptr)
 		{
 			sibling->parent = nullptr;
 			root = std::move(sibling);
 			return;
 		}
 
-		sibling->parent = dadaji;
-		if (dadaji->leftChild.get() == pitaji)
+		sibling->parent = grandP;
+		if (grandP->leftChild.get() == Parent)
 		{
-			dadaji->leftChild = std::move(sibling);
+			grandP->leftChild = std::move(sibling);
 		}
 		else
 		{
-			dadaji->rightChild = std::move(sibling);
+			grandP->rightChild = std::move(sibling);
 		}
 
-		RefitUp(dadaji);
+		RefitUp(grandP);
 	}
 
 	std::unique_ptr<nBVHNode> nAABBTree::CreateLeafNode(nCollisionEntity* Ent_)
@@ -156,6 +154,38 @@ namespace nNewton
 
 	nBVHNode* nAABBTree::FindBestSib(const nAABB& lAABB_)
 	{
-
+		const auto* nodePtr = root.get();
+		return trav_down(nodePtr,lAABB_);
+		
 	}
+
+	nBVHNode* trav_down(nBVHNode* nodePtr, const nAABB& lAABB_)
+	{
+		if (!nodePtr) return nullptr;
+		if (nodePtr->isLeaf()) return nodePtr;
+
+		nAABB merAABB_L = Merge(nodePtr->leftChild->nodeAABB, lAABB_);
+		auto LeftCost = CalSurfaceArea(merAABB_L) - CalSurfaceArea(nodePtr->leftChild->nodeAABB);
+
+		nAABB merAABB_R = Merge(nodePtr->rightChild->nodeAABB, lAABB_);
+		auto RightCost = CalSurfaceArea(merAABB_R) - CalSurfaceArea(nodePtr->rightChild->nodeAABB);
+
+
+		if (RightCost < LeftCost)
+		{
+			return trav_down(nodePtr->rightChild, lAABB_);
+		}
+		else
+		{
+			return trav_down(nodePtr->leftChild,lAABB_)
+		}
+	}
+
+	float nAABBTree::CalSurfaceArea(const nAABB& aabb)
+	{
+		auto ext = aabb.max - aabb.min;
+		return 2.f*(ext.x * ext.y + ext.y * ext.z + ext.z * ext.x);
+	}
+	
 }
+
