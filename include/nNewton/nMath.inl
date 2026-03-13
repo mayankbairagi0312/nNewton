@@ -86,6 +86,27 @@ namespace nNewton
 		return nVector2(v.y, -v.x);
 	}
 
+	constexpr bool nVector2::operator==(const nVector2& otr) const {
+		return x == otr.x && y == otr.y ;
+	}
+	constexpr bool nVector2::operator!=(const nVector2& otr) const {
+		return !(*this == otr);
+	}
+
+	constexpr bool nVector2::operator<(const nVector2& otr) const {
+		if (x != otr.x) return x < otr.x;
+		return y < otr.y;
+		
+	}
+	constexpr bool nVector2::operator>(const nVector2& otr) const {
+		return otr < *this;
+	}
+	constexpr bool nVector2::operator<=(const nVector2& otr) const {
+		return !(otr < *this);
+	}
+	constexpr bool nVector2::operator>=(const nVector2& otr) const {
+		return !(*this < otr);
+	}
 
 	//==========  VECTOR 3 
 
@@ -192,6 +213,28 @@ namespace nNewton
 		);
 	}
 
+	constexpr bool nVector3::operator==(const nVector3& otr) const {
+		return x == otr.x && y == otr.y && z == otr.z;
+	}
+	constexpr bool nVector3::operator!=(const nVector3& otr) const {
+		return !(*this == otr);
+	}
+
+	constexpr bool nVector3::operator<(const nVector3& otr) const {
+		if (x != otr.x) return x < otr.x;
+		if (y != otr.y) return y < otr.y;
+		return z < otr.z;
+	}
+	constexpr bool nVector3::operator>(const nVector3& otr) const {
+		return otr < *this;
+	}
+	constexpr bool nVector3::operator<=(const nVector3& otr) const {
+		return !(otr < *this);
+	}
+	constexpr bool nVector3::operator>=(const nVector3& otr) const {
+		return !(*this < otr);
+	}
+
 	//======================VECTOR 4=======================//
 
 	///CTOR
@@ -293,6 +336,31 @@ namespace nNewton
 			0.0f
 		);
 	}
+
+
+	constexpr bool nVector4::operator==(const nVector4& otr) const {
+		return x == otr.x && y == otr.y && z == otr.z && w == otr.w ;
+	}
+	constexpr bool nVector4::operator!=(const nVector4& otr) const {
+		return !(*this == otr);
+	}
+
+	constexpr bool nVector4::operator<(const nVector4& otr) const {
+		if (x != otr.x) return x < otr.x;
+		if (y != otr.y) return y < otr.y;
+		if (z != otr.z) return z < otr.z;
+		return w < otr.w;
+	}
+	constexpr bool nVector4::operator>(const nVector4& otr) const {
+		return otr < *this;
+	}
+	constexpr bool nVector4::operator<=(const nVector4& otr) const {
+		return !(otr < *this);
+	}
+	constexpr bool nVector4::operator>=(const nVector4& otr) const {
+		return !(*this < otr);
+	}
+
 
 	//==== Matrix 3
 

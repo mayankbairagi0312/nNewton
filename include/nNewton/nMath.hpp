@@ -62,6 +62,12 @@ namespace nNewton
 		constexpr nVector2& operator*=(float scalar);
 		constexpr nVector2& operator/=(float scalar);
 
+		constexpr bool operator==(const nVector2& otr) const;
+		constexpr bool operator!=(const nVector2& otr) const;
+		constexpr bool operator< (const nVector2& otr) const;
+		constexpr bool operator<=(const nVector2& otr) const;
+		constexpr bool operator> (const nVector2& otr) const;
+		constexpr bool operator>=(const nVector2& otr) const;
 
 		float Length()const;
 	};
@@ -101,6 +107,14 @@ namespace nNewton
 		constexpr nVector3& operator*=(float scalar);
 		constexpr nVector3& operator/=(float scalar);
 
+		constexpr bool operator==(const nVector3& otr) const;
+		constexpr bool operator!=(const nVector3& otr) const; 
+		constexpr bool operator< (const nVector3& otr) const;
+		constexpr bool operator<=(const nVector3& otr) const;
+		constexpr bool operator> (const nVector3& otr) const;
+		constexpr bool operator>=(const nVector3& otr) const;
+
+
 		float Length()const;
 	};
 	constexpr nVector3 operator*(float scalar, const nVector3& vec);
@@ -134,7 +148,14 @@ namespace nNewton
 		constexpr nVector4 operator*(float scalar) const;
 		constexpr nVector4 operator/(float scalar) const;
 		constexpr nVector4& operator*=(float scalar);
-		constexpr nVector4& operator/=(float scalar);
+		constexpr nVector4& operator/=(float scalar); 
+		
+		constexpr bool operator==(const nVector4& otr) const;
+		constexpr bool operator!=(const nVector4& otr) const;
+		constexpr bool operator< (const nVector4& otr) const;
+		constexpr bool operator<=(const nVector4& otr) const;
+		constexpr bool operator> (const nVector4& otr) const;
+		constexpr bool operator>=(const nVector4& otr) const;
 
 		float Length()const;
 	};
