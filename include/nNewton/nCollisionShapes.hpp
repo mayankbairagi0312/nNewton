@@ -1,3 +1,4 @@
+#pragma once
 #include "nMath.hpp"
 #include "nTransform.hpp"
 

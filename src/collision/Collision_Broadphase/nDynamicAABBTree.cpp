@@ -1,19 +1,43 @@
-#include <nNewton/nCollision.hpp>
-#include <nNewton/nCollisionTypes.hpp>
-#include <nNewton/nAABB.hpp>
+
+#include <nNewton/nAABBTree.hpp>
 
 namespace nNewton
 {
-	void nAABBTree::buildAABBTree(const std::vector<nCollisionEntity>& entities)
+	class nDynamicAABBTree : public nAABBTree
 	{
-		for (const nCollisionEntity& ent : entities)
-		{
-			
-		}
+	private:
+		nBVHNode* trav_down(const nBVHNode* nodePtr, const nAABB& lAABB_);
+		float CalSurfaceArea(const nAABB& aabb);
+		std::unique_ptr<nBVHNode> CreateLeafNode(nCollisionEntity* Ent_);
+		void RefitNode(nBVHNode* node_);
+		void RefitUp(nBVHNode* leaf_);
+		nBVHNode* ConstructSAH(const std::vector<nCollisionEntity>& entities);
+	public:
+		void InsertEntity(nCollisionEntity* Ent_);
+		void RemoveEntity(nBVHNode* leaf_);
+		void UpdateEntity(nBVHNode* leaf);
+		nBVHNode* FindBestSib(const nAABB& lAABB_);
+		void BuildAABBTree(const std::vector<nCollisionEntity>& entities) override;
+	private:
+		std::unique_ptr<nBVHNode> root;
 	}
+	A
+
+//=============
 
 
-	void nAABBTree::UpdateEntity(nBVHNode* leaf)
+
+	/*void nDynamicAABBTree::BuildAABBTree(const std::vector<nCollisionEntity>& entities) override
+	{
+		root = ConstructSAH(entities);
+	}*/
+
+	/*nBVHNode* nDynamicAABBTree::ConstructSAH(const std::vector<nCollisionEntity>& entities)
+	{
+
+	}*/
+
+	void nDynamicAABBTree::UpdateEntity(nBVHNode* leaf)
 	{
 		if (!leaf->isLeaf()) { return; }
 		
@@ -29,13 +53,15 @@ namespace nNewton
 		}
 	}
 
-	void nAABBTree::RefitNode(nBVHNode* node_)
+	void nDynamicAABBTree::RefitNode(nBVHNode* node_)
 	{
-		node_->nodeAABB = Merge(node_->leftChild->nodeAABB,
-			node_->rightChild->nodeAABB);
+		if (node_ != nullptr && !node_->isLeaf()) {
+			node_->nodeAABB = Merge(node_->leftChild->nodeAABB,
+				node_->rightChild->nodeAABB);
+		}
 	}
 
-	void nAABBTree::RefitUp(nBVHNode* leaf_)
+	void nDynamicAABBTree::RefitUp(nBVHNode* leaf_)
 	{
 		auto* node = leaf_;
 		while (node != nullptr)
@@ -50,7 +76,7 @@ namespace nNewton
 		
 	}
 
-	void nAABBTree::RemoveEntity(nBVHNode* leaf_)
+	void nDynamicAABBTree::RemoveEntity(nBVHNode* leaf_)
 	{
 		if (leaf_->parent == nullptr)
 		{
@@ -91,7 +117,7 @@ namespace nNewton
 		RefitUp(grandP);
 	}
 
-	std::unique_ptr<nBVHNode> nAABBTree::CreateLeafNode(nCollisionEntity* Ent_)
+	std::unique_ptr<nBVHNode> nDynamicAABBTree::CreateLeafNode(nCollisionEntity* Ent_)
 	{
 		auto leaf = std::make_unique<nBVHNode>();
 		leaf->Entity = Ent_;
@@ -99,7 +125,7 @@ namespace nNewton
 		return leaf;
 	}
 
-	void nAABBTree::InsertEntity(nCollisionEntity* Ent_)
+	void nDynamicAABBTree::InsertEntity(nCollisionEntity* Ent_)
 	{
 		auto Leaf = CreateLeafNode(Ent_);
 
@@ -152,14 +178,14 @@ namespace nNewton
 
 	}
 
-	nBVHNode* nAABBTree::FindBestSib(const nAABB& lAABB_)
+	nBVHNode* nDynamicAABBTree::FindBestSib(const nAABB& lAABB_)
 	{
 		const auto* nodePtr = root.get();
 		return trav_down(nodePtr,lAABB_);
 		
 	}
 
-	nBVHNode* trav_down(nBVHNode* nodePtr, const nAABB& lAABB_)
+	nBVHNode* nDynamicAABBTree::trav_down(nBVHNode* nodePtr, const nAABB& lAABB_)
 	{
 		if (!nodePtr) return nullptr;
 		if (nodePtr->isLeaf()) return nodePtr;
@@ -181,7 +207,7 @@ namespace nNewton
 		}
 	}
 
-	float nAABBTree::CalSurfaceArea(const nAABB& aabb)
+	float nDynamicAABBTree::CalSurfaceArea(const nAABB& aabb)
 	{
 		auto ext = aabb.max - aabb.min;
 		return 2.f*(ext.x * ext.y + ext.y * ext.z + ext.z * ext.x);

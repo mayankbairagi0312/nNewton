@@ -2,8 +2,8 @@
 
 #include"nCollisionTypes.hpp"
 #include "nDynamicsWorld.hpp"
-#include "nAABB.hpp"
-#include <memory>
+#include "nAABBTree.hpp"
+
 
 namespace nNewton
 {
@@ -36,18 +36,18 @@ namespace nNewton
 
 		}
 
-		std::pair<nBVHNode*> CrossQueries(const nAABBTree& DynamicT, const nAABBTree& StaticT);
+		
 		void BuildTrees()
 		{
-			m_StaticTree.buildAABBTree(m_Static_Entities);
-			m_DynamicTree.buildAABBTree(m_Dynamic_Entities);
+			/*m_StaticTree.BuildAABBTree(m_Static_Entities);
+			m_DynamicTree.BuildAABBTree(m_Dynamic_Entities);*/
 		}
 
 	private:
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Static_Entities;
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Dynamic_Entities;
-		nAABBTree m_StaticTree;
-		nAABBTree m_DynamicTree;
+		/*nAABBTree m_StaticTree;
+		nAABBTree m_DynamicTree;*/
 		
 	};
 
