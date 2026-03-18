@@ -10,6 +10,14 @@ namespace nNewton
 	{
 		nVector3 min;
 		nVector3 max;
+
+		nVector3 Center()      const { return (min + max) * 0.5f; }
+		nVector3 HalfExtents() const { return (max - min) * 0.5f; }
+		float SurfaceArea() const
+		{
+			nVector3 e = max - min;  // extents
+			return 2.0f * (e.x * e.y + e.y * e.z + e.z * e.x);
+		}
 	};
 
 	nAABB Expand(const nAABB& a, const float marg_)
@@ -34,6 +42,17 @@ namespace nNewton
 			this_aabb.max.y >= that_aabb.max.y &&
 			this_aabb.max.z >= that_aabb.max.z;
 	}
+
+	bool Overlaps(const nAABB& n , const nAABB& m) 
+	{
+		return (n.min.x <= m.max.x && n.max.x >= m.min.x) &&
+			(n.min.y <= m.max.y && n.max.y >= m.min.y) &&
+			(n.min.z <= m.max.z && n.max.z >= m.min.z);
+	}
+	
+
+	
+//============
 
 	class nCollisionShape
 	{
