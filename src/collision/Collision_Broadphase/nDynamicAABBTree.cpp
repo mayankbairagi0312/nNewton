@@ -1,41 +1,141 @@
 
 #include <nNewton/nAABBTree.hpp>
-
+#include <algorithm>
 namespace nNewton
 {
+	struct nSplit_SAH
+	{
+		int SPLIT_AXIS;
+		int SPLIT_INDEX;
+		int SPLIT_COST;
+	};
 	class nDynamicAABBTree : public nAABBTree
 	{
 	private:
-		nBVHNode* trav_down(const nBVHNode* nodePtr, const nAABB& lAABB_);
+
+		nBVHNode* trav_down(nBVHNode* nodePtr, const nAABB& lAABB_);
 		float CalSurfaceArea(const nAABB& aabb);
 		std::unique_ptr<nBVHNode> CreateLeafNode(nCollisionEntity* Ent_);
 		void RefitNode(nBVHNode* node_);
 		void RefitUp(nBVHNode* leaf_);
-		nBVHNode* ConstructSAH(const std::vector<nCollisionEntity>& entities);
+		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
+		nSplit_SAH FindBestSplitSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
+		
 	public:
 		void InsertEntity(nCollisionEntity* Ent_);
 		void RemoveEntity(nBVHNode* leaf_);
 		void UpdateEntity(nBVHNode* leaf);
 		nBVHNode* FindBestSib(const nAABB& lAABB_);
-		void BuildAABBTree(const std::vector<nCollisionEntity>& entities) override;
+		void BuildAABBTree(std::vector<nCollisionEntity*>& entities) override;
 	private:
 		std::unique_ptr<nBVHNode> root;
-	}
-	A
+
+	};
+	
 
 //=============
 
 
 
-	/*void nDynamicAABBTree::BuildAABBTree(const std::vector<nCollisionEntity>& entities) override
+	void nDynamicAABBTree::BuildAABBTree(std::vector<nCollisionEntity*>& entities) 
 	{
-		root = ConstructSAH(entities);
-	}*/
+		root = ConstructSAH(entities, 0, entities.size());
+	}
 
-	/*nBVHNode* nDynamicAABBTree::ConstructSAH(const std::vector<nCollisionEntity>& entities)
+	std::unique_ptr<nBVHNode> nDynamicAABBTree::ConstructSAH(std::vector<nCollisionEntity*>& entities , int start , int end)
 	{
+		if(end - start == 1)
+		{
+				return CreateLeafNode(entities[start]);
+		}
 
-	}*/
+		auto [axis, split, cost] = FindBestSplitSAH(entities ,start, end);
+
+		std::sort(entities.begin() + start, entities.begin() + end,
+			[axis](const nCollisionEntity* a, const nCollisionEntity* b)
+			{
+				return Centroid(a->currentAABB, axis) < Centroid(b->currentAABB, axis);
+			});
+
+
+		std::unique_ptr<nBVHNode> node = std::make_unique<nBVHNode>();
+
+		node->leftChild = ConstructSAH(entities, start, split);
+		node->rightChild = ConstructSAH(entities, split, end);
+
+		node->nodeAABB = Merge(
+			node->leftChild->nodeAABB,
+			node->rightChild->nodeAABB
+		);
+
+		return node;
+
+	}
+	
+	
+
+	nSplit_SAH nDynamicAABBTree::FindBestSplitSAH(std::vector<nCollisionEntity*>& entities, int start, int end)
+	{
+		nSplit_SAH bestsplit = {};
+		bestsplit.SPLIT_COST = FLT_MAX;
+
+		nAABB ParAABB = ComputeBounds(entities, start, end);
+		float ParAABB_SA = CalSurfaceArea(ParAABB);
+
+		int count = end - start;
+
+		for (int AXI = 0; AXI < 3; ++AXI)
+		{
+			std::sort(entities.begin() + start,
+				entities.begin() + end,
+				[AXI](const nCollisionEntity* a, const nCollisionEntity* b)
+				{
+					return Centroid(a->currentAABB, AXI) <
+						Centroid(b->currentAABB, AXI);
+				});
+
+			std::vector<nAABB>  leftAABB(count);
+			std::vector<float> leftSA(count);
+
+			leftAABB[0] = entities[start]->currentAABB;
+			for (int i = 1; i < count; i++)
+			{
+				leftAABB[i] = Merge(leftAABB[i - 1],entities[start + i]->currentAABB);
+				leftSA[i] = CalSurfaceArea(leftAABB[i]);
+			}
+			
+			
+			std::vector<nAABB>  rightAABB(count);
+			std::vector<float> rightSA(count);
+			rightAABB[count - 1] = entities[end - 1]->currentAABB;
+			for (int i = count - 2; i >= 0; i--)
+			{
+				rightAABB[i] = Merge(rightAABB[i + 1],entities[start + i]->currentAABB);
+				rightSA[i] = CalSurfaceArea(rightAABB[i]);
+			}
+			
+
+			for (int i = 0; i < count - 1; i++)
+			{
+				int   leftCount = i + 1;
+				int   rightCount = count - leftCount;
+				float cost = (leftCount * leftSA[i] +
+					rightCount * rightSA[i + 1]) / ParAABB_SA;
+
+				if (cost < bestsplit.SPLIT_COST)
+				{
+					bestsplit.SPLIT_COST = cost;
+					bestsplit.SPLIT_AXIS = AXI;
+					bestsplit.SPLIT_INDEX = start + leftCount;
+				}
+			}
+		}
+
+		return bestsplit;
+	}
+
+	
+
 
 	void nDynamicAABBTree::UpdateEntity(nBVHNode* leaf)
 	{
@@ -180,7 +280,7 @@ namespace nNewton
 
 	nBVHNode* nDynamicAABBTree::FindBestSib(const nAABB& lAABB_)
 	{
-		const auto* nodePtr = root.get();
+		auto* nodePtr = root.get();
 		return trav_down(nodePtr,lAABB_);
 		
 	}
@@ -199,11 +299,11 @@ namespace nNewton
 
 		if (RightCost < LeftCost)
 		{
-			return trav_down(nodePtr->rightChild, lAABB_);
+			return trav_down(nodePtr->rightChild.get(), lAABB_);
 		}
 		else
 		{
-			return trav_down(nodePtr->leftChild,lAABB_)
+			return trav_down(nodePtr->leftChild.get(), lAABB_);
 		}
 	}
 

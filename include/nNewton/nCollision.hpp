@@ -11,6 +11,7 @@ namespace nNewton
 	class nCollisionWorld
 	{
 	public:
+		nCollisionWorld();
 		nCollisionShape* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel) 
 		{
 
@@ -36,7 +37,10 @@ namespace nNewton
 
 		}
 
-		
+		void INIT_COLLISION_WORLD() 
+		{
+			BuildTrees();
+		}
 		void BuildTrees()
 		{
 			/*m_StaticTree.BuildAABBTree(m_Static_Entities);
@@ -48,6 +52,9 @@ namespace nNewton
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Dynamic_Entities;
 		/*nAABBTree m_StaticTree;
 		nAABBTree m_DynamicTree;*/
+
+		std::unique_ptr<nAABBTree> m_DynamicTree;
+		std::unique_ptr<nAABBTree> m_StaticTree;
 		
 	};
 

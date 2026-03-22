@@ -2,7 +2,7 @@
 
 namespace nNewton
 {
-    class nStaticBVHTree : public nAABBTree
+    class nStaticAABBTree : public nAABBTree
     {
     public:
         

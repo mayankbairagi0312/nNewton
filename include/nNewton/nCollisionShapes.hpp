@@ -20,6 +20,14 @@ namespace nNewton
 		}
 	};
 
+	int Centroid(const nAABB& a, int axis = 0)
+	{
+		auto center = a.Center();
+		if (axis == 0) return center.x;
+		else if (axis == 1) return center.y;
+		else return center.z;
+	}
+
 	nAABB Expand(const nAABB& a, const float marg_)
 	{
 		nAABB eaabb;

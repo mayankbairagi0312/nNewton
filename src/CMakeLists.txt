@@ -12,18 +12,19 @@ set(NNEWTON_SOURCES
 "math/nTransform.cpp" 
 "dynamics/nDynamicsWorld.cpp" 
 "dynamics/nRigidBody.cpp"
-#"collision/nCollisionShapes.hpp"
+
 "collision/nBoxShape.hpp"
 "collision/nSphereShape.hpp" 
-
-    
+"collision/Collision_Broadphase/nStaticAABBTree.cpp"
+"collision/Collision_Broadphase/nDynamicAABBTree.cpp"
+"collision/nConvexShape.hpp"  
 
     
 
     
 )
 
-add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}   "collision/Collision_Broadphase/nStaticAABBTree.cpp" "collision/nConvexShape.hpp")
+add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}    )
 
 
 target_compile_features(nNewton PUBLIC cxx_std_20)
