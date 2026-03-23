@@ -5,11 +5,18 @@ namespace nNewton
     class nStaticAABBTree : public nAABBTree
     {
     public:
-        
-        nBVHNode* GetRoot() const override { return root.get(); }
+        void Rebuild(std::vector<nCollisionEntity*>& entities)
+        {
+            Clear();
+            BuildAABBTree(entities);
+        }
 
+        void Clear()
+        {
+            root.reset(); 
+        }
         
     private:
-        std::unique_ptr<nBVHNode> root;
+        
     };
 }

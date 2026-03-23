@@ -20,6 +20,12 @@ namespace nNewton
 		}
 	};
 
+	float CalSurfaceArea(const nAABB& aabb)
+	{
+		auto ext = aabb.max - aabb.min;
+		return 2.f * (ext.x * ext.y + ext.y * ext.z + ext.z * ext.x);
+	}
+
 	int Centroid(const nAABB& a, int axis = 0)
 	{
 		auto center = a.Center();

@@ -31,17 +31,34 @@ namespace nNewton
 			bounds = Merge(bounds, entities[i]->currentAABB);
 		return bounds;
 	}
+	
+	struct nSplit_SAH
+	{
+		int SPLIT_AXIS;
+		int SPLIT_INDEX;
+		int SPLIT_COST;
+	};
 
 	class nAABBTree
 	{
 	public:
 		
 		virtual ~nAABBTree() = default;
-		virtual void BuildAABBTree(std::vector<nCollisionEntity*>& entities) = 0;
+		void BuildAABBTree(std::vector<nCollisionEntity*>& entities);
 		virtual void QueryBroadPhase(const nAABB& aabb,
 			std::vector<nCollisionEntity*>& res) const = 0;
-		virtual nBVHNode* GetRoot() const = 0;
+		virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
+		
+		virtual void Clear() = 0;
+
+	protected:
+		
+		std::unique_ptr<nBVHNode> CreateLeafNode(nCollisionEntity* Ent_);
+		std::unique_ptr<nBVHNode> root;
+		nBVHNode* GetRoot() { return root.get(); }
 	private:
+		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
+		nSplit_SAH FindBestSplitSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
 		//
 	};
 

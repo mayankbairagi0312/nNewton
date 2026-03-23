@@ -22,7 +22,7 @@ set(NNEWTON_SOURCES
     
 
     
-)
+ "collision/AABBTree.cpp")
 
 add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}    )
 
