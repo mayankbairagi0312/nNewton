@@ -5,7 +5,7 @@ namespace nNewton
 {
 	void nAABBTree::BuildAABBTree(std::vector<nCollisionEntity*>& entities)
 	{
-		root = ConstructSAH(entities, 0, entities.size());
+		root = ConstructSAH(entities, 0, (int)entities.size());
 	}
 
 	std::unique_ptr<nBVHNode> nAABBTree::ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end)
@@ -102,13 +102,18 @@ namespace nNewton
 
 	std::unique_ptr<nBVHNode> nAABBTree::CreateLeafNode(nCollisionEntity* Ent_)
 	{
+		
 		auto leaf = std::make_unique<nBVHNode>();
 		leaf->Entity = Ent_;
 		leaf->nodeAABB = Ent_->marginAABB;
+		Ent_->BVHNodePtr = leaf.get(); //store leaf ptr 
 		return leaf;
 	}
 
+	/*void  nAABBTree::UpdateEntity(nCollisionEntity* entity)
+	{
+		return;
+	}*/
 
 
-
-}
+}	

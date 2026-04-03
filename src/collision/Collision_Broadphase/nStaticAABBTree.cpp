@@ -5,7 +5,7 @@ namespace nNewton
     class nStaticAABBTree : public nAABBTree
     {
     public:
-        void Rebuild(std::vector<nCollisionEntity*>& entities)
+        /*void Rebuild(std::vector<nCollisionEntity*>& entities)
         {
             Clear();
             BuildAABBTree(entities);
@@ -14,7 +14,7 @@ namespace nNewton
         void Clear()
         {
             root.reset(); 
-        }
+        }*/
         
     private:
         

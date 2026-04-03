@@ -26,7 +26,7 @@ namespace nNewton
 		return 2.f * (ext.x * ext.y + ext.y * ext.z + ext.z * ext.x);
 	}
 
-	int Centroid(const nAABB& a, int axis = 0)
+	float Centroid(const nAABB& a, int axis = 0)
 	{
 		auto center = a.Center();
 		if (axis == 0) return center.x;

@@ -12,50 +12,30 @@ namespace nNewton
 	{
 	public:
 		nCollisionWorld();
-		nCollisionShape* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel) 
-		{
 
-			nCollisionEntity data;
-			data.EntityID = ID;
-			data.isStatic = isStatic;
-			data.EntityTransform = EntityTransform;
-			data.vel = vel;
+		bool INIT_COLLISION_WORLD();
 
-			auto ent = std::make_unique<nCollisionEntity>(std::move(data));
-			nCollisionEntity* ptr = ent.get();
+		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel);
+		/*void UpdateCollisionEntity(nCollisionEntity* entity);*/
+		void BuildTrees();
 
-			if (ent->isStatic)
-			{
-				m_Static_Entities.push_back(std::move(ent));
-			}
-			else
-			{
-				m_Dynamic_Entities.push_back(std::move(ent));
-			}
-			
-			return ptr;
-
-		}
-
-		void INIT_COLLISION_WORLD() 
-		{
-			BuildTrees();
-		}
-		void BuildTrees()
-		{
-			/*m_StaticTree.BuildAABBTree(m_Static_Entities);
-			m_DynamicTree.BuildAABBTree(m_Dynamic_Entities);*/
-		}
-
+		
 	private:
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Static_Entities;
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Dynamic_Entities;
-		/*nAABBTree m_StaticTree;
-		nAABBTree m_DynamicTree;*/
 
 		std::unique_ptr<nAABBTree> m_DynamicTree;
 		std::unique_ptr<nAABBTree> m_StaticTree;
 		
+		template<typename T>
+		std::vector<T*> ToRawPtrs(std::vector<std::unique_ptr<T>>& entities)
+		{
+			std::vector<T*> raw;
+			raw.reserve(entities.size());
+			for (auto& e : entities)
+				raw.push_back(e.get());
+			return raw;
+		}
 	};
 
 	

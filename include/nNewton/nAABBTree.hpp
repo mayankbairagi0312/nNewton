@@ -3,6 +3,7 @@
 #include "nCollisionTypes.hpp"
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 namespace nNewton
 {
@@ -16,6 +17,10 @@ namespace nNewton
 		std::unique_ptr <nBVHNode> rightChild;
 		nBVHNode* parent;
 		nCollisionEntity* Entity;
+
+		uint64_t refPoint = 0;
+		bool isRefit = false;
+
 		bool isLeaf() const { return Entity != nullptr; }
 		nBVHNode() : leftChild(nullptr), rightChild(nullptr), Entity(nullptr), parent(nullptr)
 		{
@@ -36,7 +41,7 @@ namespace nNewton
 	{
 		int SPLIT_AXIS;
 		int SPLIT_INDEX;
-		int SPLIT_COST;
+		float SPLIT_COST;
 	};
 
 	class nAABBTree
@@ -45,21 +50,25 @@ namespace nNewton
 		
 		virtual ~nAABBTree() = default;
 		void BuildAABBTree(std::vector<nCollisionEntity*>& entities);
-		virtual void QueryBroadPhase(const nAABB& aabb,
-			std::vector<nCollisionEntity*>& res) const = 0;
-		virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
+		void QueryBroadPhase(const nAABB& aabb,
+			std::vector<nCollisionEntity*>& res);
+
+		///virtual void UpdateEntity(nBVHNode* leaf) = 0;
+		/*virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
 		
-		virtual void Clear() = 0;
+		virtual void Clear() = 0;*/
 
 	protected:
-		
+
+		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
+
 		std::unique_ptr<nBVHNode> CreateLeafNode(nCollisionEntity* Ent_);
 		std::unique_ptr<nBVHNode> root;
 		nBVHNode* GetRoot() { return root.get(); }
 	private:
-		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
 		nSplit_SAH FindBestSplitSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
-		//
+		
+		
 	};
 
 	

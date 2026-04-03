@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include"nCollisionShapes.hpp"
 #include "nTransform.hpp"
 #include "nDynamicsWorld.hpp"
@@ -7,8 +8,10 @@
 
 namespace nNewton
 {
+	struct nBVHNode;   
 	struct nCollisionEntity
 	{
+		nBVHNode* BVHNodePtr;
 		std::shared_ptr<nCollisionShape> EntityShape;
 		nTransform EntityTransform;
 		nAABB marginAABB;

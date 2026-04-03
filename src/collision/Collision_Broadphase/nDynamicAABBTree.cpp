@@ -1,30 +1,99 @@
 
 #include <nNewton/nAABBTree.hpp>
 #include <algorithm>
+#include <unordered_map>
+#include <queue>
+
 namespace nNewton
 {
-	
+	//for treelet reconstruction
+	struct TreeletNode
+	{
+		nBVHNode* node;
+		uint64_t refPoint;
+	};
+
+
 	class nDynamicAABBTree : public nAABBTree
 	{
 	private:
-
+		void CollectLeaves(nBVHNode* node_, std::vector<nCollisionEntity*>& Leaves);
 		nBVHNode* trav_down(nBVHNode* nodePtr, const nAABB& lAABB_);
 		void RefitNode(nBVHNode* node_);
 		void RefitUp(nBVHNode* leaf_);
-		
+		void BuildReconstrQueue(nBVHNode* node_);
+		void TreeletReconstrutSAH(nBVHNode* treelet_root);
+
 	public:
 		void InsertEntity(nCollisionEntity* Ent_);
 		void RemoveEntity(nBVHNode* leaf_);
 		void UpdateEntity(nBVHNode* leaf);
 		nBVHNode* FindBestSib(const nAABB& lAABB_);
+
 	private:
+		
+		std::deque<TreeletNode> m_ReconstructQueue;
+		
 		//std::unique_ptr<nBVHNode> root;
 
 	};
 	
 
-//=============
 
+	void nDynamicAABBTree::BuildReconstrQueue(nBVHNode* node_)
+	{
+		if (!node_ || node_->isLeaf()) return;
+		m_ReconstructQueue.push_back({ node_, node_->refPoint });
+		BuildReconstrQueue(node_->leftChild.get());                       // recurse left
+		BuildReconstrQueue(node_->rightChild.get());
+	}
+
+//=============
+	void nDynamicAABBTree::TreeletReconstrutSAH(nBVHNode* treelet_root)
+	{
+		std::vector<nCollisionEntity*> leaves;
+
+		CollectLeaves(treelet_root, leaves);
+
+		if (leaves.size() < 2) return;
+
+		auto subtree = ConstructSAH(leaves, 0, (int)leaves.size());
+
+		//swap 
+
+		nBVHNode* newparent = treelet_root->parent;
+		subtree->parent = newparent;
+
+		if (newparent == nullptr)
+		{
+			root = std::move(subtree);
+		}
+		else
+		{
+			if (newparent->leftChild.get() == treelet_root)
+			{
+				newparent->leftChild = std::move(subtree);
+			}
+			else
+			{
+				newparent->rightChild = std::move(subtree);
+			}
+			RefitUp(newparent);
+		}
+
+	}
+
+	void nDynamicAABBTree::CollectLeaves(nBVHNode* node_, std::vector<nCollisionEntity*>& Leaves)
+	{
+		if(node_ == nullptr ) return;
+		if (node_->isLeaf())
+		{
+			Leaves.push_back(node_->Entity);
+			return;
+		}
+		CollectLeaves(node_->leftChild.get(), Leaves);
+		CollectLeaves(node_->rightChild.get(), Leaves);
+	}
 
 	void nDynamicAABBTree::UpdateEntity(nBVHNode* leaf)
 	{
@@ -40,6 +109,7 @@ namespace nNewton
 			RemoveEntity(leaf);
 			InsertEntity(entity);
 		}
+		
 	}
 
 	void nDynamicAABBTree::RefitNode(nBVHNode* node_)
@@ -55,10 +125,12 @@ namespace nNewton
 		auto* node = leaf_;
 		while (node != nullptr)
 		{
-			if (!node->isLeaf()) 
-			{
-				node->nodeAABB = Merge(node->leftChild->nodeAABB,
+
+			node->nodeAABB = Merge(node->leftChild->nodeAABB,
 					node->rightChild->nodeAABB);
+			if (!node->isRefit) {
+				node->isRefit = true;
+				m_ReconstructQueue.push_back({ node, node->refPoint }); 
 			}
 			node = node->parent;
 		}
@@ -67,6 +139,8 @@ namespace nNewton
 
 	void nDynamicAABBTree::RemoveEntity(nBVHNode* leaf_)
 	{
+		leaf_->refPoint++;
+		
 		if (leaf_->parent == nullptr)
 		{
 			//leaf is root 
