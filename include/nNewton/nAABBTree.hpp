@@ -53,7 +53,7 @@ namespace nNewton
 		void QueryBroadPhase(const nAABB& aabb,
 			std::vector<nCollisionEntity*>& res);
 
-		///virtual void UpdateEntity(nBVHNode* leaf) = 0;
+		virtual void UpdateEntity(nBVHNode* leaf) {}
 		/*virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
 		
 		virtual void Clear() = 0;*/

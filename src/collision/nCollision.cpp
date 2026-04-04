@@ -23,9 +23,20 @@ namespace nNewton
 		
 	}
 
-	//void nCollisionWorld::UpdateCollisionEntity(nCollisionEntity* entity)
+	//void nCollisionWorld::StepCollision(nCollisionEntity* entity)
 	//{
-	//	//m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
+	//	m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
+	//	
+	//	
+	//		// write phase
+	//		for (auto& ent : m_Dynamic_Entities)
+	//			m_DynamicTree->UpdateEntity(ent->leafNode);
+
+	//		m_DynamicTree->TreeletStepRestructure(); 
+
+	//		// read phase
+	//		
+	//	
 
 	//}
 

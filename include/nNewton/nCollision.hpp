@@ -16,7 +16,7 @@ namespace nNewton
 		bool INIT_COLLISION_WORLD();
 
 		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel);
-		/*void UpdateCollisionEntity(nCollisionEntity* entity);*/
+		void StepCollision(nCollisionEntity* entity);
 		void BuildTrees();
 
 		
