@@ -54,11 +54,12 @@ namespace nNewton
 			std::vector<nCollisionEntity*>& res);
 
 		virtual void UpdateEntity(nBVHNode* leaf) {}
-		/*virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
+		virtual void TreeletStepRestructure() {}
+		virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
 		
-		virtual void Clear() = 0;*/
+		virtual void Clear() = 0;
 
-	protected:
+	protected: 
 
 		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
 

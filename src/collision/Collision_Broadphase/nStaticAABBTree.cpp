@@ -5,16 +5,16 @@ namespace nNewton
     class nStaticAABBTree : public nAABBTree
     {
     public:
-        /*void Rebuild(std::vector<nCollisionEntity*>& entities)
+        void Rebuild(std::vector<nCollisionEntity*>& entities) override
         {
             Clear();
             BuildAABBTree(entities);
         }
 
-        void Clear()
+        void Clear() override
         {
             root.reset(); 
-        }*/
+        }
         
     private:
         

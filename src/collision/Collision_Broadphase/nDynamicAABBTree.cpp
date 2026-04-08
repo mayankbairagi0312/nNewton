@@ -25,20 +25,35 @@ namespace nNewton
 		void TreeletReconstrutSAH(nBVHNode* treelet_root);
 
 	public:
+		void Rebuild(std::vector<nCollisionEntity*>& entities) override;
+		void Clear() override;
 		void InsertEntity(nCollisionEntity* Ent_);
 		void RemoveEntity(nBVHNode* leaf_);
-		void UpdateEntity(nBVHNode* leaf);
-		void TreeletStepRestructure();
+		void UpdateEntity(nBVHNode* leaf) override;
+		void TreeletStepRestructure() override;
 		nBVHNode* FindBestSib(const nAABB& lAABB_);
 
 	private:
 		
 		std::deque<TreeletNode> m_ReconstructQueue;
 
-		//std::unique_ptr<nBVHNode> root;
-
 	};
-	
+
+
+	void nDynamicAABBTree::Rebuild(std::vector<nCollisionEntity*>& entities)
+	{
+		Clear();
+		BuildAABBTree(entities);
+		BuildReconstrQueue(root.get());
+	}
+
+	void nDynamicAABBTree::Clear()
+	{
+		m_ReconstructQueue.clear();
+		root.reset();
+	}
+
+
 	void nDynamicAABBTree::TreeletStepRestructure() {
 
 		if (m_ReconstructQueue.empty()) return;

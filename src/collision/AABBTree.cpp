@@ -110,10 +110,6 @@ namespace nNewton
 		return leaf;
 	}
 
-	/*void  nAABBTree::UpdateEntity(nCollisionEntity* entity)
-	{
-		return;
-	}*/
 
 
 }	
