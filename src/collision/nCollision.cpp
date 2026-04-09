@@ -66,4 +66,34 @@ namespace nNewton
 
 	}
 
+
+	//later replace with swap and pop & id map somthing ...  
+	bool nCollisionWorld::RemoveCollisionEntity(nEntity_ID& ID, bool isStatic)
+	{
+		auto& container = isStatic ? m_Static_Entities : m_Dynamic_Entities;
+
+		
+		auto it = std::find_if(container.begin(), container.end(),
+			[&ID](const std::unique_ptr<nCollisionEntity>& ent) {
+				return ent->EntityID == ID;
+			});
+
+		if (it == container.end()) return false; 
+
+		nCollisionEntity* ent = it->get();
+
+		
+		if (isStatic) {
+			auto sentity = ToRawPtrs(m_Static_Entities);
+			m_StaticTree->Rebuild(sentity);
+		}
+		else {
+			if (ent->BVHNodePtr)
+				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
+		}
+
+		// now safe to destroy — tree no longer holds this ptr
+		container.erase(it);
+		return true;
+	}
 }

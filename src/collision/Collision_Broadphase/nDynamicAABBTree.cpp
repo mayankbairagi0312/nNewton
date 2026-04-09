@@ -28,7 +28,7 @@ namespace nNewton
 		void Rebuild(std::vector<nCollisionEntity*>& entities) override;
 		void Clear() override;
 		void InsertEntity(nCollisionEntity* Ent_);
-		void RemoveEntity(nBVHNode* leaf_);
+		void RemoveEntity(nBVHNode* leaf_) override;
 		void UpdateEntity(nBVHNode* leaf) override;
 		void TreeletStepRestructure() override;
 		nBVHNode* FindBestSib(const nAABB& lAABB_);

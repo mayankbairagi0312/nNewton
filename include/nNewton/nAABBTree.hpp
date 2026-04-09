@@ -52,8 +52,8 @@ namespace nNewton
 		void BuildAABBTree(std::vector<nCollisionEntity*>& entities);
 		void QueryBroadPhase(const nAABB& aabb,
 			std::vector<nCollisionEntity*>& res);
-
 		virtual void UpdateEntity(nBVHNode* leaf) {}
+		virtual void RemoveEntity(nBVHNode* leaf_){}
 		virtual void TreeletStepRestructure() {}
 		virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
 		
