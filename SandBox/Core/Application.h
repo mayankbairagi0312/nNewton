@@ -9,6 +9,8 @@
 #include "Renderer/RenderSystem.cpp"
 #include "DebugUI/DebugUI.cpp"
 #include <nNewton/nMath.hpp>
+#include <nNewton/nCollision.hpp>
+#include "PhysicsSystem/PhysicsSystem.hpp"
 
 class Application {
 private :
@@ -22,6 +24,9 @@ private :
 	//OpneGLDebugRenderer* m_debugDrawer;
 	//std::unique_ptr<OpneGLDebugRenderer> m_debugDrawer;
 	std::unique_ptr<DebugUIEditor> m_DebugUI = std::make_unique<DebugUIEditor>();
+	std::unique_ptr<nNewton::nCollisionWorld> m_CollisionWorld = std::make_unique<nNewton::nCollisionWorld>();
+	std::unique_ptr<nNewton::nDynamicsWorld> m_DdynamicWorld = std::make_unique<nNewton::nDynamicsWorld>();
+	std::unique_ptr<PhysicsSystem> m_physicsSystem = std::make_unique<PhysicsSystem>();
 	Camera m_camera;
 
 	Uint64 m_CurrTime;

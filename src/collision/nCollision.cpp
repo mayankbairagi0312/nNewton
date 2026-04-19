@@ -14,7 +14,6 @@ namespace nNewton
 	}
 	bool nCollisionWorld::INIT_COLLISION_WORLD()
 	{
-		BuildTrees();
 		return true;
 	}
 	void nCollisionWorld::BuildTrees()
@@ -22,7 +21,7 @@ namespace nNewton
 		auto rawPtrVec = ToRawPtrs(m_Static_Entities);
 		if(!rawPtrVec.empty())m_StaticTree->BuildAABBTree(rawPtrVec);
 		rawPtrVec.clear();
-		rawPtrVec = ToRawPtrs(m_Static_Entities);
+		rawPtrVec = ToRawPtrs(m_Dynamic_Entities);
 		if (!rawPtrVec.empty())m_DynamicTree->BuildAABBTree(rawPtrVec);
 
 	}
@@ -41,7 +40,7 @@ namespace nNewton
 			//read phase
 	}
 
-	nCollisionEntity* nCollisionWorld::CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel)
+	nCollisionEntity* nCollisionWorld::CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel,std::shared_ptr<nCollisionShape> ColisionShape)
 	{
 
 		nCollisionEntity data;
@@ -49,6 +48,11 @@ namespace nNewton
 		data.isStatic = isStatic;
 		data.EntityTransform = EntityTransform;
 		data.vel = vel;
+
+
+		data.currentAABB = ColisionShape->getAABB(EntityTransform);
+		data.marginAABB = Expand(data.currentAABB, FAT_MARGIN);
+	
 
 		auto ent = std::make_unique<nCollisionEntity>(std::move(data));
 		nCollisionEntity* ptr = ent.get();
@@ -92,8 +96,11 @@ namespace nNewton
 				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
 		}
 
-		// now safe to destroy — tree no longer holds this ptr
+
 		container.erase(it);
 		return true;
 	}
-}
+
+	
+
+} //namespace nNewton

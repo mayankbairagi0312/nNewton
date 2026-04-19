@@ -110,6 +110,19 @@ namespace nNewton
 		return leaf;
 	}
 
+	void nAABBTree::DebugDrawTreeNode(nBVHNode* node, int depth, std::function<void(const nAABB&, int, bool, bool)> callback)
+	{
+		if (!node) return;
+		bool isLeaf = node->isLeaf();
+		callback(node->nodeAABB, depth, isLeaf, node->isRefit);
+		DebugDrawTreeNode(node->leftChild.get(), depth + 1, callback);
+		DebugDrawTreeNode(node->rightChild.get(), depth + 1, callback);
+	}
 
+	void nAABBTree::DebugDrawTree(std::function<void(const nAABB&, int, bool, bool)> callback)
+	{
+		if (!root) return;
+		DebugDrawTreeNode(root.get(), 0, callback);
+	}
 
 }	

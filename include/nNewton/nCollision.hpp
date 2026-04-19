@@ -15,12 +15,15 @@ namespace nNewton
 
 		bool INIT_COLLISION_WORLD();
 
-		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel);
+		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel, std::shared_ptr<nCollisionShape> CollisionShape);
 		bool RemoveCollisionEntity(nEntity_ID& ID, bool isStatic);
 		void StepCollision(nCollisionEntity* entity);
 		void BuildTrees();
-		
-		
+
+	
+		nAABBTree* GetStaticTree() { return m_StaticTree.get(); }
+		nAABBTree* GetDynamicTree() { return m_DynamicTree.get(); }
+
 	private:
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Static_Entities;
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Dynamic_Entities;

@@ -41,8 +41,15 @@ bool Application::Initialize() {
 	m_input.SetCamera(m_camera);
 
 
+
+	//init physics sys
+	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_CollisionWorld.get()))
+	{
+		std::cerr << "Physics ki MKC" << std::endl;
+	};
+
 	//init debug render
-	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer))
+	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_CollisionWorld.get(), m_DdynamicWorld.get()))
 	{
 		std::cerr << "camera ki MKC" << std::endl;
 	}
@@ -50,6 +57,12 @@ bool Application::Initialize() {
 	//default scene setup
 	m_Render_System.defaultScene();
 
+	m_CollisionWorld->BuildTrees();
+
+	
+
+	
+	
 
 
 	m_camera.setPosition(nNewton::nVector3(0.0f, 5.0f, 15.0f));
