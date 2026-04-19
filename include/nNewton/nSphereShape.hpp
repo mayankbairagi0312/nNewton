@@ -1,9 +1,10 @@
-#include <nNewton/nCollisionShapes.hpp>
+#include "nCollisionShapes.hpp"
 
 namespace nNewton
 {
 	class nSphereShape : public nCollisionShape
 	{
+	public:
 		float radius;
 		nSphereShape(const float radi) : radius(radi)
 		{ }

@@ -1,4 +1,4 @@
-#include <nNewton/nCollisionShapes.hpp>
+#include "nCollisionShapes.hpp"
 #include <vector>
 
 
