@@ -13,11 +13,10 @@ set(NNEWTON_SOURCES
 "dynamics/nDynamicsWorld.cpp" 
 "dynamics/nRigidBody.cpp"
 
-"collision/nBoxShape.hpp"
-"collision/nSphereShape.hpp" 
+
 "collision/Collision_Broadphase/nStaticAABBTree.cpp"
 "collision/Collision_Broadphase/nDynamicAABBTree.cpp"
-"collision/nConvexShape.hpp"  
+
 
     
 
