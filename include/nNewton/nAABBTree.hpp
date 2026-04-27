@@ -29,6 +29,15 @@ namespace nNewton
 
 	};
 
+	struct nBVHStats {
+		int totalNodes = 0;
+		int leafNodes = 0;
+		int dirtyNodes = 0;
+		int maxDepth = 0;
+		float avgDepth = 0.f;
+		int queueSize = 0;  // dynamic tree only
+	};
+
 
 	inline nAABB ComputeBounds(const std::vector<nCollisionEntity*>& entities, int start, int end)
 	{
@@ -62,6 +71,11 @@ namespace nNewton
 
 		void DebugDrawTree(std::function<void(const nAABB&, int, bool, bool)> callback);
 		nBVHNode* GetRoot() { return root.get(); }
+
+
+		virtual nBVHStats CollectStats() const {
+			return CollectStatsRecursive(root.get(), 0);
+		}
 	protected: 
 
 		std::unique_ptr<nBVHNode> ConstructSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
@@ -71,7 +85,7 @@ namespace nNewton
 		
 	private:
 		nSplit_SAH FindBestSplitSAH(std::vector<nCollisionEntity*>& entities, int start, int end);
-
+		nBVHStats CollectStatsRecursive(nBVHNode* node, int depth) const;
 		void DebugDrawTreeNode(nBVHNode* node, int depth, std::function<void(const nAABB&, int, bool, bool)> callback);
 		
 		

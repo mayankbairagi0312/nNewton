@@ -4,17 +4,22 @@
 #include "Core/Window.h"
 #include"Renderer/DebugRenderer.hpp"
 #include <memory>
+#include <nNewton/nCollision.hpp>
+#include<nNewton/nAABBTree.hpp>
 
 class DebugUIEditor {
 
 private:
 	Window* SDL_Window; 
 	std::shared_ptr<DebugRenderer>  debugRenderer;
+	nNewton::nCollisionWorld* m_CollisionWorld;
+	
 public:
-	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render)
+	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nCollisionWorld * collisionW)
 	{	
 		SDL_Window = window;
 		debugRenderer = render;
+		m_CollisionWorld = collisionW;
 		std::cout << "debug render this=" << debugRenderer.get() << std::endl;
 		
 		IMGUI_CHECKVERSION();
@@ -121,5 +126,41 @@ public:
 		ImGui::End();
 
 	}
+	
+
+	
+	void DrawBVHStats() {
+		
+		nNewton::nBVHStats staticStats = m_CollisionWorld->GetStaticTree()->CollectStats();
+		nNewton::nBVHStats dynamicStats = m_CollisionWorld->GetDynamicTree()->CollectStats();
+
+		ImGui::Begin("BVH Debug");
+
+		if (ImGui::CollapsingHeader("Static Tree")) {
+			ImGui::Text("Total Nodes  : %d", staticStats.totalNodes);
+			ImGui::Text("Leaf Nodes   : %d", staticStats.leafNodes);
+			ImGui::Text("Max Depth    : %d", staticStats.maxDepth);
+			ImGui::Text("Avg Depth    : %.2f", staticStats.avgDepth);
+		}
+
+		if (ImGui::CollapsingHeader("Dynamic Tree")) {
+			ImGui::Text("Total Nodes  : %d", dynamicStats.totalNodes);
+			ImGui::Text("Leaf Nodes   : %d", dynamicStats.leafNodes);
+			ImGui::Text("Dirty Nodes  : %d", dynamicStats.dirtyNodes);
+			ImGui::Text("Max Depth    : %d", dynamicStats.maxDepth);
+			ImGui::Text("Avg Depth    : %.2f", dynamicStats.avgDepth);
+			ImGui::Text("Queue Size   : %d", dynamicStats.queueSize);
+		}
+
+		/*ImGui::Separator();
+		ImGui::Checkbox("Draw Static Tree", &m_DrawStatic);
+		ImGui::Checkbox("Draw Dynamic Tree", &m_DrawDynamic);
+		ImGui::Checkbox("Draw Fat AABBs", &m_DrawFatAABB);
+		ImGui::SliderInt("Max Draw Depth", &m_DebugMaxDepth, 1,
+			std::max(staticStats.maxDepth, dynamicStats.maxDepth));*/
+
+		ImGui::End();
+	}
+
 	
 };

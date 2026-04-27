@@ -125,4 +125,29 @@ namespace nNewton
 		DebugDrawTreeNode(root.get(), 0, callback);
 	}
 
+	
+	nBVHStats nAABBTree::CollectStatsRecursive(nBVHNode* node, int depth) const
+	{
+		if (!node) return {};
+
+		nBVHStats s;
+		s.totalNodes = 1;
+		s.maxDepth = depth;
+		s.avgDepth = (float)depth;
+
+		if (node->isRefit)    s.dirtyNodes = 1;
+		if (node->isLeaf()) { s.leafNodes = 1; return s; }
+
+		nBVHStats left = CollectStatsRecursive(node->leftChild.get(), depth + 1);
+		nBVHStats right = CollectStatsRecursive(node->rightChild.get(), depth + 1);
+
+		s.totalNodes += left.totalNodes + right.totalNodes;
+		s.leafNodes += left.leafNodes + right.leafNodes;
+		s.dirtyNodes += left.dirtyNodes + right.dirtyNodes;
+		s.maxDepth = std::max({ s.maxDepth, left.maxDepth, right.maxDepth });
+		s.avgDepth = (s.avgDepth + left.avgDepth + right.avgDepth) / 3.f;
+
+		return s;
+	}
+
 }	

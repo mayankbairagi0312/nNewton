@@ -25,6 +25,11 @@ namespace nNewton
 		void TreeletReconstrutSAH(nBVHNode* treelet_root);
 
 	public:
+		nBVHStats CollectStats() const override {
+			nBVHStats s = nAABBTree::CollectStats();
+			s.queueSize = (int)m_ReconstructQueue.size();
+			return s;
+		}
 		void Rebuild(std::vector<nCollisionEntity*>& entities) override;
 		void Clear() override;
 		void InsertEntity(nCollisionEntity* Ent_);

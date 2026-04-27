@@ -32,7 +32,7 @@ bool Application::Initialize() {
 	glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
 
 	// init UI
-	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer))
+	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer,m_CollisionWorld.get()))
 	{
 		std::cerr << "UI : kya cheda bosdi \n" << std::endl;
 	}
