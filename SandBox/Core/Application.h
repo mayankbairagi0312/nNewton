@@ -6,8 +6,8 @@
 #include "Input.h"
 #include "Renderer/DebugRenderer.hpp"
 //#include"Renderer/GL_Debug_Renderer.cpp"
-#include "Renderer/RenderSystem.cpp"
-#include "DebugUI/DebugUI.cpp"
+#include "Renderer/RenderSystem.hpp"
+#include "DebugUI/DebugUI.hpp"
 #include <nNewton/nMath.hpp>
 #include <nNewton/nCollision.hpp>
 #include "PhysicsSystem/PhysicsSystem.hpp"

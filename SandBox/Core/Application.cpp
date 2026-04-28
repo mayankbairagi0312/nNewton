@@ -49,7 +49,7 @@ bool Application::Initialize() {
 	};
 
 	//init debug render
-	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_CollisionWorld.get(), m_DdynamicWorld.get()))
+	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_CollisionWorld.get(), m_DdynamicWorld.get(), m_DebugUI.get()))
 	{
 		std::cerr << "camera ki MKC" << std::endl;
 	}

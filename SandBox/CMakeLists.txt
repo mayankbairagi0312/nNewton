@@ -2,18 +2,20 @@ find_package(SDL3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 add_executable(nNewtonTest
-    main.cpp
-    Core/Application.cpp
+    "main.cpp"
+    "Core/Application.cpp"
     "Renderer/DebugRenderer.cpp"
-    DebugUI/DebugUI.cpp
-    Renderer/Shader.cpp
+    "DebugUI/DebugUI.cpp"
+    "Renderer/Shader.cpp"
  "Core/Application.h" 
  "Core/Window.h" 
  "Core/Window.cpp" 
  "Core/Input.h"
  "Core/Input.cpp" 
- 
+ "Renderer/RenderSystem.hpp"
+ "DebugUI/DebugUI.hpp"
  "Renderer/Camera.cpp"
+ "Renderer/GL_Debug_Renderer.hpp"
  "Renderer/GL_Debug_Renderer.cpp"
 "Renderer/RenderSystem.cpp"
  "common.cpp")
