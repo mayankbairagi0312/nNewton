@@ -2,7 +2,9 @@
 
 namespace nNewton
 {
-
+	nDynamicsWorld::nDynamicsWorld() {
+		m_CollisionWorld = std::make_unique<nCollisionWorld>();
+	}
 	
 	nEntity_ID nDynamicsWorld::Create_Entity(const nRigidBodyInfo& info_)
 	{
@@ -36,6 +38,8 @@ namespace nNewton
 
 		if (!e.alive || e.Gen != gen)
 			return;
+
+		m_CollisionWorld->RemoveCollisionEntity(id, e.Entity.IS_STATIC_);
 
 		e.alive = false;
 		e.Entity = nRigidBody();

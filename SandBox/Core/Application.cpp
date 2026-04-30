@@ -32,7 +32,7 @@ bool Application::Initialize() {
 	glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
 
 	// init UI
-	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer,m_CollisionWorld.get()))
+	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer, m_nWorld->GetCollisionWorld()))
 	{
 		std::cerr << "UI : kya cheda bosdi \n" << std::endl;
 	}
@@ -43,13 +43,13 @@ bool Application::Initialize() {
 
 
 	//init physics sys
-	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_CollisionWorld.get()))
+	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_nWorld->GetCollisionWorld()))
 	{
 		std::cerr << "Physics ki MKC" << std::endl;
 	};
 
 	//init debug render
-	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_CollisionWorld.get(), m_DdynamicWorld.get(), m_DebugUI.get()))
+	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_nWorld->GetCollisionWorld(), m_nWorld.get(), m_DebugUI.get()))
 	{
 		std::cerr << "camera ki MKC" << std::endl;
 	}
@@ -57,7 +57,8 @@ bool Application::Initialize() {
 	//default scene setup
 	m_Render_System.defaultScene();
 
-	m_CollisionWorld->BuildTrees();
+	//build Tree 
+	m_nWorld->GetCollisionWorld()->BuildTrees();
 
 	
 

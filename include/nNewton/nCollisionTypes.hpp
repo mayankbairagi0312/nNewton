@@ -3,7 +3,7 @@
 
 #include"nCollisionShapes.hpp"
 #include "nTransform.hpp"
-#include "nDynamicsWorld.hpp"
+#include "nTypes.hpp"
 #include <memory>
 
 namespace nNewton

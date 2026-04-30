@@ -4,13 +4,10 @@
 #include<vector>
 #include "nTransform.hpp"
 #include "nRigidBody.hpp"
+#include"nCollision.hpp"
+#include "nTypes.hpp"
 
 namespace nNewton {
-
-
-	using nEntity_ID = uint32_t;
-	static constexpr nEntity_ID INVALID_ENTITY = 0;
-
 
 	struct nEntity
 	{
@@ -19,24 +16,11 @@ namespace nNewton {
 		bool      alive = false;
 	};
 
-	inline nEntity_ID MAKE_ID(uint32_t index_, uint32_t gen_)
-	{
-		return (gen_ << 16) | index_;
-	}
-
-	inline uint32_t INDEX_FROM_ID(nEntity_ID id_)
-	{
-		return id_ & 0xFFFF;
-	}
-
-	inline uint32_t GEN_FROM_ID(nEntity_ID id_)
-	{
-		return id_ >> 16;
-	}
-
 	class nDynamicsWorld
 	{
 	public:
+
+		nDynamicsWorld();
 
 		nEntity_ID Create_Entity(const nRigidBodyInfo& _info);
 
@@ -50,11 +34,13 @@ namespace nNewton {
 
 		void Step(float deltaT_);
 
+		nCollisionWorld* GetCollisionWorld() { return m_CollisionWorld.get(); }
+		const nCollisionWorld* GetCollisionWorld() const { return m_CollisionWorld.get(); }
 
 	private:
 		std::vector<nEntity> m_Entity;
 		std::vector<uint32_t> m_FreeList;
-
+		std::unique_ptr<nCollisionWorld> m_CollisionWorld;
 		
 
 	};

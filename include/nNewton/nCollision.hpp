@@ -1,9 +1,9 @@
 #pragma once
 
-#include"nCollisionTypes.hpp"
-#include "nDynamicsWorld.hpp"
+#include "nCollisionTypes.hpp"
+#include "nTypes.hpp"
 #include "nAABBTree.hpp"
-
+#include <memory>
 
 namespace nNewton
 {
