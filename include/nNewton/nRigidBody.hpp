@@ -1,6 +1,10 @@
 #pragma once 
 
 #include "nTransform.hpp"
+#include <memory>   
+#include"nCollisionShapes.hpp"
+#include "nBoxShape.hpp"
+#include"nSphereShape.hpp"
 
 namespace nNewton {
 	struct nRigidBodyInfo {
@@ -8,6 +12,25 @@ namespace nNewton {
 		nVector3 INIT_VELOCITY_;
 		nTransform INIT_TRANSFORM_;
 		bool IS_STATIC_ = false;
+	private:
+		std::shared_ptr<nCollisionShape> m_Shape;
+
+	public:
+		void SetBoxShape(nVector3 hext)
+		{
+			m_Shape = std::make_shared<nNewton::nBoxShape>(hext);
+		}
+
+		void SetSphereShape(float Radi)
+		{
+			m_Shape = std::make_shared<nNewton::nSphereShape>(Radi);
+		}
+
+		std::shared_ptr<nCollisionShape> getCollisionShape() const
+		{
+			return m_Shape;
+		}
+
 	};
 	struct nRigidBody
 	{

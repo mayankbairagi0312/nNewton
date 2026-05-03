@@ -1,3 +1,4 @@
+#pragma once
 #include "nCollisionShapes.hpp"
 
 namespace nNewton
