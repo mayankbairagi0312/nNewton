@@ -11,25 +11,27 @@
 #include<nNewton/nCollisionShapes.hpp>
 #include<nNewton/nBoxShape.hpp>
 #include <nNewton/nSphereShape.hpp>
-#include "DebugUI/DebugUI.hpp"
+//#include "DebugUI/DebugUI.hpp"
+
+enum struct RenderObjectType
+{
+	DEBUG_BOX,
+	DEBUG_SPHERE,
+	DEBUG_CAPSULE,
+	DEBUG_PLANE
+};
+struct RenderObject
+{
+	RenderObjectType objType;
+	nNewton::nVector4 color;
+};
 
 class nRenderSystem
 {
 
 
 private:
-	enum struct RenderObjectType
-	{
-		DEBUG_BOX,
-		DEBUG_SPHERE,
-		DEBUG_CAPSULE,
-		DEBUG_PLANE
-	};
-	struct RenderObject
-	{
-		RenderObjectType objType;
-		nNewton::nVector4 color;
-	};
+	
 
 
 	std::unordered_map<nNewton::nEntity_ID, RenderObject> render_Map;
@@ -37,12 +39,12 @@ private:
 	nNewton::nCollisionWorld* m_collisionWorld;
 	std::shared_ptr<DebugRenderer> m_Renderer;
 	std::unique_ptr<OpneGLDebugRenderer> m_DebugDrawer;
-	DebugUIEditor* m_DebugUI;
+	/*DebugUIEditor* m_DebugUI;*/
 
 public:
 	void DrawBVHTree(nNewton::nAABBTree* tree, int maxDepth = 10);
 	bool INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW,
-		nNewton::nDynamicsWorld* dynamicW, DebugUIEditor* UI);
+		nNewton::nDynamicsWorld* dynamicW);
 	void Debug_Render();
 	void Debug_DrawAxis(const nNewton::nVector3& camPOS);
 	void Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color);
@@ -53,9 +55,15 @@ public:
 	void End_Debug_Draw();
 	void ShutDown_DebugRender();
 
+	//void InsertToDraw(nNewton::nEntity_ID id, RenderObject obj);
 
 
 	void defaultScene();
+	void RegisterEntity(nNewton::nEntity_ID id,
+		RenderObjectType    type,
+		nNewton::nVector4   color);
+
+	void UnregisterEntity(nNewton::nEntity_ID id);
 
 };
 

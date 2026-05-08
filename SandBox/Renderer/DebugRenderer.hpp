@@ -40,7 +40,12 @@ enum class flags : uint32_t
 	Joints			= 1 << 3,  
 	Normals			= 1 << 4,  
 	Velocity		= 1 << 5,  
-	CenterOfMass	= 1 << 6,  
+	CenterOfMass	= 1 << 6, 
+
+	BVH_Static = 1 << 7,
+	BVH_Dynamic = 1 << 8,
+	BVH_FatAABB = 1 << 9,
+
 	All				= 0xFFFFFFF
 
 };
@@ -103,6 +108,10 @@ public:
 		m_Drawer->clearRenderer();
 	}
 
+
+	void SetBVHMaxDepth(int d) { m_BVHMaxDepth = d; }
+	int  GetBVHMaxDepth() const { return m_BVHMaxDepth; }
+
 private:
 	int m_LineCount;
 	IDebugRenderer* m_Drawer;
@@ -110,5 +119,5 @@ private:
 	bool m_enabled;
 	bool m_Inframe;
 	
-
+	int m_BVHMaxDepth = 5;
 };

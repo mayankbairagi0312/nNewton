@@ -21,7 +21,7 @@ void nRenderSystem::DrawBVHTree(nNewton::nAABBTree * tree, int maxDepth )
 		});
 }
 
-bool nRenderSystem::INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW, nNewton::nDynamicsWorld* dynamicW, DebugUIEditor* UI)
+bool nRenderSystem::INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW, nNewton::nDynamicsWorld* dynamicW)
 {
 	m_Renderer = Drend;
 	m_collisionWorld = collisionW;
@@ -29,7 +29,7 @@ bool nRenderSystem::INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRende
 	m_DebugDrawer = std::make_unique<OpneGLDebugRenderer>();
 	m_Renderer->SetDrawer(m_DebugDrawer.get());
 
-	m_DebugUI = UI;
+	//m_DebugUI = UI;
 
 
 	if (!m_DebugDrawer->init_renderer(camera))
@@ -61,7 +61,15 @@ void nRenderSystem::Debug_Render()
 	auto IsAABB = m_Renderer->IsFlagEnabled(flags::AABB);
 	auto IsContacts = m_Renderer->IsFlagEnabled(flags::Contacts);
 
+	if (IsAABB) {
+		if (m_Renderer->IsFlagEnabled(flags::BVH_Static))
+			DrawBVHTree(m_collisionWorld->GetStaticTree(),
+				m_Renderer->GetBVHMaxDepth());
 
+		if (m_Renderer->IsFlagEnabled(flags::BVH_Dynamic))
+			DrawBVHTree(m_collisionWorld->GetDynamicTree(),
+				m_Renderer->GetBVHMaxDepth());
+	}
 
 
 	/*auto* dynRoot = m_collisionWorld->GetDynamicTree()->GetRoot();
@@ -83,13 +91,7 @@ void nRenderSystem::Debug_Render()
 		{
 			Debug_DrawShape(ro.objType, model, ro.color);
 		}
-		if (IsAABB)
-		{
-			if (m_DebugUI->DrawStatic())
-				DrawBVHTree(m_collisionWorld->GetStaticTree(), m_DebugUI->GetMaxDepth());
-			if (m_DebugUI->DrawDynamic())
-				DrawBVHTree(m_collisionWorld->GetDynamicTree(), m_DebugUI->GetMaxDepth());
-		}
+		
 		if (IsContacts)
 		{
 
@@ -156,6 +158,9 @@ void nRenderSystem::Debug_DrawShape(const RenderObjectType& objType, const nNewt
 	}
 }
 
+
+
+
 // default scene (deafult Cube :) )
 void nRenderSystem::defaultScene()
 {
@@ -206,5 +211,19 @@ void nRenderSystem::defaultScene()
 	render_Map.insert({ boxID2, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f)} });
 	render_Map.insert({ SphereID, {RenderObjectType::DEBUG_SPHERE, nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f)} });
 	render_Map.insert({ planeID, {RenderObjectType::DEBUG_PLANE, nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f)} });
+}
+
+
+
+void nRenderSystem::RegisterEntity(nNewton::nEntity_ID id,
+	RenderObjectType    type,
+	nNewton::nVector4   color)
+{
+	render_Map[id] = RenderObject{ type, color };
+}
+
+void nRenderSystem::UnregisterEntity(nNewton::nEntity_ID id)
+{
+	render_Map.erase(id);
 }
 
