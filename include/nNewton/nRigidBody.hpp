@@ -1,5 +1,6 @@
 #pragma once 
 
+#include <iostream>
 #include "nTransform.hpp"
 #include <memory>   
 #include"nCollisionShapes.hpp"
@@ -28,6 +29,7 @@ namespace nNewton {
 
 		std::shared_ptr<nCollisionShape> getCollisionShape() const
 		{
+			std::cout << m_Shape << "\n";
 			return m_Shape;
 		}
 

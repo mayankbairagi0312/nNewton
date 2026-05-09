@@ -1,3 +1,5 @@
+#pragma once
+
 #include<nNewton/nDynamicsWorld.hpp>
 #include<nNewton/nRigidBody.hpp>
 #include <nNewton/nTransform.hpp>
@@ -5,6 +7,8 @@
 #include <nNewton/nCollision.hpp>
 
 using namespace nNewton;
+
+enum class SimState { Stopped, Playing, Paused };
 
 class PhysicsSystem
 {

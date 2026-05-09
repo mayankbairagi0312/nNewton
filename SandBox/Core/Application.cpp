@@ -32,7 +32,7 @@ bool Application::Initialize() {
 	glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
 
 	// init UI
-	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer, m_nWorld->GetCollisionWorld()))
+	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer, m_nWorld.get(), &m_Render_System))
 	{
 		std::cerr << "UI : kya cheda bosdi \n" << std::endl;
 	}
@@ -49,7 +49,7 @@ bool Application::Initialize() {
 	};
 
 	//init debug render
-	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_nWorld->GetCollisionWorld(), m_nWorld.get(), m_DebugUI.get()))
+	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_nWorld->GetCollisionWorld(), m_nWorld.get()))
 	{
 		std::cerr << "camera ki MKC" << std::endl;
 	}

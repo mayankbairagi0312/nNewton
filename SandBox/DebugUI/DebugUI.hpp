@@ -6,8 +6,19 @@
 #include "Core/Window.h"
 #include"Renderer/DebugRenderer.hpp"
 #include <memory>
-#include <nNewton/nCollision.hpp>
+#include "Renderer/RenderSystem.hpp"
 #include<nNewton/nAABBTree.hpp>
+#include <nNewton/nTransform.hpp>
+#include<nNewton/nDynamicsWorld.hpp>
+#include "PhysicsSystem/PhysicsSystem.hpp"
+#include"common.hpp"
+
+
+struct EntityMeta {
+	nNewton::nEntity_ID id;
+	std::string         name;
+	bool                visible = true;
+};
 
 
 class DebugUIEditor {
@@ -15,23 +26,78 @@ class DebugUIEditor {
 private:
 	Window* SDL_Window;
 	std::shared_ptr<DebugRenderer>  debugRenderer;
-	nNewton::nCollisionWorld* m_CollisionWorld;
-	bool m_DrawStatic = true;
-	bool m_DrawDynamic = true;
-	bool m_DrawFatAABB = false;
-	int  m_DebugMaxDepth = 5;
+	nNewton::nDynamicsWorld* m_World;
+	nRenderSystem* m_RenderSystem = nullptr;
+
+	std::vector<EntityMeta>        m_Entities;
+	nNewton::nEntity_ID            m_SelectedID = {};       
+	char                           m_RenameBuffer[64] = {};
+
+
+	char                           m_NewName[64] = "Entity";
+	float                          m_NewMass = 1.0f;
+	float                          m_NewPos[3] = {};
+	bool						   m_NewIsStatic;
+	float						   m_NewVelocity[3] = {};
+	float						   m_NewScale[3] = {};
+
+	int                            m_NewShapeType = 0;        
+	float                          m_NewHalfExt[3] = { 0.5f, 0.5f, 0.5f };
+	float                          m_NewRadius = 0.5f;
+	nVector4 m_NewColor = { nColor::Magenta.r,nColor::Magenta.g,nColor::Magenta.b,nColor::Magenta.a };
+
+
+	float m_EditPos[3] = {};
+	float m_EditRot[3] = {};  
+	float m_EditScale[3] = { 1,1,1 };
+
+	SimState m_SimState = SimState::Stopped;
+	bool     m_StepRequested = false;
+
+	struct TransformSnapshot {
+		nNewton::nEntity_ID id;
+		float pos[3];
+		float rot[3];   
+	};
+	std::vector<TransformSnapshot> m_PlaySnapshot;
+
+	void DrawEntityList();
+	void DrawAddEntityPopup();
+	void DrawInspector();
+	void DrawTransformSection();
+	void DrawPhysicsSection();
+	void DrawPlayBar();
+
+	EntityMeta* FindMeta(nNewton::nEntity_ID id);
+	const EntityMeta* FindMeta(nNewton::nEntity_ID id) const;
+
+	void SyncEditCacheFromWorld();          
+	void FlushEditCacheToWorld();
+
+	static const char* ShapeTypeName(int t);
 
 public:
-	bool DrawStatic()    const { return m_DrawStatic; }
-	bool DrawDynamic()   const { return m_DrawDynamic; }
-	bool DrawFatAABB()   const { return m_DrawFatAABB; }
-	int  GetMaxDepth()   const { return m_DebugMaxDepth; }
-
-	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nCollisionWorld* collisionW);
+	
+	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* ,
+		nRenderSystem* renderSystem);
 	void BeginUIFrame();
 	void EndUIFrame();
 	void ShutDownUI();
 	void Stats_Overlay(bool* IsOverlay);
 	void DrawBVHStats();
+
+	bool IsPlaying() const { return m_SimState == SimState::Playing; }
+	bool IsPaused()  const { return m_SimState == SimState::Paused; }
+	SimState GetSimState() const { return m_SimState; }
+
+	bool TickSimulation(float deltaTime);
+	nNewton::nEntity_ID   GetSelectedID()      const { return m_SelectedID; }
+
+	
+
+
+	void DrawEditorPanel(bool* open = nullptr);
+	
+
 };
 

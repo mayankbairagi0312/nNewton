@@ -78,6 +78,7 @@ void nRenderSystem::Debug_Render()
 
 	for (auto& [id, ro] : render_Map)
 	{
+		//std::cout << id << "\n";
 		if (!m_physics->IsValid(id))
 			continue;
 
@@ -219,7 +220,8 @@ void nRenderSystem::RegisterEntity(nNewton::nEntity_ID id,
 	RenderObjectType    type,
 	nNewton::nVector4   color)
 {
-	render_Map[id] = RenderObject{ type, color };
+	//render_Map[id] = RenderObject{ type, color };
+	render_Map.insert({ id,RenderObject{type,color} });
 }
 
 void nRenderSystem::UnregisterEntity(nNewton::nEntity_ID id)

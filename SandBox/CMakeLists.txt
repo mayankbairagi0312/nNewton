@@ -18,7 +18,7 @@ add_executable(nNewtonTest
  "Renderer/GL_Debug_Renderer.hpp"
  "Renderer/GL_Debug_Renderer.cpp"
 "Renderer/RenderSystem.cpp"
- "common.cpp")
+ "common.hpp")
 
 #target_compile_features(nNewtonTest PRIVATE cxx_std_20)
 
