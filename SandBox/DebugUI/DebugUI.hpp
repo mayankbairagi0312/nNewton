@@ -37,11 +37,11 @@ private:
 	char                           m_NewName[64] = "Entity";
 	float                          m_NewMass = 1.0f;
 	float                          m_NewPos[3] = {};
-	bool						   m_NewIsStatic;
-	float						   m_NewVelocity[3] = {};
-	float						   m_NewScale[3] = {};
+	bool						   m_NewIsStatic = false;;
+	float						   m_NewVelocity[3] = { 0.f, 0.f, 0.f };
+	float						   m_NewScale[3] = { 1.f, 1.f, 1.f };
 
-	int                            m_NewShapeType = 0;        
+	int                            m_NewShapeType = 0;       
 	float                          m_NewHalfExt[3] = { 0.5f, 0.5f, 0.5f };
 	float                          m_NewRadius = 0.5f;
 	nVector4 m_NewColor = { nColor::Magenta.r,nColor::Magenta.g,nColor::Magenta.b,nColor::Magenta.a };
@@ -66,7 +66,7 @@ private:
 	void DrawInspector();
 	void DrawTransformSection();
 	void DrawPhysicsSection();
-	void DrawPlayBar();
+	//void DrawPlayBar();
 
 	EntityMeta* FindMeta(nNewton::nEntity_ID id);
 	const EntityMeta* FindMeta(nNewton::nEntity_ID id) const;
@@ -85,6 +85,7 @@ public:
 	void ShutDownUI();
 	void Stats_Overlay(bool* IsOverlay);
 	void DrawBVHStats();
+	void DrawBVHStatsInline();
 
 	bool IsPlaying() const { return m_SimState == SimState::Playing; }
 	bool IsPaused()  const { return m_SimState == SimState::Paused; }

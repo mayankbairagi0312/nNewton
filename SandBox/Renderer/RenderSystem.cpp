@@ -173,6 +173,7 @@ void nRenderSystem::defaultScene()
 	DefaultBoxInfo.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
 	DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
 	DefaultBoxInfo.IS_STATIC_ = false;
+	DefaultBoxInfo.SetBoxShape({ 1,1,1 });
 
 	//another box
 	nNewton::nRigidBodyInfo DefaultBoxInfo2;
@@ -180,6 +181,7 @@ void nRenderSystem::defaultScene()
 	DefaultBoxInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
 	DefaultBoxInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1));
 	DefaultBoxInfo2.IS_STATIC_ = false;
+	DefaultBoxInfo2.SetBoxShape({ 1,1,1 });
 
 	//golakar bhuj
 	nNewton::nRigidBodyInfo DefaultSphereInfo2;
@@ -187,26 +189,18 @@ void nRenderSystem::defaultScene()
 	DefaultSphereInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
 	DefaultSphereInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
 	DefaultSphereInfo2.IS_STATIC_ = false;
+	DefaultSphereInfo2.SetBoxShape({ 1,1,1 });
 
 	//Plane
 	nNewton::nRigidBodyInfo DefaultPlaneInfo;
-	DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
+	DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5));
 	DefaultPlaneInfo.IS_STATIC_ = true;
+	DefaultPlaneInfo.SetBoxShape({ 1,1,1 });
 
-	auto boxShape = std::make_shared<nNewton::nBoxShape>(nNewton::nVector3(1, 1, 1));
-	//auto sphereShape = std::make_shared<nNewton::nSphereShape>(1.0f);
-	auto planeShape = std::make_shared<nNewton::nBoxShape>(nNewton::nVector3(5, 0.05f, 5));
-
-	nNewton::nEntity_ID boxID = m_physics->Create_Entity(DefaultBoxInfo);
-	nNewton::nEntity_ID boxID2 = m_physics->Create_Entity(DefaultBoxInfo2);
-	nNewton::nEntity_ID SphereID = m_physics->Create_Entity(DefaultSphereInfo2);
-	nNewton::nEntity_ID planeID = m_physics->Create_Entity(DefaultPlaneInfo);
-
-	m_collisionWorld->CreateCollisionEntity(boxID, DefaultBoxInfo.IS_STATIC_, DefaultBoxInfo.INIT_TRANSFORM_, DefaultBoxInfo.INIT_VELOCITY_, boxShape);
-	m_collisionWorld->CreateCollisionEntity(boxID2, DefaultBoxInfo2.IS_STATIC_, DefaultBoxInfo2.INIT_TRANSFORM_, DefaultBoxInfo2.INIT_VELOCITY_, boxShape);
-	m_collisionWorld->CreateCollisionEntity(SphereID, DefaultSphereInfo2.IS_STATIC_, DefaultSphereInfo2.INIT_TRANSFORM_, DefaultSphereInfo2.INIT_VELOCITY_, boxShape);
-
-	m_collisionWorld->CreateCollisionEntity(planeID, DefaultPlaneInfo.IS_STATIC_, DefaultPlaneInfo.INIT_TRANSFORM_, DefaultPlaneInfo.INIT_VELOCITY_, planeShape);
+	nNewton::nEntity_ID boxID = m_physics->Create_Entity(DefaultBoxInfo, false);
+	nNewton::nEntity_ID boxID2 = m_physics->Create_Entity(DefaultBoxInfo2, false);
+	nNewton::nEntity_ID SphereID = m_physics->Create_Entity(DefaultSphereInfo2, false);
+	nNewton::nEntity_ID planeID = m_physics->Create_Entity(DefaultPlaneInfo, false);
 
 	render_Map.insert({ boxID, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f)} });
 	render_Map.insert({ boxID2, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f)} });

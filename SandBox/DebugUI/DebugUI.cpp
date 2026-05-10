@@ -312,6 +312,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 	ImGui::InputText("Name", m_NewName, sizeof(m_NewName));
 	ImGui::DragFloat("Mass", &m_NewMass, 0.1f, 0.f, 1000.f, "%.2f kg");
 	ImGui::DragFloat3("Position", m_NewPos, 0.1f);
+	ImGui::Checkbox("Static", &m_NewIsStatic);
 
 	const char* shapes[] = { "Box", "Sphere", "Capsule" };
 	ImGui::Combo("Shape", &m_NewShapeType, shapes, IM_ARRAYSIZE(shapes));
@@ -330,13 +331,13 @@ void DebugUIEditor::DrawAddEntityPopup()
 		info.IS_STATIC_ = m_NewIsStatic;
 		info.INIT_VELOCITY_ = { m_NewVelocity[0], m_NewVelocity[1], m_NewVelocity[2] };
 		info.INIT_TRANSFORM_.SetPosition({ m_NewPos[0],   m_NewPos[1],   m_NewPos[2] });
-		info.INIT_TRANSFORM_.SetScale({ m_NewScale[0], m_NewScale[1], m_NewScale[2] });
+		info.INIT_TRANSFORM_.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
 		info.INIT_TRANSFORM_.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
 
 		RenderObjectType renderType = RenderObjectType::DEBUG_BOX;
 		switch (m_NewShapeType) {
 		case 0:
-			info.SetBoxShape({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
+			info.SetBoxShape({ 1.f, 1.f, 1.f });
 			renderType = RenderObjectType::DEBUG_BOX;
 			break;
 		case 1:
@@ -345,11 +346,11 @@ void DebugUIEditor::DrawAddEntityPopup()
 			break;
 		}
 
-		nNewton::nEntity_ID newID = m_World->Create_Entity(info);
+		nNewton::nEntity_ID newID = m_World->Create_Entity(info,true);
 
 		
 
-		m_World->GetCollisionWorld()->CreateCollisionEntity(newID, info.IS_STATIC_, info.INIT_TRANSFORM_, info.INIT_VELOCITY_, info.getCollisionShape());
+		//m_World->GetCollisionWorld()->CreateCollisionEntity(newID, info.IS_STATIC_, info.INIT_TRANSFORM_, info.INIT_VELOCITY_, info.getCollisionShape());
 
 		if (m_RenderSystem)
 			m_RenderSystem->RegisterEntity(newID, renderType, m_NewColor);
@@ -367,6 +368,9 @@ void DebugUIEditor::DrawAddEntityPopup()
 		std::snprintf(m_NewName, sizeof(m_NewName), "Entity");
 		m_NewMass = 1.f;
 		m_NewPos[0] = m_NewPos[1] = m_NewPos[2] = 0.f;
+		m_NewHalfExt[0] = m_NewHalfExt[1] = m_NewHalfExt[2] = 0.5f;
+		m_NewScale[0] = m_NewScale[1] = m_NewScale[2] = 1.f;
+		m_NewIsStatic = false;
 
 		ImGui::CloseCurrentPopup();
 	}
@@ -374,6 +378,8 @@ void DebugUIEditor::DrawAddEntityPopup()
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel", ImVec2(80, 0)))
 		ImGui::CloseCurrentPopup();
+
+	
 
 	ImGui::EndPopup();
 
@@ -400,7 +406,7 @@ void DebugUIEditor::DrawInspector()
 		nNewton::GEN_FROM_ID(m_SelectedID));
 	ImGui::Separator();
 
-	DrawBVHStats();
+	DrawBVHStatsInline();
 	ImGui::Spacing();
 	DrawTransformSection();
 	ImGui::Spacing();
@@ -452,8 +458,8 @@ void DebugUIEditor::DrawPhysicsSection()
 
 void DebugUIEditor::DrawTransformSection()
 {
-	if (m_SimState != SimState::Playing)
-		SyncEditCacheFromWorld();
+	/*if (m_SimState != SimState::Playing)
+		SyncEditCacheFromWorld();*/
 
 	bool open = ImGui::CollapsingHeader("Transform",
 		ImGuiTreeNodeFlags_DefaultOpen);
@@ -557,6 +563,9 @@ void DebugUIEditor::FlushEditCacheToWorld()
 
 	
 	body->TRANSFORM_.SetScale({ m_EditScale[0], m_EditScale[1], m_EditScale[2] });
+
+	if (body->ColEnt)
+		body->ColEnt->EntityTransform = body->TRANSFORM_;
 }
 
 EntityMeta* DebugUIEditor::FindMeta(nNewton::nEntity_ID id)
@@ -580,4 +589,49 @@ const char* DebugUIEditor::ShapeTypeName(int t) {
 	case 2: return "Capsule";
 	default: return "Unknown";
 	}
+}
+
+void DebugUIEditor::DrawBVHStatsInline()
+{
+	if (!ImGui::CollapsingHeader("BVH Debug"))
+		return;
+
+	nNewton::nBVHStats dynStats =
+		m_World->GetCollisionWorld()->GetDynamicTree()->CollectStats();
+	nNewton::nBVHStats staStats =
+		m_World->GetCollisionWorld()->GetStaticTree()->CollectStats();
+
+	if (ImGui::TreeNode("Dynamic Tree")) {
+		ImGui::Text("Nodes  : %d  Leaves: %d", dynStats.totalNodes, dynStats.leafNodes);
+		ImGui::Text("Depth  : %d  Dirty : %d", dynStats.maxDepth, dynStats.dirtyNodes);
+		ImGui::Text("Queue  : %d", dynStats.queueSize);
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode("Static Tree")) {
+		ImGui::Text("Nodes  : %d  Leaves: %d", staStats.totalNodes, staStats.leafNodes);
+		ImGui::Text("Depth  : %d", staStats.maxDepth);
+		ImGui::TreePop();
+	}
+
+	ImGui::Separator();
+
+	// draw flags inline
+	bool drawDyn = debugRenderer->IsFlagEnabled(flags::BVH_Dynamic);
+	bool drawSta = debugRenderer->IsFlagEnabled(flags::BVH_Static);
+	int  maxDepth = debugRenderer->GetBVHMaxDepth();
+
+	if (ImGui::Checkbox("Draw Dynamic", &drawDyn))
+		drawDyn ? debugRenderer->SetFlagEnabled(flags::BVH_Dynamic)
+		: debugRenderer->SetDisableFlag(flags::BVH_Dynamic);
+
+	ImGui::SameLine();
+
+	if (ImGui::Checkbox("Draw Static", &drawSta))
+		drawSta ? debugRenderer->SetFlagEnabled(flags::BVH_Static)
+		: debugRenderer->SetDisableFlag(flags::BVH_Static);
+
+	int maxAllowed = std::max(dynStats.maxDepth, staStats.maxDepth);
+	maxAllowed = std::max(maxAllowed, 1);
+	if (ImGui::SliderInt("Max Depth", &maxDepth, 1, maxAllowed))
+		debugRenderer->SetBVHMaxDepth(maxDepth);
 }

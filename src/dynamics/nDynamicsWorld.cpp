@@ -6,7 +6,7 @@ namespace nNewton
 		m_CollisionWorld = std::make_unique<nCollisionWorld>();
 	}
 	
-	nEntity_ID nDynamicsWorld::Create_Entity(const nRigidBodyInfo& info_)
+	nEntity_ID nDynamicsWorld::Create_Entity(const nRigidBodyInfo& info_, bool insertNow = true)
 	{
 		nEntity_ID index_;
 
@@ -24,6 +24,17 @@ namespace nNewton
 		auto& entity = m_Entity[index_];
 		entity.alive = true;
 		entity.Entity = nRigidBody(info_);
+
+		auto ID = MAKE_ID(index_, entity.Gen);
+
+		entity.Entity.ColEnt = m_CollisionWorld->CreateCollisionEntity(
+			ID,
+			info_.IS_STATIC_,
+			entity.Entity.TRANSFORM_,
+			entity.Entity.GetVelocity(),
+			info_.getCollisionShape(),insertNow
+		);
+
 		return MAKE_ID(index_, entity.Gen);
 	}
 
@@ -110,8 +121,25 @@ namespace nNewton
 		return true;
 	}
 
-	/*void nDynamicsWorld::Step(float deltaT_)
+	void nDynamicsWorld::Step(float deltaT_)
 	{
+		for (auto& entity : m_Entity)
+		{
+			if (!entity.alive)         continue;
+			if (entity.Entity.IS_STATIC_) continue;
+
+			nRigidBody& body = entity.Entity;
+			body.ApplyForce(GetGravity() * body.GetMass());
+
+			body.Integrate(deltaT_);
+			
+			body.ClearForces();
+
+			if (entity.Entity.ColEnt)
+				entity.Entity.ColEnt->EntityTransform = body.TRANSFORM_;
 		
-	}*/
+		}
+
+		//m_CollisionWorld->StepCollision();
+	}
 }

@@ -66,7 +66,8 @@ namespace nNewton
 		virtual void RemoveEntity(nBVHNode* leaf_){ (void)leaf_; }
 		virtual void TreeletStepRestructure() {}
 		virtual void Rebuild(std::vector<nCollisionEntity*>& entities) = 0;
-		
+		virtual void InsertEntity(nCollisionEntity* Ent_){}
+
 		virtual void Clear() = 0;
 
 		void DebugDrawTree(std::function<void(const nAABB&, int, bool, bool)> callback);

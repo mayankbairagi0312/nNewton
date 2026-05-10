@@ -29,6 +29,9 @@ namespace nNewton
 		node->leftChild = ConstructSAH(entities, start, split);
 		node->rightChild = ConstructSAH(entities, split, end);
 
+		node->leftChild->parent = node.get();
+		node->rightChild->parent = node.get();
+
 		node->nodeAABB = Merge(
 			node->leftChild->nodeAABB,
 			node->rightChild->nodeAABB

@@ -15,9 +15,10 @@ namespace nNewton
 
 		bool INIT_COLLISION_WORLD();
 
-		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel, std::shared_ptr<nCollisionShape> CollisionShape);
+		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel,
+			std::shared_ptr<nCollisionShape> CollisionShape, bool insertNow);
 		bool RemoveCollisionEntity(nEntity_ID& ID, bool isStatic);
-		void StepCollision(nCollisionEntity* entity);
+		void StepCollision();
 		void BuildTrees();
 
 	

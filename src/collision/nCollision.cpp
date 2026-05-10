@@ -26,21 +26,23 @@ namespace nNewton
 
 	}
 
-	void nCollisionWorld::StepCollision(nCollisionEntity* entity)
+	void nCollisionWorld::StepCollision()
 	{
-		m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
+		//m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
 		
 			// write phase
 		auto dentity = ToRawPtrs(m_Dynamic_Entities);
-		for (auto& ent : dentity)
-		m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
+		for (auto& ent : dentity) {
+			m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
+		}
 
 		m_DynamicTree->TreeletStepRestructure(); 
 
 			//read phase
 	}
 
-	nCollisionEntity* nCollisionWorld::CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel,std::shared_ptr<nCollisionShape> ColisionShape)
+	nCollisionEntity* nCollisionWorld::CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel,
+		std::shared_ptr<nCollisionShape> ColisionShape, bool insertNow = true)
 	{
 
 		nCollisionEntity data;
@@ -48,7 +50,7 @@ namespace nNewton
 		data.isStatic = isStatic;
 		data.EntityTransform = EntityTransform;
 		data.vel = vel;
-
+		data.EntityShape = ColisionShape;
 
 		data.currentAABB = ColisionShape->getAABB(EntityTransform);
 		data.marginAABB = Expand(data.currentAABB, FAT_MARGIN);
@@ -64,6 +66,8 @@ namespace nNewton
 		else
 		{
 			m_Dynamic_Entities.push_back(std::move(ent));
+			if (insertNow)
+				m_DynamicTree->InsertEntity(ptr);
 		}
 		
 		return ptr;

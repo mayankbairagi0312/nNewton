@@ -43,7 +43,7 @@ bool Application::Initialize() {
 
 
 	//init physics sys
-	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_nWorld->GetCollisionWorld()))
+	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_nWorld.get()))
 	{
 		std::cerr << "Physics ki MKC" << std::endl;
 	};
@@ -118,8 +118,10 @@ void Application::Run() {
 			m_input.ProcessMosueInput();
 		}
 
-		TRender();
+		m_physicsSystem->UpdatePhysicsSystem(m_DeltaTime);
 
+		TRender();
+		
 
 		m_DebugUI->EndUIFrame();
 		SDL_GL_SwapWindow(m_testWindow->GetNativeHandle());

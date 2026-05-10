@@ -32,7 +32,7 @@ namespace nNewton
 		}
 		void Rebuild(std::vector<nCollisionEntity*>& entities) override;
 		void Clear() override;
-		void InsertEntity(nCollisionEntity* Ent_);
+		void InsertEntity(nCollisionEntity* Ent_) override;
 		void RemoveEntity(nBVHNode* leaf_) override;
 		void UpdateEntity(nBVHNode* leaf) override;
 		void TreeletStepRestructure() override;
@@ -139,13 +139,16 @@ namespace nNewton
 	{
 		if (!leaf->isLeaf()) { return; }
 		
-		leaf->Entity->currentAABB = leaf->Entity->EntityShape->getAABB(leaf->Entity->EntityTransform);
+		leaf->Entity->currentAABB = leaf->Entity->EntityShape->getAABB(leaf->Entity->EntityTransform); nAABB tight = leaf->Entity->EntityShape->getAABB(leaf->Entity->EntityTransform);
+		leaf->Entity->currentAABB = tight;
 
-		if (!Contains(leaf->nodeAABB, leaf->Entity->currentAABB))
+		nAABB expectedFat = Expand(tight, FAT_MARGIN);
+
+		if (!Contains(leaf->nodeAABB, expectedFat) ||
+			!Contains(expectedFat, leaf->nodeAABB))
 		{
 			auto* entity = leaf->Entity;
-			entity->marginAABB = Expand(entity->currentAABB, FAT_MARGIN);
-
+			entity->marginAABB = expectedFat;
 			RemoveEntity(leaf);
 			InsertEntity(entity);
 		}
@@ -224,6 +227,7 @@ namespace nNewton
 	void nDynamicAABBTree::InsertEntity(nCollisionEntity* Ent_)
 	{
 		auto Leaf = CreateLeafNode(Ent_);
+
 
 		if(root == nullptr){
 			root = std::move(Leaf);
