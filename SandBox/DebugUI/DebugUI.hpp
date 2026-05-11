@@ -83,9 +83,14 @@ public:
 	void BeginUIFrame();
 	void EndUIFrame();
 	void ShutDownUI();
+
+	void RenderUI(bool* IsOverlay, bool* IsPanels);
+
+
 	void Stats_Overlay(bool* IsOverlay);
 	void DrawBVHStats();
 	void DrawBVHStatsInline();
+	void ApplyCustomStyle();
 
 	bool IsPlaying() const { return m_SimState == SimState::Playing; }
 	bool IsPaused()  const { return m_SimState == SimState::Paused; }
@@ -95,10 +100,8 @@ public:
 	nNewton::nEntity_ID   GetSelectedID()      const { return m_SelectedID; }
 
 	
-
-
-	void DrawEditorPanel(bool* open = nullptr);
-	
+	void DrawEntityListPanel(bool* open);
+	void DrawInspectorPanel(bool* open);
 
 };
 

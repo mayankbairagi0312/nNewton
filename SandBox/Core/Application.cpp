@@ -111,7 +111,7 @@ void Application::Run() {
 
 		static bool demo = true;
 		//ImGui::ShowDemoWindow(&demo);
-		m_DebugUI->Stats_Overlay(&demo);
+		m_DebugUI->RenderUI(&demo, &demo);
 
 		m_input.ProcessInputKey(m_DeltaTime);
 		if (!pauseGameInput) {

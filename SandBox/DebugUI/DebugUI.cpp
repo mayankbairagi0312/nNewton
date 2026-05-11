@@ -13,8 +13,11 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImGui::StyleColorsClassic();
+	ApplyCustomStyle();
 	ImGuiIO& io = ImGui::GetIO();
 
+	io.Fonts->AddFontFromFileTTF("assets/Fonts/JetBrainsMonoNL-Regular.ttf", 13.0f);
 	//io.DisplaySize = ImVec2((float)SDL_Window->getWidth(), (float)SDL_Window->getHeight());
 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -28,6 +31,90 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 
 	return true;
 }
+
+void DebugUIEditor::ApplyCustomStyle()
+{
+	ImGuiStyle& s = ImGui::GetStyle();
+
+	//rounding
+	s.WindowRounding = 4.f;
+	s.FrameRounding = 4.f;
+	s.PopupRounding = 4.f;
+	s.ScrollbarRounding = 4.f;
+	s.GrabRounding = 4.f;
+	s.TabRounding = 4.f;
+	s.ChildRounding = 4.f;
+
+	//spacing
+	s.WindowPadding = ImVec2(10, 10);
+	s.FramePadding = ImVec2(4, 4);
+	s.ItemSpacing = ImVec2(8, 6);
+	s.ItemInnerSpacing = ImVec2(6, 4);
+	s.IndentSpacing = 14.f;
+	s.ScrollbarSize = 10.f;
+	s.GrabMinSize = 10.f;
+	s.WindowBorderSize = 2.f;
+	s.FrameBorderSize = 0.f;
+	s.PopupBorderSize = 1.f;
+
+	ImVec4* c = s.Colors;
+
+	// base
+	c[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.13f, 0.14f, 1.00f);
+	c[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+	c[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.13f, 0.14f, 1.00f);
+	c[ImGuiCol_Border] = ImVec4(0.30f, 0.30f, 0.32f, 0.60f);
+
+	// text
+	c[ImGuiCol_Text] = ImVec4(0.92f, 0.92f, 0.92f, 1.00f);
+	c[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.52f, 1.00f);
+
+	// headers (CollapsingHeader, TreeNode, Selectable)
+	c[ImGuiCol_Header] = ImVec4(0.26f, 0.26f, 0.28f, 1.00f);
+	c[ImGuiCol_HeaderHovered] = ImVec4(0.32f, 0.32f, 0.35f, 1.00f);
+	c[ImGuiCol_HeaderActive] = ImVec4(0.22f, 0.22f, 0.25f, 1.00f);
+
+	// frames (InputText, Combo, Slider bg)
+	c[ImGuiCol_FrameBg] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+	c[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
+	c[ImGuiCol_FrameBgActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+
+	// accent 
+	ImVec4 accent = ImVec4(0.95f, 0.15f, 0.15f, 1.00f);
+	ImVec4 accentHover = ImVec4(0.36f, 0.64f, 1.00f, 1.00f);
+	ImVec4 accentClick = ImVec4(0.20f, 0.48f, 0.80f, 1.00f);
+
+	c[ImGuiCol_TitleBgActive] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
+	c[ImGuiCol_TitleBgCollapsed] = ImVec4(0.12f, 0.12f, 0.13f, 0.80f);
+	c[ImGuiCol_MenuBarBg] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+	c[ImGuiCol_ScrollbarGrab] = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
+	c[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
+	c[ImGuiCol_ScrollbarGrabActive] = accent;
+
+	c[ImGuiCol_CheckMark] = accent;
+	c[ImGuiCol_SliderGrab] = accent;
+	c[ImGuiCol_SliderGrabActive] = accentClick;
+
+	c[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.25f, 1.00f);
+	c[ImGuiCol_ButtonHovered] = accentHover;
+	c[ImGuiCol_ButtonActive] = accentClick;
+
+	c[ImGuiCol_Tab] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_TabHovered] = accentHover;
+	c[ImGuiCol_TabActive] = accent;
+	c[ImGuiCol_TabUnfocused] = ImVec4(0.14f, 0.14f, 0.16f, 1.00f);
+	c[ImGuiCol_TabUnfocusedActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+
+	c[ImGuiCol_Separator] = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
+	c[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.30f, 0.32f, 0.50f);
+	c[ImGuiCol_ResizeGripHovered] = accentHover;
+	c[ImGuiCol_ResizeGripActive] = accent;
+}
+
+
+
 
 void DebugUIEditor::BeginUIFrame()
 {
@@ -53,6 +140,14 @@ void DebugUIEditor::ShutDownUI()
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
 }
+
+void DebugUIEditor::RenderUI(bool* IsOverlay, bool* IsPanels )
+{
+	Stats_Overlay(IsOverlay);
+	DrawEntityListPanel(IsPanels);
+	DrawInspectorPanel(IsPanels);
+}
+
 
 void DebugUIEditor::Stats_Overlay(bool* IsOverlay)
 {
@@ -113,8 +208,7 @@ void DebugUIEditor::Stats_Overlay(bool* IsOverlay)
 	SDL_GetWindowSize(SDL_Window->GetNativeHandle(), &w, &h);
 	ImGui::Text("Window Size: %d X %d\n", w, h);
 	ImGui::End();
-	//DrawBVHStats();
-	DrawEditorPanel(IsOverlay);
+	
 }
 
 
@@ -185,31 +279,15 @@ bool DebugUIEditor::TickSimulation(float deltaTime)
 	return stepped;
 }
 
-void DebugUIEditor::DrawEditorPanel(bool* open)
+
+void DebugUIEditor::DrawEntityListPanel(bool* open) 
 {
-	ImGui::SetNextWindowSize(ImVec2(620, 480), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPos(ImVec2(20, 40), ImGuiCond_FirstUseEver);
-
-	ImGuiWindowFlags flags =
-		ImGuiWindowFlags_NoScrollbar |
-		ImGuiWindowFlags_NoScrollWithMouse;
-
-	if (!ImGui::Begin("Scene Editor", open, flags)) {
+	
+	if (!ImGui::Begin("Entity List", open)) {
 		ImGui::End();
 		return;
 	}
-
-	// Left column - entity list + play bar
-	ImGui::BeginChild("##left", ImVec2(210, 0), ImGuiChildFlags_Borders);
 	DrawEntityList();
-	ImGui::EndChild();
-
-	ImGui::SameLine();
-
-	// Right column - inspector
-	ImGui::BeginChild("##right", ImVec2(0, 0), ImGuiChildFlags_Borders);
-	DrawInspector();
-	ImGui::EndChild();
 
 	ImGui::End();
 }
@@ -217,12 +295,14 @@ void DebugUIEditor::DrawEditorPanel(bool* open)
 void DebugUIEditor::DrawEntityList()
 {
 	
-	ImGui::TextDisabled("ENTITIES (%d)", (int)m_Entities.size());
+	ImGui::TextDisabled("ENTITIES %d ", (int)m_Entities.size());
 
-	float rightEdge = ImGui::GetContentRegionAvail().x;
-	ImGui::SameLine(rightEdge - 50.f);
+	float windowWidth = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+	float buttonWidth = ImGui::CalcTextSize(" + ").x + ImGui::GetStyle().FramePadding.x * 2;
+	
+	ImGui::SameLine(ImGui::GetWindowContentRegionMax().x  - buttonWidth * 2 - 8.f);
 
-	if (ImGui::SmallButton("  +  "))
+	if (ImGui::SmallButton(" + "))
 		ImGui::OpenPopup("AddEntityPopup");
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Add entity");
 
@@ -230,7 +310,7 @@ void DebugUIEditor::DrawEntityList()
 
 	bool hasSelection = m_World && m_World->IsValid(m_SelectedID);
 	if (!hasSelection) ImGui::BeginDisabled();
-	if (ImGui::SmallButton("  -  ")) {
+	if (ImGui::SmallButton(" - ")) {
 		m_World->DestroyEntity(m_SelectedID);
 		m_Entities.erase(std::remove_if(m_Entities.begin(), m_Entities.end(),
 			[this](const EntityMeta& m) { return m.id == m_SelectedID; }),
@@ -241,11 +321,11 @@ void DebugUIEditor::DrawEntityList()
 	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 		ImGui::SetTooltip("Destroy selected entity");
 
-	ImGui::Separator();
+	//ImGui::Separator();
 
 	DrawAddEntityPopup();
 
-	float listH = ImGui::GetContentRegionAvail().y - 36.f; 
+	float listH = ImGui::GetContentRegionAvail().y ; 
 	ImGui::BeginChild("##list_scroll", ImVec2(0, listH));
 
 	for (auto& meta : m_Entities)
@@ -307,7 +387,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 	if (!ImGui::BeginPopup("AddEntityPopup")) return;
 
 	ImGui::TextDisabled("New Entity");
-	ImGui::Separator();
+	//ImGui::Separator();
 
 	ImGui::InputText("Name", m_NewName, sizeof(m_NewName));
 	ImGui::DragFloat("Mass", &m_NewMass, 0.1f, 0.f, 1000.f, "%.2f kg");
@@ -385,6 +465,18 @@ void DebugUIEditor::DrawAddEntityPopup()
 
 }
 
+
+void DebugUIEditor::DrawInspectorPanel(bool* open)
+{
+	if (!ImGui::Begin("Inspector Panel", open)) {
+		ImGui::End();
+		return;
+	}
+	DrawInspector();
+
+	ImGui::End();
+}
+
 void DebugUIEditor::DrawInspector()
 {
 	if (!m_World || !m_World->IsValid(m_SelectedID)) {
@@ -460,73 +552,68 @@ void DebugUIEditor::DrawTransformSection()
 {
 	/*if (m_SimState != SimState::Playing)
 		SyncEditCacheFromWorld();*/
-
+	
+	ImGui::AlignTextToFramePadding();
 	bool open = ImGui::CollapsingHeader("Transform",
 		ImGuiTreeNodeFlags_DefaultOpen);
 
-	ImGui::SameLine(ImGui::GetContentRegionAvail().x
-		+ ImGui::GetCursorPosX() - 46.f);
-	if (ImGui::SmallButton("Reset##tf")) {
+	if (!open) return;
+
+	bool changed = false;
+
+	auto Vec3Row = [&](const char* label, float* v, float speed, const char* fmt) -> bool
+		{
+			bool dirty = false;
+			ImGui::TextDisabled("%s", label);
+			ImGui::SameLine(120.f); 
+
+			float itemW = (ImGui::GetContentRegionAvail().x - 8.f) / 3.f;
+
+			struct { const char* prefix; ImVec4 col; } axes[3] = {
+				{ "X", { 0.75f, 0.20f, 0.20f, 0.8f } },
+				{ "Y", { 0.20f, 0.70f, 0.25f, 0.8f } },
+				{ "Z", { 0.20f, 0.40f, 0.80f, 0.8f } },
+			};
+
+			for (int i = 0; i < 3; ++i)
+			{
+				/*ImGui::PushStyleColor(ImGuiCol_FrameBg,
+					ImVec4(axes[i].col.x * 0.3f,
+						axes[i].col.y * 0.3f,
+						axes[i].col.z * 0.3f, 0.6f));*/
+
+				ImGui::SetNextItemWidth(itemW);
+				char id[16]; std::snprintf(id, sizeof(id), "##%s%d", label, i);
+				if (ImGui::DragFloat(id, &v[i], speed, 0.f, 0.f, fmt))
+					dirty = true;
+
+				//ImGui::PopStyleColor();
+
+				if (i < 2) ImGui::SameLine(0, 4);
+			}
+
+			return dirty;
+		};
+
+	ImGui::Spacing();
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 4)); 
+	changed |= Vec3Row("Position", m_EditPos, 0.05f, "%.2f");
+	changed |= Vec3Row("Rotation", m_EditRot, 0.5f, "%.1f");
+	changed |= Vec3Row("Scale", m_EditScale, 0.01f, "%.2f");
+	ImGui::PopStyleVar();
+	ImGui::Spacing();
+
+	if (ImGui::SmallButton(" Reset ")) {
 		std::memset(m_EditPos, 0, sizeof(m_EditPos));
 		std::memset(m_EditRot, 0, sizeof(m_EditRot));
 		m_EditScale[0] = m_EditScale[1] = m_EditScale[2] = 1.f;
 		FlushEditCacheToWorld();
 	}
 
-	if (!open) return;
-
-	bool changed = false;
-
-	auto Vec3Row = [&](const char* label, float* v,
-		float speed, const char* fmt) -> bool
-		{
-			bool dirty = false;
-			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(3, 2));
-			if (ImGui::BeginTable(label, 4,
-				ImGuiTableFlags_SizingStretchProp |
-				ImGuiTableFlags_BordersInnerV))
-			{
-				ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 62.f);
-				ImGui::TableSetupColumn("X", ImGuiTableColumnFlags_WidthFixed, 62.f);
-				ImGui::TableSetupColumn("Y", ImGuiTableColumnFlags_WidthFixed, 62.f);
-				ImGui::TableSetupColumn("Z", ImGuiTableColumnFlags_WidthFixed, 62.f);
-				ImGui::TableNextRow();
-
-				ImGui::TableSetColumnIndex(0);
-				ImGui::TextDisabled("%s", label);
-
-				struct { const char* tag; ImVec4 col; } axes[3] = {
-					{"X", {0.75f,0.20f,0.20f,0.8f}},
-					{"Y", {0.20f,0.70f,0.25f,0.8f}},
-					{"Z", {0.20f,0.40f,0.80f,0.8f}},
-				};
-				for (int i = 0; i < 3; ++i) {
-					ImGui::TableSetColumnIndex(i + 1);
-					ImGui::PushStyleColor(ImGuiCol_FrameBg,
-						ImVec4(axes[i].col.x * 0.3f, axes[i].col.y * 0.3f,
-							axes[i].col.z * 0.3f, 0.55f));
-					ImGui::PushItemWidth(-1);
-					char id[16]; std::snprintf(id, sizeof(id), "##%s%d", label, i);
-					if (ImGui::DragFloat(id, &v[i], speed, 0.f, 0.f, fmt))
-						dirty = true;
-					ImGui::PopItemWidth();
-					ImGui::PopStyleColor();
-				}
-				ImGui::EndTable();
-			}
-			ImGui::PopStyleVar();
-			return dirty;
-		};
-
-	changed |= Vec3Row("Position", m_EditPos, 0.05f, "%.3f");
-	changed |= Vec3Row("Rotation", m_EditRot, 0.5f, "%.1f°");
-	changed |= Vec3Row("Scale", m_EditScale, 0.01f, "%.3f");
 
 	if (changed)
 		FlushEditCacheToWorld();
 }
-
-
 
 
 void DebugUIEditor::SyncEditCacheFromWorld()
