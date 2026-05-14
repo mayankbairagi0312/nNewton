@@ -414,14 +414,17 @@ void DebugUIEditor::DrawAddEntityPopup()
 		info.INIT_TRANSFORM_.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
 		info.INIT_TRANSFORM_.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
 
+		info.SetBoxShape({ 1.f, 1.f, 1.f });
+
 		RenderObjectType renderType = RenderObjectType::DEBUG_BOX;
+		
+
 		switch (m_NewShapeType) {
 		case 0:
-			info.SetBoxShape({ 1.f, 1.f, 1.f });
+			
 			renderType = RenderObjectType::DEBUG_BOX;
 			break;
 		case 1:
-			info.SetSphereShape({ m_NewRadius });
 			renderType = RenderObjectType::DEBUG_SPHERE;
 			break;
 		}

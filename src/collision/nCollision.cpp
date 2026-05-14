@@ -62,6 +62,10 @@ namespace nNewton
 		if (ent->isStatic)
 		{
 			m_Static_Entities.push_back(std::move(ent));
+			
+			auto sentity = ToRawPtrs(m_Static_Entities); 
+			m_StaticTree->Rebuild(sentity);
+				
 		}
 		else
 		{
@@ -90,18 +94,19 @@ namespace nNewton
 
 		nCollisionEntity* ent = it->get();
 
-		
-		if (isStatic) {
-			auto sentity = ToRawPtrs(m_Static_Entities);
-			m_StaticTree->Rebuild(sentity);
-		}
-		else {
+		if (!isStatic) {
 			if (ent->BVHNodePtr)
 				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
 		}
 
 
 		container.erase(it);
+
+		if (isStatic) {
+			auto sentity = ToRawPtrs(m_Static_Entities);
+			m_StaticTree->Rebuild(sentity);
+		}
+
 		return true;
 	}
 
