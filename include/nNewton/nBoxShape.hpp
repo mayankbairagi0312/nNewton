@@ -46,5 +46,8 @@ namespace nNewton
 			supportPoint.z = (direction.z >= 0) ? m_HalfExtents.z : -m_HalfExtents.z;
 			return supportPoint;
 		}
+
+		nCollisionShapeType GetType() const override { return nCollisionShapeType::Box; }
+
 	};
 }

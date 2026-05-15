@@ -30,5 +30,8 @@ namespace nNewton
 			auto normDir = direction / len;
 			return normDir * radius;
 		}
+
+
+		nCollisionShapeType GetType() const override { return nCollisionShapeType::Sphere; }
 	};
 }

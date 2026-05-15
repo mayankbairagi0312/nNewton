@@ -68,6 +68,7 @@ namespace nNewton
 
 	
 //============
+	enum class nCollisionShapeType { Box, Sphere, Capsule};
 
 	class nCollisionShape
 	{
@@ -75,7 +76,7 @@ namespace nNewton
 
 		virtual nAABB getAABB(const nTransform& transform_)const = 0;
 		virtual nVector3 getSupportPoint(const nVector3& direction)const = 0;
-
+		virtual nCollisionShapeType GetType() const = 0;
 		virtual ~nCollisionShape() = default;
 		
 	};
