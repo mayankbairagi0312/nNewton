@@ -14,7 +14,7 @@ namespace nNewton {
 		nVector3 INIT_VELOCITY_;
 		nTransform INIT_TRANSFORM_;
 		bool IS_STATIC_ = false;
-		nCollisionEntity* ColEnt = nullptr;
+
 
 	private:
 		std::shared_ptr<nCollisionShape> m_Shape;
@@ -32,7 +32,6 @@ namespace nNewton {
 
 		std::shared_ptr<nCollisionShape> getCollisionShape() const
 		{
-			std::cout << m_Shape << "\n";
 			return m_Shape;
 		}
 
@@ -64,8 +63,8 @@ namespace nNewton {
 
 		void Integrate(float dt_);
 
-		nRigidBody();
-		explicit nRigidBody(const nRigidBodyInfo& Info_) : MASS_(Info_.MASS_), VELOCITY_(Info_.INIT_VELOCITY_), TRANSFORM_(Info_.INIT_TRANSFORM_), IS_STATIC_(Info_.IS_STATIC_)
+		nRigidBody() = default;
+		explicit nRigidBody(const nRigidBodyInfo& Info_) : MASS_(Info_.MASS_), VELOCITY_(Info_.INIT_VELOCITY_), TRANSFORM_(Info_.INIT_TRANSFORM_), IS_STATIC_(Info_.IS_STATIC_) 
 		{ }
 	};
 }

@@ -2,9 +2,7 @@
 
 namespace nNewton
 {
-	nRigidBody::nRigidBody()
-	{
-	}
+	
 	void nRigidBody::ApplyForce(nVector3 Force)
 	{
 		if (IS_STATIC_)return;

@@ -29,7 +29,12 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	ImGui_ImplSDL3_InitForOpenGL(SDL_Window->GetNativeHandle(), SDL_Window->GetSDLglContext());
 	ImGui_ImplOpenGL3_Init("#version 460");
 
+	defaultScene();
+
+
 	return true;
+
+
 }
 
 void DebugUIEditor::ApplyCustomStyle()
@@ -146,6 +151,8 @@ void DebugUIEditor::RenderUI(bool* IsOverlay, bool* IsPanels )
 	Stats_Overlay(IsOverlay);
 	DrawEntityListPanel(IsPanels);
 	DrawInspectorPanel(IsPanels);
+
+	
 }
 
 
@@ -327,7 +334,7 @@ void DebugUIEditor::DrawEntityList()
 
 	float listH = ImGui::GetContentRegionAvail().y ; 
 	ImGui::BeginChild("##list_scroll", ImVec2(0, listH));
-
+	int i = 1;
 	for (auto& meta : m_Entities)
 	{
 		// Stale guard 
@@ -343,9 +350,9 @@ void DebugUIEditor::DrawEntityList()
 		ImVec4 dot = isStatic
 			? ImVec4(0.45f, 0.75f, 0.45f, 1.f)   
 			: ImVec4(0.35f, 0.60f, 0.95f, 1.f);   
-
+		
 		ImGui::PushStyleColor(ImGuiCol_Text, dot);
-		ImGui::Text("@");
+		ImGui::Text(" %d. ", i);
 		ImGui::PopStyleColor();
 		ImGui::SameLine();
 
@@ -353,6 +360,8 @@ void DebugUIEditor::DrawEntityList()
 			ImGuiSelectableFlags_SpanAllColumns))
 		{
 			m_SelectedID = meta.id;
+
+			
 			SyncEditCacheFromWorld();
 		}
 
@@ -375,6 +384,7 @@ void DebugUIEditor::DrawEntityList()
 		}
 
 		ImGui::PopID();
+		i++;
 	}
 
 	ImGui::EndChild();
@@ -411,32 +421,30 @@ void DebugUIEditor::DrawAddEntityPopup()
 		info.IS_STATIC_ = m_NewIsStatic;
 		info.INIT_VELOCITY_ = { m_NewVelocity[0], m_NewVelocity[1], m_NewVelocity[2] };
 		info.INIT_TRANSFORM_.SetPosition({ m_NewPos[0],   m_NewPos[1],   m_NewPos[2] });
-		info.INIT_TRANSFORM_.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
 		info.INIT_TRANSFORM_.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
 
-		info.SetBoxShape({ 1.f, 1.f, 1.f });
-
-		RenderObjectType renderType = RenderObjectType::DEBUG_BOX;
 		
 
 		switch (m_NewShapeType) {
 		case 0:
-			
-			renderType = RenderObjectType::DEBUG_BOX;
+			info.INIT_TRANSFORM_.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
+			info.SetBoxShape({ 1.f, 1.f, 1.f });
 			break;
 		case 1:
-			renderType = RenderObjectType::DEBUG_SPHERE;
+			info.INIT_TRANSFORM_.SetScale({ m_NewRadius, m_NewRadius, m_NewRadius });
+			info.SetSphereShape(1.f);
 			break;
 		}
 
 		nNewton::nEntity_ID newID = m_World->Create_Entity(info,true);
+
 
 		
 
 		//m_World->GetCollisionWorld()->CreateCollisionEntity(newID, info.IS_STATIC_, info.INIT_TRANSFORM_, info.INIT_VELOCITY_, info.getCollisionShape());
 
 		if (m_RenderSystem)
-			m_RenderSystem->RegisterEntity(newID, renderType, m_NewColor);
+			m_RenderSystem->RegisterEntity(newID, m_NewColor);
 
 
 		EntityMeta meta;
@@ -453,6 +461,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 		m_NewPos[0] = m_NewPos[1] = m_NewPos[2] = 0.f;
 		m_NewHalfExt[0] = m_NewHalfExt[1] = m_NewHalfExt[2] = 0.5f;
 		m_NewScale[0] = m_NewScale[1] = m_NewScale[2] = 1.f;
+		m_NewRadius = .5f;
 		m_NewIsStatic = false;
 
 		ImGui::CloseCurrentPopup();
@@ -650,8 +659,6 @@ void DebugUIEditor::FlushEditCacheToWorld()
 	
 	body->TRANSFORM_.SetPosition({ m_EditPos[0], m_EditPos[1], m_EditPos[2] });
 
-
-	
 	body->TRANSFORM_.SetScale({ m_EditScale[0], m_EditScale[1], m_EditScale[2] });
 
 	if (body->ColEnt)
@@ -724,4 +731,74 @@ void DebugUIEditor::DrawBVHStatsInline()
 	maxAllowed = std::max(maxAllowed, 1);
 	if (ImGui::SliderInt("Max Depth", &maxDepth, 1, maxAllowed))
 		debugRenderer->SetBVHMaxDepth(maxDepth);
+}
+
+
+void DebugUIEditor::defaultScene()
+{
+	//render_Map.clear();
+
+	// Create a box 
+	nNewton::nRigidBodyInfo DefaultBoxInfo;
+	DefaultBoxInfo.MASS_ = 1;
+	DefaultBoxInfo.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
+	DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
+	DefaultBoxInfo.IS_STATIC_ = false;
+	DefaultBoxInfo.SetBoxShape({ 1,1,1 });
+
+	//another box
+	nNewton::nRigidBodyInfo DefaultBoxInfo2;
+	DefaultBoxInfo2.MASS_ = 1;
+	DefaultBoxInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
+	DefaultBoxInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1));
+	DefaultBoxInfo2.IS_STATIC_ = false;
+	DefaultBoxInfo2.SetBoxShape({ 1,1,1 });
+
+	//golakar bhuj
+	nNewton::nRigidBodyInfo DefaultSphereInfo2;
+	DefaultSphereInfo2.MASS_ = 1;
+	DefaultSphereInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
+	DefaultSphereInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
+	DefaultSphereInfo2.IS_STATIC_ = false;
+	DefaultSphereInfo2.SetSphereShape(1);
+
+	//Plane
+	nNewton::nRigidBodyInfo DefaultPlaneInfo;
+	DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5));
+	DefaultPlaneInfo.IS_STATIC_ = true;
+	DefaultPlaneInfo.SetBoxShape({ 1,1,1 });
+
+
+	nNewton::nEntity_ID boxID = m_World->Create_Entity(DefaultBoxInfo, false);
+	nNewton::nEntity_ID boxID2 = m_World->Create_Entity(DefaultBoxInfo2, false);
+	nNewton::nEntity_ID SphereID = m_World->Create_Entity(DefaultSphereInfo2, false);
+	nNewton::nEntity_ID planeID = m_World->Create_Entity(DefaultPlaneInfo, false);
+
+
+	EntityMeta metabox1;
+	metabox1.id = boxID;
+	metabox1.name =  "box1";
+	m_Entities.push_back(metabox1);
+
+	EntityMeta metabox2;
+	metabox2.id = boxID2;
+	metabox2.name = "box2";
+	m_Entities.push_back(metabox2);
+
+	EntityMeta metasphere;
+	metasphere.id = SphereID;
+	metasphere.name = "Sphere";
+	m_Entities.push_back(metasphere);
+
+
+	EntityMeta metaplane;
+	metaplane.id = planeID;
+	metaplane.name = "ground_plane";
+	m_Entities.push_back(metaplane);
+
+	m_RenderSystem->RegisterEntity(boxID, { nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f) });
+	m_RenderSystem->RegisterEntity(boxID2, { nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f) });
+	m_RenderSystem->RegisterEntity(SphereID, { nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f) });
+	m_RenderSystem->RegisterEntity(planeID, { nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f) });
+
 }

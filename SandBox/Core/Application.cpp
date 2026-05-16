@@ -55,7 +55,7 @@ bool Application::Initialize() {
 	}
 
 	//default scene setup
-	m_Render_System.defaultScene();
+	//m_Render_System.defaultScene();
 
 	//build Tree 
 	m_nWorld->GetCollisionWorld()->BuildTrees();

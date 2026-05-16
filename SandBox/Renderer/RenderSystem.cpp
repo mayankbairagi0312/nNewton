@@ -90,7 +90,7 @@ void nRenderSystem::Debug_Render()
 
 		if (IsShapes)
 		{
-			Debug_DrawShape(ro.objType, model, ro.color);
+			Debug_DrawShape(id, model, ro.color);
 		}
 		
 		if (IsContacts)
@@ -127,95 +127,33 @@ void nRenderSystem::Debug_DrawContactPoint(const nNewton::nVector3& position, co
 		color);
 }
 
-void nRenderSystem::Debug_DrawShape(const RenderObjectType& objType, const nNewton::nMatrix4& model, const nNewton::nVector4& color)
+void nRenderSystem::Debug_DrawShape(nNewton::nEntity_ID id, const nNewton::nMatrix4& model, const nNewton::nVector4& color)
 {
-	switch (objType)
+	auto shape = m_physics->GetShape(id);
+	if (!shape) return;
+
+	switch (shape->GetType())
 	{
-	case RenderObjectType::DEBUG_BOX:
-	{
-		nNewton::nVector3 min(-1, -1, -1);
-		nNewton::nVector3 max(1, 1, 1);
-		auto center = nNewton::nVector3(model.A[12], model.A[13], model.A[14]);
-		m_Renderer->DrawBox(min, max, center, color, model);
+	case nNewton::nCollisionShapeType::Box:
+		m_Renderer->DrawBox(
+			nNewton::nVector3(-1, -1, -1),
+			nNewton::nVector3(1, 1, 1),
+			nNewton::nVector3(model.A[12], model.A[13], model.A[14]),
+			color, model);
 		break;
-	}
-	case RenderObjectType::DEBUG_SPHERE:
-	{
-		nNewton::nVector3 s_center(0, 0, 0);
-		m_Renderer->DrawSphere(s_center, model, color);
+		
+	case nNewton::nCollisionShapeType::Sphere:
+		m_Renderer->DrawSphere({ 0,0,0 }, model, color);
 		break;
-	}
-	case RenderObjectType::DEBUG_CAPSULE:
-	{
-		break;
-	}
-	case RenderObjectType::DEBUG_PLANE:
-	{
-		nNewton::nVector3 p_center(0, 0, 0);
-		nNewton::nVector3 normal(0, 1, 0);
-		m_Renderer->DrawPlane(p_center, normal, color, 5);
-		break;
-	}
 	}
 }
-
-
-
-
-// default scene (deafult Cube :) )
-void nRenderSystem::defaultScene()
-{
-	//render_Map.clear();
-
-	// Create a box 
-	nNewton::nRigidBodyInfo DefaultBoxInfo;
-	DefaultBoxInfo.MASS_ = 1;
-	DefaultBoxInfo.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
-	DefaultBoxInfo.IS_STATIC_ = false;
-	DefaultBoxInfo.SetBoxShape({ 1,1,1 });
-
-	//another box
-	nNewton::nRigidBodyInfo DefaultBoxInfo2;
-	DefaultBoxInfo2.MASS_ = 1;
-	DefaultBoxInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultBoxInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1));
-	DefaultBoxInfo2.IS_STATIC_ = false;
-	DefaultBoxInfo2.SetBoxShape({ 1,1,1 });
-
-	//golakar bhuj
-	nNewton::nRigidBodyInfo DefaultSphereInfo2;
-	DefaultSphereInfo2.MASS_ = 1;
-	DefaultSphereInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultSphereInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
-	DefaultSphereInfo2.IS_STATIC_ = false;
-	DefaultSphereInfo2.SetBoxShape({ 1,1,1 });
-
-	//Plane
-	nNewton::nRigidBodyInfo DefaultPlaneInfo;
-	DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5));
-	DefaultPlaneInfo.IS_STATIC_ = true;
-	DefaultPlaneInfo.SetBoxShape({ 1,1,1 });
-
-	nNewton::nEntity_ID boxID = m_physics->Create_Entity(DefaultBoxInfo, false);
-	nNewton::nEntity_ID boxID2 = m_physics->Create_Entity(DefaultBoxInfo2, false);
-	nNewton::nEntity_ID SphereID = m_physics->Create_Entity(DefaultSphereInfo2, false);
-	nNewton::nEntity_ID planeID = m_physics->Create_Entity(DefaultPlaneInfo, false);
-
-	render_Map.insert({ boxID, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f)} });
-	render_Map.insert({ boxID2, {RenderObjectType::DEBUG_BOX, nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f)} });
-	render_Map.insert({ SphereID, {RenderObjectType::DEBUG_SPHERE, nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f)} });
-	render_Map.insert({ planeID, {RenderObjectType::DEBUG_PLANE, nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f)} });
-}
-
 
 
 void nRenderSystem::RegisterEntity(nNewton::nEntity_ID id,
-	RenderObjectType    type,
 	nNewton::nVector4   color)
 {
 	//render_Map[id] = RenderObject{ type, color };
-	render_Map.insert({ id,RenderObject{type,color} });
+	render_Map.insert({ id,RenderObject{color} });
 }
 
 void nRenderSystem::UnregisterEntity(nNewton::nEntity_ID id)

@@ -36,7 +36,13 @@ namespace nNewton {
 
 		nCollisionWorld* GetCollisionWorld() { return m_CollisionWorld.get(); }
 		const nCollisionWorld* GetCollisionWorld() const { return m_CollisionWorld.get(); }
-
+		std::shared_ptr<nCollisionShape> GetShape(nEntity_ID id) const
+		{
+			if (!IsValid(id)) return nullptr;
+			const nRigidBody* body = GetBody(id);
+			if (!body || !body->ColEnt) return nullptr;
+			return body->ColEnt->EntityShape;
+		}
 
 		void SetGravity(nVector3 gravity) { m_Gravity = gravity; }
 		nVector3 GetGravity()const { return m_Gravity; }

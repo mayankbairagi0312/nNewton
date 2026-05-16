@@ -11,18 +11,10 @@
 #include<nNewton/nCollisionShapes.hpp>
 #include<nNewton/nBoxShape.hpp>
 #include <nNewton/nSphereShape.hpp>
-//#include "DebugUI/DebugUI.hpp"
 
-enum struct RenderObjectType
-{
-	DEBUG_BOX,
-	DEBUG_SPHERE,
-	DEBUG_CAPSULE,
-	DEBUG_PLANE
-};
+
 struct RenderObject
 {
-	RenderObjectType objType;
 	nNewton::nVector4 color;
 };
 
@@ -39,7 +31,7 @@ private:
 	nNewton::nCollisionWorld* m_collisionWorld;
 	std::shared_ptr<DebugRenderer> m_Renderer;
 	std::unique_ptr<OpneGLDebugRenderer> m_DebugDrawer;
-	/*DebugUIEditor* m_DebugUI;*/
+	
 
 public:
 	void DrawBVHTree(nNewton::nAABBTree* tree, int maxDepth = 10);
@@ -49,18 +41,13 @@ public:
 	void Debug_DrawAxis(const nNewton::nVector3& camPOS);
 	void Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color);
 	void Debug_DrawContactPoint(const nNewton::nVector3& position, const nNewton::nVector3& normal, const nNewton::nVector4& color);
-	void Debug_DrawShape(const RenderObjectType& objType, const nNewton::nMatrix4& model, const nNewton::nVector4& color);
+	void Debug_DrawShape(nNewton::nEntity_ID id ,const nNewton::nMatrix4& model, const nNewton::nVector4& color);
 
 	void Start_Debug_Draw();
 	void End_Debug_Draw();
 	void ShutDown_DebugRender();
 
-	//void InsertToDraw(nNewton::nEntity_ID id, RenderObject obj);
-
-
-	void defaultScene();
 	void RegisterEntity(nNewton::nEntity_ID id,
-		RenderObjectType    type,
 		nNewton::nVector4   color);
 
 	void UnregisterEntity(nNewton::nEntity_ID id);

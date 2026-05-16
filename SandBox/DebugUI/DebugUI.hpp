@@ -103,5 +103,7 @@ public:
 	void DrawEntityListPanel(bool* open);
 	void DrawInspectorPanel(bool* open);
 
+	void defaultScene();
+
 };
 
