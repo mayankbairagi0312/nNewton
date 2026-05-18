@@ -21,7 +21,8 @@ namespace nNewton
 		void StepCollision();
 		void BuildTrees();
 
-	
+		void QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*,nCollisionEntity*>>& OverlapEntities);
+
 		nAABBTree* GetStaticTree() { return m_StaticTree.get(); }
 		nAABBTree* GetDynamicTree() { return m_DynamicTree.get(); }
 

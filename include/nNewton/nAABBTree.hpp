@@ -73,6 +73,11 @@ namespace nNewton
 		void DebugDrawTree(std::function<void(const nAABB&, int, bool, bool)> callback);
 		nBVHNode* GetRoot() { return root.get(); }
 
+		static void TraverseCrossOverlaps(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities,
+			const nBVHNode* FirstTree, const nBVHNode* SecTree);
+
+		static void TraverseOverlaps(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities,
+			const nBVHNode* a, const nBVHNode* b);
 
 		virtual nBVHStats CollectStats() const {
 			return CollectStatsRecursive(root.get(), 0);

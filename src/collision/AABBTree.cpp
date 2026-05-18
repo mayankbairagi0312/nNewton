@@ -153,4 +153,80 @@ namespace nNewton
 		return s;
 	}
 
+
+	void nAABBTree::TraverseOverlaps(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities,
+		const nBVHNode* a, const nBVHNode* b)
+	{
+		if (!a || !b) return;
+		if (!Overlaps(a->nodeAABB, b->nodeAABB))
+		{
+			return;
+		}
+
+		if (a->isLeaf() && b->isLeaf())
+		{
+			if (a->Entity != b->Entity)
+			{
+				if (a->Entity->EntityID < b->Entity->EntityID)
+				{
+					OverlapEntities.push_back({ a->Entity,b->Entity });
+				}
+			}
+			return;
+		}
+		else if (!a->isLeaf() && !b->isLeaf())
+		{
+			TraverseOverlaps(OverlapEntities, a->leftChild.get(), b->leftChild.get());
+			TraverseOverlaps(OverlapEntities, a->rightChild.get(), b->rightChild.get());
+			TraverseOverlaps(OverlapEntities, a->leftChild.get(), b->rightChild.get());
+			TraverseOverlaps(OverlapEntities, a->rightChild.get(), b->leftChild.get());
+		}
+		else if (a->isLeaf() && !b->isLeaf())
+		{
+			TraverseOverlaps(OverlapEntities, a, b->leftChild.get());
+			TraverseOverlaps(OverlapEntities, a, b->rightChild.get());
+		}
+
+		else
+		{
+			TraverseOverlaps(OverlapEntities, a, b->leftChild.get());
+			TraverseOverlaps(OverlapEntities, a, b->rightChild.get());
+		}
+	}
+
+
+	void nAABBTree::TraverseCrossOverlaps(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nBVHNode* FirstTree, const nBVHNode* SecTree)
+	{
+		if (!FirstTree || !SecTree) return;
+		if (!Overlaps(FirstTree->nodeAABB, SecTree->nodeAABB))
+		{
+			return;
+		}
+
+		if (FirstTree->isLeaf() && SecTree->isLeaf())
+		{
+			OverlapEntities.push_back({ FirstTree->Entity,SecTree->Entity });
+			return;
+		}
+		else if (!FirstTree->isLeaf() && !SecTree->isLeaf())
+		{
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->leftChild.get(), SecTree->leftChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->rightChild.get(), SecTree->rightChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->leftChild.get(), SecTree->rightChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->rightChild.get(), SecTree->leftChild.get());
+		}
+		else if (FirstTree->isLeaf() && !SecTree->isLeaf())
+		{
+			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->leftChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->rightChild.get());
+		}
+
+		else
+		{
+			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->leftChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->rightChild.get());
+		}
+
+	}
+
 }	

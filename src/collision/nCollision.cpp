@@ -99,7 +99,6 @@ namespace nNewton
 				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
 		}
 
-
 		container.erase(it);
 
 		if (isStatic) {
@@ -109,7 +108,16 @@ namespace nNewton
 
 		return true;
 	}
-
 	
+
+	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities)
+	{
+		if (m_StaticTree->GetRoot())
+			nAABBTree::TraverseOverlaps(OverlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
+		if (m_DynamicTree->GetRoot())
+			nAABBTree::TraverseOverlaps(OverlapEntities, m_DynamicTree->GetRoot(), m_DynamicTree->GetRoot());
+		if (m_DynamicTree->GetRoot() && m_StaticTree->GetRoot())
+			nAABBTree::TraverseCrossOverlaps(OverlapEntities,m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
+	}
 
 } //namespace nNewton
