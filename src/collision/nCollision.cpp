@@ -3,6 +3,7 @@
 #include "Collision_Broadphase/nDynamicAABBTree.cpp"
 #include "Collision_Broadphase/nStaticAABBTree.cpp"
 #include <list>
+#include <iostream>
 
 namespace nNewton
 {
@@ -36,7 +37,7 @@ namespace nNewton
 			m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
 		}
 
-		m_DynamicTree->TreeletStepRestructure(); 
+		m_DynamicTree->TreeletStepRestructure();
 
 			//read phase
 	}
@@ -119,5 +120,26 @@ namespace nNewton
 		if (m_DynamicTree->GetRoot() && m_StaticTree->GetRoot())
 			nAABBTree::TraverseCrossOverlaps(OverlapEntities,m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
 	}
+
+	void nCollisionWorld::QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nCollisionEntity* Entity)
+	{
+		if (!Entity->BVHNodePtr)return;
+
+		if (Entity->isStatic)
+		{
+			if (m_StaticTree->GetRoot())
+				nAABBTree::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+			if (m_DynamicTree->GetRoot())
+				nAABBTree::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+		}
+		else
+		{
+			if (m_StaticTree->GetRoot())
+				nAABBTree::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+			if (m_DynamicTree->GetRoot())
+				nAABBTree::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+		}
+	}
+
 
 } //namespace nNewton

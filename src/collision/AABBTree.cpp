@@ -189,8 +189,8 @@ namespace nNewton
 
 		else
 		{
-			TraverseOverlaps(OverlapEntities, a, b->leftChild.get());
-			TraverseOverlaps(OverlapEntities, a, b->rightChild.get());
+			TraverseOverlaps(OverlapEntities, a->leftChild.get(), b);
+			TraverseOverlaps(OverlapEntities, a->rightChild.get(), b);
 		}
 	}
 
@@ -205,7 +205,9 @@ namespace nNewton
 
 		if (FirstTree->isLeaf() && SecTree->isLeaf())
 		{
-			OverlapEntities.push_back({ FirstTree->Entity,SecTree->Entity });
+			if (FirstTree->Entity != SecTree->Entity) {
+				OverlapEntities.push_back({ FirstTree->Entity,SecTree->Entity });
+			}
 			return;
 		}
 		else if (!FirstTree->isLeaf() && !SecTree->isLeaf())
@@ -223,8 +225,8 @@ namespace nNewton
 
 		else
 		{
-			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->leftChild.get());
-			TraverseCrossOverlaps(OverlapEntities, FirstTree, SecTree->rightChild.get());
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->leftChild.get(), SecTree);
+			TraverseCrossOverlaps(OverlapEntities, FirstTree->rightChild.get(), SecTree);
 		}
 
 	}
