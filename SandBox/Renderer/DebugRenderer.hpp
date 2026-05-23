@@ -4,7 +4,6 @@
 #include<nNewton/nDynamicsWorld.hpp>
 #include<nNewton/nTransform.hpp>
 #include<nNewton/nMath.hpp>
-#include <glm/glm.hpp>
 #include <memory>
 
 class IDebugRenderer

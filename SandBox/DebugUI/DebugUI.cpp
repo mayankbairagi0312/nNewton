@@ -3,11 +3,12 @@
 
 
 bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* world,
-	nRenderSystem* renderSystem)
+	nRenderSystem* renderSystem , SandboxFramebuffer* FrameBuff)
 {
 	SDL_Window = window;
 	debugRenderer = render;
 	m_World = world;
+	m_FrameBuff = FrameBuff;
 	std::cout << "debug render this=" << debugRenderer.get() << std::endl;
 	m_RenderSystem = renderSystem;
 
@@ -18,22 +19,22 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.Fonts->AddFontFromFileTTF("assets/Fonts/JetBrainsMonoNL-Regular.ttf", 13.0f);
-	//io.DisplaySize = ImVec2((float)SDL_Window->getWidth(), (float)SDL_Window->getHeight());
+	
+	io.FontGlobalScale = 2.0f;
 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-
-
+	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	
 	ImGui_ImplSDL3_InitForOpenGL(SDL_Window->GetNativeHandle(), SDL_Window->GetSDLglContext());
 	ImGui_ImplOpenGL3_Init("#version 460");
+	
+	m_FrameBuff->Initialize(m_ViewportSize.x,m_ViewportSize.y);
 
 	defaultScene();
 
-
 	return true;
-
 
 }
 
@@ -65,40 +66,42 @@ void DebugUIEditor::ApplyCustomStyle()
 	ImVec4* c = s.Colors;
 
 	// base
-	c[ImGuiCol_WindowBg] = ImVec4(0.13f, 0.13f, 0.14f, 1.00f);
+	c[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
 	c[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.13f, 0.14f, 1.00f);
-	c[ImGuiCol_Border] = ImVec4(0.30f, 0.30f, 0.32f, 0.60f);
+	c[ImGuiCol_PopupBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+	c[ImGuiCol_Border] = ImVec4(0.10f, 0.10f, 0.11f, 0.60f);
 
 	// text
-	c[ImGuiCol_Text] = ImVec4(0.92f, 0.92f, 0.92f, 1.00f);
-	c[ImGuiCol_TextDisabled] = ImVec4(0.50f, 0.50f, 0.52f, 1.00f);
+	c[ImGuiCol_Text] = ImVec4(0.95f, 0.95f, 0.95f, 1.00f);
+	c[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.62f, 1.00f);
 
 	// headers (CollapsingHeader, TreeNode, Selectable)
-	c[ImGuiCol_Header] = ImVec4(0.26f, 0.26f, 0.28f, 1.00f);
-	c[ImGuiCol_HeaderHovered] = ImVec4(0.32f, 0.32f, 0.35f, 1.00f);
-	c[ImGuiCol_HeaderActive] = ImVec4(0.22f, 0.22f, 0.25f, 1.00f);
+	c[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.25f, 0.27f, 1.00f);
+	c[ImGuiCol_HeaderActive] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
 
 	// frames (InputText, Combo, Slider bg)
-	c[ImGuiCol_FrameBg] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-	c[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
+	c[ImGuiCol_FrameBg] = ImVec4(0.14f, 0.14f, 0.16f, 1.00f);
+	c[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
 	c[ImGuiCol_FrameBgActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
 
 	// accent 
-	ImVec4 accent = ImVec4(0.95f, 0.15f, 0.15f, 1.00f);
+	ImVec4 accent = ImVec4(0.36f, 0.45f, 1.00f, 1.00f);
 	ImVec4 accentHover = ImVec4(0.36f, 0.64f, 1.00f, 1.00f);
 	ImVec4 accentClick = ImVec4(0.20f, 0.48f, 0.80f, 1.00f);
 
-	c[ImGuiCol_TitleBgActive] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
-	c[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.13f, 1.00f);
+	c[ImGuiCol_TitleBgActive] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
+	c[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
 	c[ImGuiCol_TitleBgCollapsed] = ImVec4(0.12f, 0.12f, 0.13f, 0.80f);
-	c[ImGuiCol_MenuBarBg] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
 	c[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
 	c[ImGuiCol_ScrollbarGrab] = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
 	c[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
 	c[ImGuiCol_ScrollbarGrabActive] = accent;
 
 	c[ImGuiCol_CheckMark] = accent;
+	c[ImGuiCol_CheckboxSelectedBg] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
+	
 	c[ImGuiCol_SliderGrab] = accent;
 	c[ImGuiCol_SliderGrabActive] = accentClick;
 
@@ -106,10 +109,10 @@ void DebugUIEditor::ApplyCustomStyle()
 	c[ImGuiCol_ButtonHovered] = accentHover;
 	c[ImGuiCol_ButtonActive] = accentClick;
 
-	c[ImGuiCol_Tab] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
+	c[ImGuiCol_Tab] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
 	c[ImGuiCol_TabHovered] = accentHover;
 	c[ImGuiCol_TabActive] = accent;
-	c[ImGuiCol_TabUnfocused] = ImVec4(0.14f, 0.14f, 0.16f, 1.00f);
+	c[ImGuiCol_TabUnfocused] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
 	c[ImGuiCol_TabUnfocusedActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
 
 	c[ImGuiCol_Separator] = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
@@ -119,24 +122,22 @@ void DebugUIEditor::ApplyCustomStyle()
 }
 
 
-
-
 void DebugUIEditor::BeginUIFrame()
 {
 
 	ImGui_ImplOpenGL3_NewFrame();
-
 	ImGui_ImplSDL3_NewFrame();
 
 	ImGui::NewFrame();
+	BeginDockspace();
 
 }
 void DebugUIEditor::EndUIFrame()
 {
+	EndDockspace();
 	ImGui::Render();
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 }
 
 void DebugUIEditor::ShutDownUI()
@@ -146,50 +147,159 @@ void DebugUIEditor::ShutDownUI()
 	ImGui::DestroyContext();
 }
 
-void DebugUIEditor::RenderUI(bool* IsOverlay, bool* IsPanels )
-{
-	Stats_Overlay(IsOverlay);
-	DrawEntityListPanel(IsPanels);
-	DrawInspectorPanel(IsPanels);
+void DebugUIEditor::RenderUI(bool* IsPanels )
+{	
+		DrawEntityListPanel(IsPanels);
+		DrawInspectorPanel(IsPanels);
 
-	
 }
 
 
-void DebugUIEditor::Stats_Overlay(bool* IsOverlay)
+void DebugUIEditor::BeginDockspace()
+{
+	
+	ImGuiWindowFlags flags =
+		ImGuiWindowFlags_MenuBar |
+		ImGuiWindowFlags_NoDocking |
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoBringToFrontOnFocus |
+		ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+
+	const ImGuiViewport* vp = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(vp->WorkPos);
+	ImGui::SetNextWindowSize(vp->WorkSize);
+	ImGui::SetNextWindowViewport(vp->ID);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+	ImGui::Begin("##MainDockspace", nullptr, flags);
+	ImGui::PopStyleVar(3);
+
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			ImGui::MenuItem("New Scene", "Ctrl+N");
+			ImGui::MenuItem("Open Scene", "Ctrl+O");
+			ImGui::MenuItem("Save", "Ctrl+S");
+			ImGui::Separator();
+			ImGui::MenuItem("Exit");
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Debug")) {
+			ImGui::MenuItem("Stats Overlay");
+			ImGui::MenuItem("BVH Debug");
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+
+	ImGuiID dockID = ImGui::GetID("MainDockSpace");
+	ImGui::DockSpace(dockID, ImVec2(0, 0), ImGuiDockNodeFlags_None);
+}
+
+void DebugUIEditor::EndDockspace()
+{
+	ImGui::End(); 
+}
+
+void DebugUIEditor::ViewportBegin(Camera* camera)
+{
+	if (!camera) return;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+	ImGui::Begin("Scene Viewport",nullptr, ImGuiWindowFlags_NoScrollbar);
+	ImGui::PopStyleVar();
+	
+	m_ViewportSize = ImGui::GetContentRegionAvail();
+
+	// Resize framebuf
+	if (m_ViewportSize.x > 1 && m_ViewportSize.y > 1) {
+		if ((int)m_ViewportSize.x != m_FrameBuff->Width() ||
+			(int)m_ViewportSize.y != m_FrameBuff->Height()) {
+			m_FrameBuff->Resize((int)m_ViewportSize.x, (int)m_ViewportSize.y);
+			m_FrameBuff->Bind();
+			glViewport(0, 0, (int)m_ViewportSize.x, (int)m_ViewportSize.y);
+			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			m_FrameBuff->Unbind();
+
+			auto ar = static_cast<float>(m_ViewportSize.x) / static_cast<float>(m_ViewportSize.y);
+			camera->setAspectRatio(ar);
+		}
+	}	
+}
+void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
+	
+
+	m_ViewportFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+	m_ViewportHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+
+	ImGui::Image(
+		(ImTextureID)(uintptr_t)m_FrameBuff->getFrameTexture(),
+		m_ViewportSize,
+		ImVec2(0, 1),   // top-left UV
+		ImVec2(1, 0)    // bottom-right UV
+	);
+
+	bool imageHovered = ImGui::IsItemHovered();
+	auto MousePos = ImGui::GetMousePos();
+
+	m_ProcessMouseInput =
+		imageHovered &&
+		m_ViewportFocused ;
+
+	ImVec2 vpMin = ImGui::GetItemRectMin();
+	ImVec2 vpMax = ImGui::GetItemRectMax();
+
+	Stats_Overlay(IsOverlay, vpMin, vpMax);
+	ImGui::SetCursorPos(ImVec2(vpMax.x - 80, 28));
+	ImGui::Button("T"); ImGui::SameLine();
+	ImGui::Button("R"); ImGui::SameLine();
+	ImGui::Button("S");
+
+	ImGui::End();
+}
+
+
+void DebugUIEditor::Stats_Overlay(bool* IsOverlay, ImVec2 vpMin, ImVec2 vpMax)
 {
 	static int location = 0;
 	ImGuiIO& io = ImGui::GetIO();
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-	if (location >= 0)
-	{
-		const float	PAD = 10.0f;
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | 
+		ImGuiWindowFlags_NoSavedSettings | 
+		ImGuiWindowFlags_NoFocusOnAppearing | 
+		ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking;
+	
+	
+	const float	PAD = 12.0f;
+	ImVec2 vpSize = ImVec2(vpMax.x - vpMin.x, vpMax.y - vpMin.y);
+	
+	ImVec2 Window_POS, Window_POS_Pivot;
 
-		ImVec2 work_pos = viewport->WorkPos;
-		ImVec2 work_size = viewport->WorkSize;
-		ImVec2 Window_POS, Window_POS_Pivot;
-
-		Window_POS.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
-		Window_POS.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-		Window_POS_Pivot.x = (location & 1) ? 1.0f : 0.0f;
-		Window_POS_Pivot.y = (location & 2) ? 1.0f : 0.0f;
-		ImGui::SetNextWindowPos(Window_POS, ImGuiCond_Always, Window_POS_Pivot);
+	Window_POS.x = (location & 1) ? (vpMax.x - PAD) : (vpMin.x + PAD);
+	Window_POS.y = (location & 2) ? (vpMax.y - PAD) : (vpMin.y + PAD);
+	Window_POS_Pivot.x = (location & 1) ? 1.0f : 0.0f;
+	Window_POS_Pivot.y = (location & 2) ? 1.0f : 0.0f;
+	ImGui::SetNextWindowPos(Window_POS, ImGuiCond_Always, Window_POS_Pivot);
 
 		//UI WINDOW SIZE 
-		ImGui::SetNextWindowSize(ImVec2(450.0f, 350.0f), ImGuiCond_Always);
-		window_flags |= ImGuiWindowFlags_NoMove;
-
-	}
-
+	ImGui::SetNextWindowSize(ImVec2(350.0f, 300.0f), ImGuiCond_Always);
+	window_flags |= ImGuiWindowFlags_NoMove;
+	
+	
 
 	ImGui::SetNextWindowBgAlpha(0.2f);
-	ImGui::Begin("Stats Overlay", IsOverlay, window_flags);
+	
+	ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); // no border
+	ImGui::Begin("StatsOverlay", IsOverlay, window_flags);
 	//ImGui::SetWindowFontScale(1.5f);
-	io.FontGlobalScale = 2.0f;
-	ImGui::Text("nNewton Statistics:\n""Mayank Bairagi");
+	ImGui::PopStyleVar();
+	ImGui::TextColored(ImVec4(0.890f, 0.894f, 0.949f, 0.85f), "nNewton Statistics");
+	ImGui::TextColored(ImVec4(0.741f, 0.741f, 0.741f, 0.70f), "Mayank Bairagi");	ImGui::Separator();
 	ImGui::Separator();
-
 	ImGui::Text("FrameRate : %.1f FPS\nFrameTime : %.1f MS", io.Framerate, 1000 / io.Framerate);
 
 	ImGui::Separator();
@@ -203,7 +313,7 @@ void DebugUIEditor::Stats_Overlay(bool* IsOverlay)
 
 	ImGui::Text("Numbers of Objects: %s\n", "NA");
 	int vertCount = debugRenderer->GetLineCount() * 2;
-	//printf("Stats_Overlay lineCount = %d\n", lineCount);
+	
 	ImGui::Text("Numbers of Vertex: %d\n", vertCount);
 
 	ImGui::Separator();
@@ -217,7 +327,6 @@ void DebugUIEditor::Stats_Overlay(bool* IsOverlay)
 	ImGui::End();
 	
 }
-
 
 
 void DebugUIEditor::DrawBVHStats()

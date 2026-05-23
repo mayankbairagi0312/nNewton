@@ -12,7 +12,7 @@
 #include<nNewton/nDynamicsWorld.hpp>
 #include "PhysicsSystem/PhysicsSystem.hpp"
 #include"common.hpp"
-
+#include "Renderer/GL_framebuffer.hpp"
 
 struct EntityMeta {
 	nNewton::nEntity_ID id;
@@ -29,9 +29,17 @@ private:
 	nNewton::nDynamicsWorld* m_World;
 	nRenderSystem* m_RenderSystem = nullptr;
 
+	SandboxFramebuffer* m_FrameBuff;
+
 	std::vector<EntityMeta>        m_Entities;
 	nNewton::nEntity_ID            m_SelectedID = {};       
 	char                           m_RenameBuffer[64] = {};
+
+
+	ImVec2      m_ViewportSize = { 1280.0f, 720.0f };
+	bool        m_ViewportFocused = false;
+	bool        m_ViewportHovered = false;
+	bool		m_ProcessMouseInput = false;
 
 
 	char                           m_NewName[64] = "Entity";
@@ -44,6 +52,7 @@ private:
 	int                            m_NewShapeType = 0;       
 	float                          m_NewHalfExt[3] = { 0.5f, 0.5f, 0.5f };
 	float                          m_NewRadius = 0.5f;
+
 	nVector4 m_NewColor = { nColor::Magenta.r,nColor::Magenta.g,nColor::Magenta.b,nColor::Magenta.a };
 
 
@@ -79,15 +88,20 @@ private:
 public:
 	
 	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* ,
-		nRenderSystem* renderSystem);
+		nRenderSystem* renderSystem,SandboxFramebuffer* FrameBuff);
 	void BeginUIFrame();
 	void EndUIFrame();
 	void ShutDownUI();
 
-	void RenderUI(bool* IsOverlay, bool* IsPanels);
+	void RenderUI( bool* IsPanels);
+
+	void BeginDockspace();
+	void EndDockspace();
+	void ViewportBegin(Camera* camera);
+	void ViewportEnd(bool* IsOverlay);
 
 
-	void Stats_Overlay(bool* IsOverlay);
+	void Stats_Overlay(bool* IsOverlay, ImVec2 vpMin, ImVec2 vpMax);
 	void DrawBVHStats();
 	void DrawBVHStatsInline();
 	void ApplyCustomStyle();
@@ -104,6 +118,9 @@ public:
 	void DrawInspectorPanel(bool* open);
 
 	void defaultScene();
-
+	
+	bool IsViewportFocused()const { return m_ViewportFocused; }
+	bool IsViewportHovered()const { return m_ViewportHovered; }
+	bool IsProcessMouse()const { return m_ProcessMouseInput; }
 };
 

@@ -11,6 +11,7 @@
 #include <nNewton/nMath.hpp>
 #include <nNewton/nCollision.hpp>
 #include "PhysicsSystem/PhysicsSystem.hpp"
+#include "Renderer/GL_framebuffer.hpp"
 
 class Application {
 private :
@@ -26,6 +27,8 @@ private :
 	std::unique_ptr<DebugUIEditor> m_DebugUI = std::make_unique<DebugUIEditor>();
 	std::unique_ptr<nNewton::nDynamicsWorld> m_nWorld = std::make_unique<nNewton::nDynamicsWorld>();
 	std::unique_ptr<PhysicsSystem> m_physicsSystem = std::make_unique<PhysicsSystem>();
+	std::unique_ptr<SandboxFramebuffer> m_FrameBuffer = std::make_unique<SandboxFramebuffer>();
+
 	Camera m_camera;
 
 	Uint64 m_CurrTime;
