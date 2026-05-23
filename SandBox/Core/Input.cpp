@@ -65,6 +65,8 @@ void Input::BeginFrame() {
 		m_mouseState.prevButtons[i] = m_mouseState.buttons[i];
 	}
 	
+	m_mouseState.prevX = m_mouseState.x;
+	m_mouseState.prevY = m_mouseState.y;
 
 	// clear frame 
 	m_keyPressedThisFrame.clear();
@@ -157,34 +159,28 @@ void Input::ProcessInputKey(float deltaTime)
 {
 	
     if (IsKeyDown(SDL_SCANCODE_W)) {
-        printf("W pressed!\n");
         m_camera->ProcessKeyboard(m_camera->GetFront(), deltaTime);
     }
     if (IsKeyDown(SDL_SCANCODE_S)) {
-        printf("S pressed!\n");
         m_camera->ProcessKeyboard(-m_camera->GetFront(), deltaTime);  
     }
     if (IsKeyDown(SDL_SCANCODE_A)) {
-        printf("A pressed!\n");
         m_camera->ProcessKeyboard(-m_camera->GetRight(), deltaTime);  
     }
     if (IsKeyDown(SDL_SCANCODE_D)) {
-        printf("D pressed!\n");
         m_camera->ProcessKeyboard(m_camera->GetRight(), deltaTime);  
     }
 	
 }
 void Input::ProcessMosueInput()
 {	
-	if (ImGui::GetIO().WantCaptureMouse)
-		return;
 
-	float xoffset, yoffset;
+	float xoffset = 0.0f;
+	float yoffset = 0.0f;
 	GetMouseDelta(&xoffset, &yoffset);
 
 	if (IsMouseButtonDown(1))
 	{
-
 		m_camera->ProcessMouseMove(xoffset, yoffset, true);
 	}
 	
@@ -192,7 +188,6 @@ void Input::ProcessMosueInput()
 	if (IsMouseButtonDown(2))
 	{
 		m_camera->ProcessMousePan(xoffset, yoffset);
-		printf("===> Mid Mouse Down <===\n");
 	}
 	m_mouseState.prevX = m_mouseState.x;
 	m_mouseState.prevY = m_mouseState.y;
@@ -211,8 +206,6 @@ void Input::HandleWindowEvent(const SDL_WindowEvent& windowEvent) {
 		Height = windowEvent.data2;
 		testwindow.setWindow(Width, Height);
 
-		glViewport(0, 0, Width, Height);
-		m_camera->setAspectRatio(static_cast<float>(Width) / static_cast<float>(Height));
 		break;
 	case SDL_EVENT_WINDOW_MINIMIZED:
 

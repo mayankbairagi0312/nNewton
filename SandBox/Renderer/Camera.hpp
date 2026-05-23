@@ -34,7 +34,7 @@ private:
 	mutable bool m_projectionDirty;
 	 
 public:
-	Camera(const nNewton::nVector3& position = nNewton::nVector3(0.0f,0.0f,8.0f),
+	Camera(const nNewton::nVector3& position = nNewton::nVector3(0.0f,5.0,15.0f),
 		const nNewton::nVector3& up = nNewton::nVector3(0.0f,1.0f,0.0f),float yaw = -90.0f,
 		float pitch = 0.0f);
 	
@@ -56,7 +56,7 @@ public:
 	const nNewton::nVector3 GetRight() const { return nNewton::Normalized(m_Right); }
 	float GetFOV() const { return m_fov; }
 	float GetFarPlane()const { return m_farPlane; }
-
+	float GetNearPlane()const { return m_nearPlane; }
 private:
 	void UpdateCameraVectors();
 	void MarkViewDirty();
