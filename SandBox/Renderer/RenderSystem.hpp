@@ -20,19 +20,13 @@ struct RenderObject
 
 class nRenderSystem
 {
-
-
 private:
-	
-
-
 	std::unordered_map<nNewton::nEntity_ID, RenderObject> render_Map;
 	nNewton::nDynamicsWorld* m_physics;
 	nNewton::nCollisionWorld* m_collisionWorld;
 	std::shared_ptr<DebugRenderer> m_Renderer;
 	std::unique_ptr<OpneGLDebugRenderer> m_DebugDrawer;
 	
-
 public:
 	void DrawBVHTree(nNewton::nAABBTree* tree, int maxDepth = 10);
 	bool INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW,

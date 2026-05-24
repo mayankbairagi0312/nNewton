@@ -1,6 +1,11 @@
 #include "DebugUI.hpp"
-
-
+#include <algorithm>
+#include <cstring>
+#ifdef _MSC_VER
+#define Stricmp _stricmp
+#else
+#define Stricmp strcasecmp
+#endif
 
 bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* world,
 	nRenderSystem* renderSystem , SandboxFramebuffer* FrameBuff)
@@ -150,8 +155,9 @@ void DebugUIEditor::ShutDownUI()
 void DebugUIEditor::RenderUI(bool* IsPanels )
 {	
 		DrawEntityListPanel(IsPanels);
-		DrawInspectorPanel(IsPanels);
-
+		DrawPropertiesPanel(IsPanels);
+		
+		DrawDiagnosticsPanel(IsPanels);
 }
 
 
@@ -250,10 +256,72 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 		imageHovered &&
 		m_ViewportFocused ;
 
+//========================================
 	ImVec2 vpMin = ImGui::GetItemRectMin();
 	ImVec2 vpMax = ImGui::GetItemRectMax();
 
-	Stats_Overlay(IsOverlay, vpMin, vpMax);
+	ImVec2 viewportPos = vpMin;
+	ImVec2 viewportSize = ImVec2(
+		vpMax.x - vpMin.x,
+		vpMax.y - vpMin.y
+	);
+
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	ImVec2 overlayPos = ImVec2(
+		viewportPos.x + 10.0f,
+		viewportPos.y + 10.0f
+	);
+	ImVec2 overlaySize = ImVec2(260, 180);
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	char buffer[128];
+
+	sprintf(buffer, "FPS: %.1f", io.Framerate);
+
+	drawList->AddText(
+		ImVec2(overlayPos.x + 10, overlayPos.y + 10),
+		IM_COL32_WHITE,
+		buffer
+	);
+
+	sprintf(buffer, "Frame Time: %.2f ms", 1000.0f / io.Framerate);
+
+	drawList->AddText(
+		ImVec2(overlayPos.x + 10, overlayPos.y + 32),
+		IM_COL32_WHITE,
+		buffer
+	);
+	
+	if(ImGui::IsMousePosValid())
+		sprintf(buffer, "Mouse Position :(%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
+	else
+		sprintf(buffer, "Mouse Position : <invalid>");
+
+	drawList->AddText(
+		ImVec2(overlayPos.x + 10, overlayPos.y + 54),
+		IM_COL32_WHITE,
+		buffer
+	);
+
+	sprintf(buffer, "Entity Count: %d",(int)m_Entities.size());
+
+	drawList->AddText(
+		ImVec2(overlayPos.x + 10, overlayPos.y + 76),
+		IM_COL32_WHITE,
+		buffer
+	);
+
+	sprintf(buffer, "Vertex : %d", debugRenderer->GetLineCount()*2);
+
+	drawList->AddText(
+		ImVec2(overlayPos.x + 10, overlayPos.y + 98),
+		IM_COL32_WHITE,
+		buffer
+	);
+//============================================
+
 	ImGui::SetCursorPos(ImVec2(vpMax.x - 80, 28));
 	ImGui::Button("T"); ImGui::SameLine();
 	ImGui::Button("R"); ImGui::SameLine();
@@ -263,120 +331,82 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 }
 
 
-void DebugUIEditor::Stats_Overlay(bool* IsOverlay, ImVec2 vpMin, ImVec2 vpMax)
+void DebugUIEditor::DrawDiagnosticsPanel(bool* open)
 {
-	static int location = 0;
-	ImGuiIO& io = ImGui::GetIO();
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | 
-		ImGuiWindowFlags_NoSavedSettings | 
-		ImGuiWindowFlags_NoFocusOnAppearing | 
-		ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDocking;
-	
-	
-	const float	PAD = 12.0f;
-	ImVec2 vpSize = ImVec2(vpMax.x - vpMin.x, vpMax.y - vpMin.y);
-	
-	ImVec2 Window_POS, Window_POS_Pivot;
-
-	Window_POS.x = (location & 1) ? (vpMax.x - PAD) : (vpMin.x + PAD);
-	Window_POS.y = (location & 2) ? (vpMax.y - PAD) : (vpMin.y + PAD);
-	Window_POS_Pivot.x = (location & 1) ? 1.0f : 0.0f;
-	Window_POS_Pivot.y = (location & 2) ? 1.0f : 0.0f;
-	ImGui::SetNextWindowPos(Window_POS, ImGuiCond_Always, Window_POS_Pivot);
-
-		//UI WINDOW SIZE 
-	ImGui::SetNextWindowSize(ImVec2(350.0f, 300.0f), ImGuiCond_Always);
-	window_flags |= ImGuiWindowFlags_NoMove;
-	
-	
-
-	ImGui::SetNextWindowBgAlpha(0.2f);
-	
-	ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f); // no border
-	ImGui::Begin("StatsOverlay", IsOverlay, window_flags);
-	//ImGui::SetWindowFontScale(1.5f);
-	ImGui::PopStyleVar();
-	ImGui::TextColored(ImVec4(0.890f, 0.894f, 0.949f, 0.85f), "nNewton Statistics");
-	ImGui::TextColored(ImVec4(0.741f, 0.741f, 0.741f, 0.70f), "Mayank Bairagi");	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Text("FrameRate : %.1f FPS\nFrameTime : %.1f MS", io.Framerate, 1000 / io.Framerate);
-
-	ImGui::Separator();
-
-	if (ImGui::IsMousePosValid())
-		ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
-	else
-		ImGui::Text("Mouse Position: <invalid>");
-
-	ImGui::Separator();
-
-	ImGui::Text("Numbers of Objects: %s\n", "NA");
-	int vertCount = debugRenderer->GetLineCount() * 2;
-	
-	ImGui::Text("Numbers of Vertex: %d\n", vertCount);
-
-	ImGui::Separator();
-
-	ImGui::Text("Numbers of Collision: %s\n", "NA");
-
-	ImGui::Separator();
-	int w, h;
-	SDL_GetWindowSize(SDL_Window->GetNativeHandle(), &w, &h);
-	ImGui::Text("Window Size: %d X %d\n", w, h);
-	ImGui::End();
-	
-}
-
-
-void DebugUIEditor::DrawBVHStats()
-{
-	nNewton::nBVHStats staticStats = m_World->GetCollisionWorld()->GetStaticTree()->CollectStats();
-	nNewton::nBVHStats dynamicStats = m_World->GetCollisionWorld()->GetDynamicTree()->CollectStats();
-
-	bool drawStatic = debugRenderer->IsFlagEnabled(flags::BVH_Static);
-	bool drawDynamic = debugRenderer->IsFlagEnabled(flags::BVH_Dynamic);
-	bool drawFatAABB = debugRenderer->IsFlagEnabled(flags::BVH_FatAABB);
-	int  maxDepth = debugRenderer->GetBVHMaxDepth();
-
-	ImGui::Begin("BVH Debug");
-
-	if (ImGui::CollapsingHeader("Static Tree")) {
-		ImGui::Text("Total Nodes  : %d", staticStats.totalNodes);
-		ImGui::Text("Leaf Nodes   : %d", staticStats.leafNodes);
-		ImGui::Text("Max Depth    : %d", staticStats.maxDepth);
-		ImGui::Text("Avg Depth    : %.2f", staticStats.avgDepth);
+	if (!ImGui::Begin("Diagnostics", open)) {
+		ImGui::End();
+		return;
 	}
 
-	if (ImGui::CollapsingHeader("Dynamic Tree")) {
-		ImGui::Text("Total Nodes  : %d", dynamicStats.totalNodes);
-		ImGui::Text("Leaf Nodes   : %d", dynamicStats.leafNodes);
-		ImGui::Text("Dirty Nodes  : %d", dynamicStats.dirtyNodes);
-		ImGui::Text("Max Depth    : %d", dynamicStats.maxDepth);
-		ImGui::Text("Avg Depth    : %.2f", dynamicStats.avgDepth);
-		ImGui::Text("Queue Size   : %d", dynamicStats.queueSize);
+	ImGui::Spacing();
+
+	{
+		static float values[90] = {};
+		static int values_offset = 0;
+		static double refresh_time = 0.0;
+
+		if (refresh_time == 0.0)
+			refresh_time = ImGui::GetTime();
+
+		while (refresh_time < ImGui::GetTime())
+		{
+			values[values_offset] = ImGui::GetIO().Framerate;
+			values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+			refresh_time += 1.0f / 60.0f;
+		}
+
+		float average = 0.0f;
+		for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+			average += values[n];
+
+		average /= (float)IM_ARRAYSIZE(values);
+
+		char overlay[32];
+		sprintf(overlay, "Avg FPS: %.1f FPS", average);
+
+		ImGui::PlotLines("Framerate", values, IM_ARRAYSIZE(values), values_offset,
+			overlay, 0.0f, 2000.0f, ImVec2(0, 80.0f)
+		);
 	}
 
-	ImGui::Separator();
 
-	if (ImGui::Checkbox("Draw Static Tree", &drawStatic))
-		drawStatic ? debugRenderer->SetFlagEnabled(flags::BVH_Static)
-		: debugRenderer->SetDisableFlag(flags::BVH_Static);
+	{
+		static float values[90] = {};
+		static int values_offset = 0;
+		static double refresh_time = 0.0;
 
-	if (ImGui::Checkbox("Draw Dynamic Tree", &drawDynamic))
-		drawDynamic ? debugRenderer->SetFlagEnabled(flags::BVH_Dynamic)
-		: debugRenderer->SetDisableFlag(flags::BVH_Dynamic);
+		if (refresh_time == 0.0)
+			refresh_time = ImGui::GetTime();
 
-	if (ImGui::Checkbox("Draw Fat AABBs", &drawFatAABB))
-		drawFatAABB ? debugRenderer->SetFlagEnabled(flags::BVH_FatAABB)
-		: debugRenderer->SetDisableFlag(flags::BVH_FatAABB);
+		while (refresh_time < ImGui::GetTime())
+		{
+			values[values_offset] = 1000.0f / ImGui::GetIO().Framerate;
+			values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+			refresh_time += 1.0f / 60.0f;
+		}
 
-	int maxAllowed = std::max(staticStats.maxDepth, dynamicStats.maxDepth);
-	if (ImGui::SliderInt("Max Draw Depth", &maxDepth, 1, maxAllowed))
-		debugRenderer->SetBVHMaxDepth(maxDepth);
+		float average = 0.0f;
+		for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+			average += values[n];
+
+		average /= (float)IM_ARRAYSIZE(values);
+
+		char overlay[32];
+		sprintf(overlay, "Avg Frametime: %.1f FPS", average);
+
+		ImGui::PlotLines("Frametime", values, IM_ARRAYSIZE(values), values_offset,
+			overlay, 0.0f, 10.0f, ImVec2(0, 80.0f)
+		);
+	}
+
+	ImGui::Spacing();
+
+	DrawBVHStatsInline();
 
 	ImGui::End();
 }
+
+
 
 
 bool DebugUIEditor::TickSimulation(float deltaTime)
@@ -587,9 +617,9 @@ void DebugUIEditor::DrawAddEntityPopup()
 }
 
 
-void DebugUIEditor::DrawInspectorPanel(bool* open)
+void DebugUIEditor::DrawPropertiesPanel(bool* open)
 {
-	if (!ImGui::Begin("Inspector Panel", open)) {
+	if (!ImGui::Begin("Properties", open)) {
 		ImGui::End();
 		return;
 	}
@@ -619,7 +649,6 @@ void DebugUIEditor::DrawInspector()
 		nNewton::GEN_FROM_ID(m_SelectedID));
 	ImGui::Separator();
 
-	DrawBVHStatsInline();
 	ImGui::Spacing();
 	DrawTransformSection();
 	ImGui::Spacing();
@@ -799,9 +828,7 @@ const char* DebugUIEditor::ShapeTypeName(int t) {
 
 void DebugUIEditor::DrawBVHStatsInline()
 {
-	if (!ImGui::CollapsingHeader("BVH Debug"))
-		return;
-
+	ImGui::SeparatorText("BVH Tree Stats");	ImGui::Spacing();
 	nNewton::nBVHStats dynStats =
 		m_World->GetCollisionWorld()->GetDynamicTree()->CollectStats();
 	nNewton::nBVHStats staStats =
@@ -819,12 +846,16 @@ void DebugUIEditor::DrawBVHStatsInline()
 		ImGui::TreePop();
 	}
 
-	ImGui::Separator();
+	ImGui::Spacing();
+	ImGui::SeparatorText("Collision Debug");	ImGui::Spacing();
 
 	// draw flags inline
 	bool drawDyn = debugRenderer->IsFlagEnabled(flags::BVH_Dynamic);
 	bool drawSta = debugRenderer->IsFlagEnabled(flags::BVH_Static);
-	int  maxDepth = debugRenderer->GetBVHMaxDepth();
+	bool drawFatAABB = debugRenderer->IsFlagEnabled(flags::BVH_FatAABB);
+	
+	int  maxDepth = std::max(dynStats.maxDepth, staStats.maxDepth);
+	debugRenderer->SetBVHMaxDepth(std::max(maxDepth, 1));
 
 	if (ImGui::Checkbox("Draw Dynamic", &drawDyn))
 		drawDyn ? debugRenderer->SetFlagEnabled(flags::BVH_Dynamic)
@@ -836,10 +867,20 @@ void DebugUIEditor::DrawBVHStatsInline()
 		drawSta ? debugRenderer->SetFlagEnabled(flags::BVH_Static)
 		: debugRenderer->SetDisableFlag(flags::BVH_Static);
 
-	int maxAllowed = std::max(dynStats.maxDepth, staStats.maxDepth);
-	maxAllowed = std::max(maxAllowed, 1);
-	if (ImGui::SliderInt("Max Depth", &maxDepth, 1, maxAllowed))
-		debugRenderer->SetBVHMaxDepth(maxDepth);
+	//ImGui::SameLine();
+	if (ImGui::Checkbox("Draw Fat AABBs", &drawFatAABB))
+		drawFatAABB ? debugRenderer->SetFlagEnabled(flags::BVH_FatAABB)
+		: debugRenderer->SetDisableFlag(flags::BVH_FatAABB);
+
+	static int uiMaxDepth = std::clamp(debugRenderer->GetBVHMaxDepth(), 1,
+		std::max({ dynStats.maxDepth, staStats.maxDepth, 1 }));
+
+	int maxAllowed = std::max({ dynStats.maxDepth, staStats.maxDepth, 1 });
+	uiMaxDepth = std::clamp(uiMaxDepth, 1, maxAllowed);
+
+	if (ImGui::SliderInt("Max Depth", &uiMaxDepth, 1, maxAllowed))
+		debugRenderer->SetBVHMaxDepth(uiMaxDepth);
+	
 }
 
 

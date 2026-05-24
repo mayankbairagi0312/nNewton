@@ -118,5 +118,5 @@ private:
 	bool m_enabled;
 	bool m_Inframe;
 	
-	int m_BVHMaxDepth = 5;
+	int m_BVHMaxDepth ;
 };

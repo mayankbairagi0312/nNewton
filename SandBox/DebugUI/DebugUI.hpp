@@ -100,9 +100,6 @@ public:
 	void ViewportBegin(Camera* camera);
 	void ViewportEnd(bool* IsOverlay);
 
-
-	void Stats_Overlay(bool* IsOverlay, ImVec2 vpMin, ImVec2 vpMax);
-	void DrawBVHStats();
 	void DrawBVHStatsInline();
 	void ApplyCustomStyle();
 
@@ -115,7 +112,8 @@ public:
 
 	
 	void DrawEntityListPanel(bool* open);
-	void DrawInspectorPanel(bool* open);
+	void DrawPropertiesPanel(bool* open);
+	void DrawDiagnosticsPanel(bool* open);
 
 	void defaultScene();
 	
@@ -123,4 +121,3 @@ public:
 	bool IsViewportHovered()const { return m_ViewportHovered; }
 	bool IsProcessMouse()const { return m_ProcessMouseInput; }
 };
-
