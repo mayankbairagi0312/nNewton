@@ -51,7 +51,8 @@ bool Application::Initialize() {
 
 	m_running = true;
 	std::cout << "=== > Application initialized successfully < ===.\n";
-
+	DebugUIEditor::AddLog("===> Application initialized successfully <===");
+	DebugUIEditor::AddLog("===> Welcome to nNewton <===");
 	return true;
 
 }

@@ -13,11 +13,63 @@
 #include "PhysicsSystem/PhysicsSystem.hpp"
 #include"common.hpp"
 #include "Renderer/GL_framebuffer.hpp"
+#include <format>
+
+
+static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2);
+static std::string Strtrim(const std::string& str);
 
 struct EntityMeta {
 	nNewton::nEntity_ID id;
 	std::string         name;
 	bool                visible = true;
+};
+
+//======== Console 
+
+class DebugConsole
+{
+private:
+	struct LogEntry {
+		std::string Text;
+		ImVec4 Color;
+		bool HasColor;
+	};
+
+public:
+	DebugConsole();
+	~DebugConsole();
+
+	void ClearLog();
+	void AddLog(char* buf);
+	void    Draw(const char* title, bool* p_open);
+	void    ExecCommand(const std::string command_line);
+	int TextEditCallback(ImGuiInputTextCallbackData* data);
+
+private:
+
+	char							InputBuf[256];
+	std::vector<LogEntry>			Items;
+	std::vector<const char*>		Commands;
+	std::vector<int>				FilterIndices;
+	std::vector<std::string>		History;
+	int								HistoryPos;
+	ImGuiTextFilter					Filter;
+	bool							FilterDirty;
+	bool							AutoScroll;
+	bool							ScrollToBottom;
+
+
+	void UpdateFilter()
+	{
+		FilterIndices.clear();
+
+		for (int i = 0; i < Items.size(); ++i)
+		{
+			if (Filter.PassFilter(Items[i].Text.c_str())) FilterIndices.push_back(i);
+		}
+		FilterDirty = false;
+	}
 };
 
 
@@ -30,6 +82,7 @@ private:
 	nRenderSystem* m_RenderSystem = nullptr;
 
 	SandboxFramebuffer* m_FrameBuff;
+
 
 	std::vector<EntityMeta>        m_Entities;
 	nNewton::nEntity_ID            m_SelectedID = {};       
@@ -115,9 +168,22 @@ public:
 	void DrawPropertiesPanel(bool* open);
 	void DrawDiagnosticsPanel(bool* open);
 
+	static DebugConsole& GetConsole()
+	{
+		static DebugConsole console;
+		return console;
+	}
+	static void DrawConsole(bool* p_open);
+
+	template<typename... Args>
+	static void AddLog(std::format_string<Args...> fmt, Args&&... args);
+
 	void defaultScene();
 	
 	bool IsViewportFocused()const { return m_ViewportFocused; }
 	bool IsViewportHovered()const { return m_ViewportHovered; }
 	bool IsProcessMouse()const { return m_ProcessMouseInput; }
 };
+
+
+

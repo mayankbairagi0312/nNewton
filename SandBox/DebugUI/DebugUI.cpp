@@ -38,7 +38,7 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	m_FrameBuff->Initialize(m_ViewportSize.x,m_ViewportSize.y);
 
 	defaultScene();
-
+	
 	return true;
 
 }
@@ -47,83 +47,101 @@ void DebugUIEditor::ApplyCustomStyle()
 {
 	ImGuiStyle& s = ImGui::GetStyle();
 
-	//rounding
-	s.WindowRounding = 4.f;
-	s.FrameRounding = 4.f;
-	s.PopupRounding = 4.f;
-	s.ScrollbarRounding = 4.f;
-	s.GrabRounding = 4.f;
-	s.TabRounding = 4.f;
-	s.ChildRounding = 4.f;
+	//Rounding 
+	s.WindowRounding = 2.0f;
+	s.FrameRounding = 2.0f;
+	s.PopupRounding = 2.0f;
+	s.ScrollbarRounding = 2.0f;
+	s.GrabRounding = 2.0f;
+	s.TabRounding = 2.0f;
+	s.ChildRounding = 2.0f;
 
-	//spacing
-	s.WindowPadding = ImVec2(10, 10);
-	s.FramePadding = ImVec2(4, 4);
-	s.ItemSpacing = ImVec2(8, 6);
-	s.ItemInnerSpacing = ImVec2(6, 4);
-	s.IndentSpacing = 14.f;
-	s.ScrollbarSize = 10.f;
-	s.GrabMinSize = 10.f;
-	s.WindowBorderSize = 2.f;
-	s.FrameBorderSize = 0.f;
-	s.PopupBorderSize = 1.f;
+	//Spacing 
+	s.WindowPadding = ImVec2(8, 8);
+	s.FramePadding = ImVec2(5, 4);
+	s.ItemSpacing = ImVec2(8, 5);
+	s.ItemInnerSpacing = ImVec2(4, 4);
+	s.IndentSpacing = 14.0f;
+	s.ScrollbarSize = 14.0f;
+	s.GrabMinSize = 10.0f;
+
+	//Borders
+	s.WindowBorderSize = 1.0f;
+	s.ChildBorderSize = 1.0f;
+	s.PopupBorderSize = 1.0f;
+	s.FrameBorderSize = 1.0f;
 
 	ImVec4* c = s.Colors;
 
-	// base
-	c[ImGuiCol_WindowBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_ChildBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_PopupBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_Border] = ImVec4(0.10f, 0.10f, 0.11f, 0.60f);
+	// Darks
+	ImVec4 baseBg = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+	ImVec4 panelBg = ImVec4(0.12f, 0.13f, 0.13f, 1.00f);
+	ImVec4 borderCol = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
 
-	// text
-	c[ImGuiCol_Text] = ImVec4(0.95f, 0.95f, 0.95f, 1.00f);
-	c[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.62f, 1.00f);
+	// Accent
+	ImVec4 accent = ImVec4(0.24f, 0.36f, 0.48f, 1.00f);
+	ImVec4 accentHover = ImVec4(0.31f, 0.44f, 0.58f, 1.00f);
+	ImVec4 accentActive = ImVec4(0.19f, 0.29f, 0.40f, 1.00f);
 
-	// headers (CollapsingHeader, TreeNode, Selectable)
-	c[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.18f, 1.00f);
-	c[ImGuiCol_HeaderHovered] = ImVec4(0.25f, 0.25f, 0.27f, 1.00f);
-	c[ImGuiCol_HeaderActive] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
+	// Text - Soft off-white
+	c[ImGuiCol_Text] = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+	c[ImGuiCol_TextDisabled] = ImVec4(0.45f, 0.45f, 0.45f, 1.00f);
 
-	// frames (InputText, Combo, Slider bg)
-	c[ImGuiCol_FrameBg] = ImVec4(0.14f, 0.14f, 0.16f, 1.00f);
-	c[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.24f, 1.00f);
-	c[ImGuiCol_FrameBgActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+	// Windows & Panels
+	c[ImGuiCol_WindowBg] = baseBg;
+	c[ImGuiCol_ChildBg] = panelBg;
+	c[ImGuiCol_PopupBg] = panelBg;
+	c[ImGuiCol_Border] = borderCol;
+	c[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 
-	// accent 
-	ImVec4 accent = ImVec4(0.36f, 0.45f, 1.00f, 1.00f);
-	ImVec4 accentHover = ImVec4(0.36f, 0.64f, 1.00f, 1.00f);
-	ImVec4 accentClick = ImVec4(0.20f, 0.48f, 0.80f, 1.00f);
+	// Frames
+	c[ImGuiCol_FrameBg] = panelBg;
+	c[ImGuiCol_FrameBgHovered] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
+	c[ImGuiCol_FrameBgActive] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
 
-	c[ImGuiCol_TitleBgActive] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_TitleBgCollapsed] = ImVec4(0.12f, 0.12f, 0.13f, 0.80f);
-	c[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.10f, 0.11f, 1.00f);
-	c[ImGuiCol_ScrollbarGrab] = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
-	c[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.40f, 0.40f, 0.42f, 1.00f);
-	c[ImGuiCol_ScrollbarGrabActive] = accent;
+	// Headers
+	c[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
+	c[ImGuiCol_HeaderHovered] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+	c[ImGuiCol_HeaderActive] = ImVec4(0.24f, 0.24f, 0.24f, 1.00f);
 
-	c[ImGuiCol_CheckMark] = accent;
-	c[ImGuiCol_CheckboxSelectedBg] = ImVec4(0.12f, 0.12f, 0.15f, 1.00f);
-	
-	c[ImGuiCol_SliderGrab] = accent;
-	c[ImGuiCol_SliderGrabActive] = accentClick;
+	// Buttons
+	c[ImGuiCol_Button] = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
+	c[ImGuiCol_ButtonHovered] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+	c[ImGuiCol_ButtonActive] = accentActive;
 
-	c[ImGuiCol_Button] = ImVec4(0.22f, 0.22f, 0.25f, 1.00f);
-	c[ImGuiCol_ButtonHovered] = accentHover;
-	c[ImGuiCol_ButtonActive] = accentClick;
-
-	c[ImGuiCol_Tab] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+	// Tabs
+	c[ImGuiCol_Tab] = baseBg;
 	c[ImGuiCol_TabHovered] = accentHover;
-	c[ImGuiCol_TabActive] = accent;
-	c[ImGuiCol_TabUnfocused] = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-	c[ImGuiCol_TabUnfocusedActive] = ImVec4(0.20f, 0.20f, 0.22f, 1.00f);
+	c[ImGuiCol_TabActive] = panelBg; 
+	c[ImGuiCol_TabUnfocused] = baseBg;
+	c[ImGuiCol_TabUnfocusedActive] = panelBg;
 
-	c[ImGuiCol_Separator] = ImVec4(0.28f, 0.28f, 0.30f, 1.00f);
-	c[ImGuiCol_ResizeGrip] = ImVec4(0.30f, 0.30f, 0.32f, 0.50f);
+	// Title
+	c[ImGuiCol_TitleBg] = baseBg;
+	c[ImGuiCol_TitleBgActive] = baseBg;
+	c[ImGuiCol_TitleBgCollapsed] = baseBg;
+	c[ImGuiCol_MenuBarBg] = baseBg;
+
+	// Scrollbars
+	c[ImGuiCol_ScrollbarBg] = baseBg;
+	c[ImGuiCol_ScrollbarGrab] = ImVec4(0.22f, 0.22f, 0.22f, 1.00f);
+	c[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.30f, 0.30f, 0.30f, 1.00f);
+	c[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
+
+	c[ImGuiCol_CheckMark] = accentHover;
+	c[ImGuiCol_CheckboxSelectedBg] = panelBg;
+	c[ImGuiCol_SliderGrab] = accent;
+	c[ImGuiCol_SliderGrabActive] = accentActive;
+
+	// Resize Grips
+	c[ImGuiCol_ResizeGrip] = ImVec4(0.18f, 0.18f, 0.18f, 0.50f);
 	c[ImGuiCol_ResizeGripHovered] = accentHover;
-	c[ImGuiCol_ResizeGripActive] = accent;
+	c[ImGuiCol_ResizeGripActive] = accentActive;
+
+	// Separators
+	c[ImGuiCol_Separator] = borderCol;
+	c[ImGuiCol_SeparatorHovered] = accentHover;
+	c[ImGuiCol_SeparatorActive] = accentActive;
 }
 
 
@@ -156,7 +174,7 @@ void DebugUIEditor::RenderUI(bool* IsPanels )
 {	
 		DrawEntityListPanel(IsPanels);
 		DrawPropertiesPanel(IsPanels);
-		
+		DrawConsole(IsPanels);
 		DrawDiagnosticsPanel(IsPanels);
 }
 
@@ -444,11 +462,11 @@ void DebugUIEditor::DrawEntityList()
 	ImGui::TextDisabled("ENTITIES %d ", (int)m_Entities.size());
 
 	float windowWidth = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-	float buttonWidth = ImGui::CalcTextSize(" + ").x + ImGui::GetStyle().FramePadding.x * 2;
+	float buttonWidth = ImGui::CalcTextSize("  +  ").x + ImGui::GetStyle().FramePadding.x * 2;
 	
 	ImGui::SameLine(ImGui::GetWindowContentRegionMax().x  - buttonWidth * 2 - 8.f);
 
-	if (ImGui::SmallButton(" + "))
+	if (ImGui::SmallButton("Add"))
 		ImGui::OpenPopup("AddEntityPopup");
 	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Add entity");
 
@@ -456,7 +474,7 @@ void DebugUIEditor::DrawEntityList()
 
 	bool hasSelection = m_World && m_World->IsValid(m_SelectedID);
 	if (!hasSelection) ImGui::BeginDisabled();
-	if (ImGui::SmallButton(" - ")) {
+	if (ImGui::SmallButton("remove")) {
 		m_World->DestroyEntity(m_SelectedID);
 		m_Entities.erase(std::remove_if(m_Entities.begin(), m_Entities.end(),
 			[this](const EntityMeta& m) { return m.id == m_SelectedID; }),
@@ -577,8 +595,6 @@ void DebugUIEditor::DrawAddEntityPopup()
 
 		nNewton::nEntity_ID newID = m_World->Create_Entity(info,true);
 
-
-		
 
 		//m_World->GetCollisionWorld()->CreateCollisionEntity(newID, info.IS_STATIC_, info.INIT_TRANSFORM_, info.INIT_VELOCITY_, info.getCollisionShape());
 
@@ -951,4 +967,414 @@ void DebugUIEditor::defaultScene()
 	m_RenderSystem->RegisterEntity(SphereID, { nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f) });
 	m_RenderSystem->RegisterEntity(planeID, { nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f) });
 
+}
+
+//======== Console panel
+
+DebugConsole::DebugConsole()
+{
+	ClearLog();
+	memset(InputBuf, 0, sizeof(InputBuf));
+	HistoryPos = -1;
+	Commands.push_back("HELP");
+	Commands.push_back("HISTORY");
+	Commands.push_back("CLEAR");
+	Commands.push_back("CLASSIFY");
+	AutoScroll = true;
+	ScrollToBottom = false;
+	FilterDirty = true;
+}
+
+DebugConsole::~DebugConsole()
+{
+}
+
+void DebugConsole::ClearLog()
+{
+	Items.clear();
+	FilterIndices.clear();
+	FilterDirty = true;
+}
+
+
+void DebugConsole::AddLog(char* buf) 
+{
+
+	char* start = buf;
+	char* end = strchr(start, '\n');
+
+
+
+	while (end != nullptr) {
+		*end = '\0';   
+
+		LogEntry entry;
+		entry.Text = start;
+		entry.HasColor = false;
+
+		if (entry.Text.find("[error]") != std::string::npos) {
+			entry.Color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+			entry.HasColor = true;
+		}
+		else if (entry.Text.starts_with("# ")) {
+			entry.Color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f);
+			entry.HasColor = true;
+		}
+
+		Items.push_back(entry);
+		start = end + 1;         
+		end = strchr(start, '\n'); 
+	}
+
+	if (*start != '\0') {
+
+		LogEntry entry;
+		entry.Text = start;
+		entry.HasColor = false;
+
+		if (entry.Text.find("[error]") != std::string::npos) {
+			entry.Color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+			entry.HasColor = true;
+		}
+		else if (entry.Text.starts_with("> ")) {
+			entry.Color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f);
+			entry.HasColor = true;
+		}
+
+		Items.push_back(entry);
+	}
+
+	FilterDirty = true;
+}
+
+void DebugConsole::Draw(const char* title, bool* p_open)
+{
+	ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
+	if (!ImGui::Begin(title, p_open))
+	{
+		ImGui::End();
+		return;
+	}
+
+	if (ImGui::BeginPopupContextItem())
+	{
+		if (ImGui::MenuItem("Close Console"))
+			*p_open = false;
+		ImGui::EndPopup();
+	}
+
+
+	ImGui::TextWrapped("Enter 'HELP' for help.");
+
+	// TODO: display items starting from the bottom
+
+	if (ImGui::SmallButton("Clear")) { ClearLog(); }
+	ImGui::SameLine();
+	bool copy_to_clipboard = ImGui::SmallButton("Copy");
+
+	//ImGui::Separator();
+	ImGui::Spacing();
+	// Options menu
+	if (ImGui::BeginPopup("Options"))
+	{
+		ImGui::Checkbox("Auto-scroll", &AutoScroll);
+		ImGui::EndPopup();
+	}
+
+	// Options, Filter
+	ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_Tooltip);
+	if (ImGui::Button("Options"))
+		ImGui::OpenPopup("Options");
+	ImGui::SameLine();
+
+
+	static char search_buf[128] = "";
+
+	//ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+	ImGui::SetNextItemWidth(250.0f); // Use negative for right-alignment or ImGui::GetContentRegionAvail().x for full
+
+	// 1. Use the Hint version for the "faded text"
+	if (ImGui::InputTextWithHint("##ConsoleSearch", "Search logs...", search_buf, IM_ARRAYSIZE(search_buf)))
+	{
+		// 2. THE FIX: Manually update the Filter's internal buffer
+		strcpy(Filter.InputBuf, search_buf);
+
+		// 3. Tell the filter to rebuild its internal state
+		Filter.Build();
+
+		// 4. Mark your indices as dirty so the clipper updates
+		FilterDirty = true;
+	}
+
+	//ImGui::PopStyleVar();
+	if (search_buf[0] != '\0') {
+		ImGui::SameLine();
+		if (ImGui::Button(" X ")) {
+			search_buf[0] = '\0';
+			Filter.InputBuf[0] = '\0';
+			Filter.Build();
+			FilterDirty = true;
+		}
+	}
+
+	ImGui::Spacing();
+	//ImGui::Separator();
+
+	if (FilterDirty) {
+		UpdateFilter();
+	}
+
+	// Reserve enough left-over height for 1 separator + 1 input text
+	ImGuiStyle& style = ImGui::GetStyle();
+	const float footer_height_to_reserve = style.SeparatorSize + style.ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+	if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_HorizontalScrollbar))
+	{
+		if (ImGui::BeginPopupContextWindow())
+		{
+			if (ImGui::Selectable("Clear")) ClearLog();
+			ImGui::EndPopup();
+		}
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+		if (copy_to_clipboard)
+			ImGui::LogToClipboard();
+		
+		ImGuiListClipper clip;
+		clip.Begin(FilterIndices.size());
+
+		while (clip.Step())
+		{
+			for (int i = clip.DisplayStart; i < clip.DisplayEnd; ++i)
+			{
+				int realIndex = FilterIndices[i];
+				const LogEntry& item = Items[realIndex]; 
+				if (item.HasColor)
+					ImGui::PushStyleColor(ImGuiCol_Text, item.Color);
+
+				ImGui::TextUnformatted(item.Text.c_str());
+
+				if (item.HasColor)
+					ImGui::PopStyleColor();
+			}
+		}
+		
+		if (copy_to_clipboard)
+			ImGui::LogFinish();
+
+		// Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
+		// Using a scrollbar or mouse-wheel will take away from the bottom edge.
+		if (ScrollToBottom || (AutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
+			ImGui::SetScrollHereY(1.0f);
+		ScrollToBottom = false;
+
+		ImGui::PopStyleVar();
+	}
+	ImGui::EndChild();
+	//ImGui::Separator();
+
+	// Command-line
+	bool reclaim_focus = false;
+	ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory ;
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 5));
+	ImGui::PushItemWidth(-1.0f);
+	if (ImGui::InputTextWithHint("##Input", "Type command here...", InputBuf, IM_COUNTOF(InputBuf), input_text_flags,
+		[](ImGuiInputTextCallbackData* data) { DebugConsole* console = (DebugConsole*)data->UserData;
+	return console->TextEditCallback(data); }, (void*)this))
+	{
+		std::string s = InputBuf;
+
+		Strtrim(s);
+
+		if (s[0])
+			ExecCommand(s);
+
+		InputBuf[0] = '\0';             
+		reclaim_focus = true;
+	}
+	ImGui::PopItemWidth();
+	ImGui::PopStyleVar();
+	ImGui::PopStyleVar();
+	// Auto-focus on window apparition
+	ImGui::SetItemDefaultFocus();
+	if (reclaim_focus)
+		ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+
+	ImGui::End();
+}
+
+void    DebugConsole::ExecCommand(const std::string command_line)
+{
+	DebugUIEditor::AddLog("> {}\n", command_line.c_str());
+
+	// Insert into history. First find match and delete it so it can be pushed to the back.
+	// This isn't trying to be smart or optimal.
+	HistoryPos = -1;
+	for (int i = History.size() - 1; i >= 0; i--)
+		if (Stricmp(History[i].c_str(), command_line.c_str()) == 0)
+		{
+			History.erase(History.begin() + i);
+			break;
+		}
+	History.push_back(command_line);
+
+	// Process command
+	if (CaseInsensitiveMatch(command_line, "CLEAR"))
+	{
+		Items.clear();
+	}
+	else if (CaseInsensitiveMatch(command_line, "HELP"))
+	{
+		DebugUIEditor::AddLog("Commands:");
+		for (int i = 0; i < Commands.size(); i++)
+			DebugUIEditor::AddLog("- {}", Commands[i]);
+	}
+	else if (CaseInsensitiveMatch(command_line, "HISTORY"))
+	{
+		int first = History.size() - 10;
+		for (int i = first > 0 ? first : 0; i < History.size(); i++)
+			DebugUIEditor::AddLog("{:3}: {}\n", i, History[i].c_str());
+	}
+	else
+	{
+		DebugUIEditor::AddLog("Unknown command: '{}'\n", command_line.c_str());
+	}
+
+	// On command input, we scroll to bottom even if AutoScroll==false
+	ScrollToBottom = true;
+}
+
+int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
+{
+	//AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
+	switch (data->EventFlag)
+	{
+	case ImGuiInputTextFlags_CallbackCompletion:
+	{
+		// Locate beginning of current word
+		const char* word_end = data->Buf + data->CursorPos;
+		const char* word_start = word_end;
+		while (word_start > data->Buf)
+		{
+			const char c = word_start[-1];
+			if (c == ' ' || c == '\t' || c == ',' || c == ';')
+				break;
+			word_start--;
+		}
+
+		// Build a list of candidates
+		ImVector<const char*> candidates;
+		for (int i = 0; i < Commands.size(); i++)
+			if (CaseInsensitiveMatch(std::string_view(Commands[i]), std::string_view(word_start, (int)(word_end - word_start))))
+				candidates.push_back(Commands[i]);
+
+		if (candidates.Size == 0)
+		{
+			// No match
+			DebugUIEditor::AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+		}
+		else if (candidates.Size == 1)
+		{
+			// Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
+			data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+			data->InsertChars(data->CursorPos, candidates[0]);
+			data->InsertChars(data->CursorPos, " ");
+		}
+		else
+		{
+			// Multiple matches. Complete as much as we can..
+			// So inputting "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
+			int match_len = (int)(word_end - word_start);
+			for (;;)
+			{
+				int c = 0;
+				bool all_candidates_matches = true;
+				for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
+					if (i == 0)
+						c = toupper(candidates[i][match_len]);
+					else if (c == 0 || c != toupper(candidates[i][match_len]))
+						all_candidates_matches = false;
+				if (!all_candidates_matches)
+					break;
+				match_len++;
+			}
+
+			if (match_len > 0)
+			{
+				data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
+				data->InsertChars(data->CursorPos, candidates[0], candidates[0] + match_len);
+			}
+
+			// List matches
+			DebugUIEditor::AddLog("Possible matches:\n");
+			for (int i = 0; i < candidates.Size; i++)
+				DebugUIEditor::AddLog("- %s\n", candidates[i]);
+		}
+
+		break;
+	}
+	case ImGuiInputTextFlags_CallbackHistory:
+	{
+		// HISTORY
+		const int prev_history_pos = HistoryPos;
+		if (data->EventKey == ImGuiKey_UpArrow)
+		{
+			if (HistoryPos == -1)
+				HistoryPos = History.size() - 1;
+			else if (HistoryPos > 0)
+				HistoryPos--;
+		}
+		else if (data->EventKey == ImGuiKey_DownArrow)
+		{
+			if (HistoryPos != -1)
+				if (++HistoryPos >= History.size())
+					HistoryPos = -1;
+		}
+
+		// A better implementation would preserve the data on the current input line along with cursor position.
+		if (prev_history_pos != HistoryPos)
+		{
+			const char* history_str = (HistoryPos >= 0) ? History[HistoryPos].c_str() : "";
+			data->DeleteChars(0, data->BufTextLen);
+			data->InsertChars(0, history_str);
+		}
+	}
+	}
+	return 0;
+}
+
+static std::string Strtrim(const std::string& str) {
+	const std::string whitespace = " \t\r\n\v\f";
+
+	size_t start = str.find_first_not_of(whitespace);
+	if (start == std::string::npos) return "";
+
+	size_t end = str.find_last_not_of(whitespace);
+
+	return str.substr(start, end - start + 1);
+}
+
+static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2) {
+	if (str1.size() != str2.size()) return false;
+	return std::equal(str1.begin(), str1.end(), str2.begin(),
+		[](unsigned char c1, unsigned char c2) {
+			return std::tolower(c1) == std::tolower(c2);
+		});
+}
+
+void DebugUIEditor::DrawConsole(bool* p_open)
+{
+	GetConsole().Draw(" Console ", p_open);
+}
+
+template<typename... Args>
+void DebugUIEditor::AddLog(std::format_string<Args...> fmt, Args&&... args )
+{
+
+	static DebugConsole console;
+
+	std::string massage = std::format(fmt, std::forward<Args>(args)...);
+	
+
+	GetConsole().AddLog(massage.data());
 }
