@@ -1,5 +1,6 @@
 #include "DebugUI.hpp"
 #include <algorithm>
+#include <random>
 #include <cstring>
 #ifdef _MSC_VER
 #define Stricmp _stricmp
@@ -90,7 +91,7 @@ void DebugUIEditor::ApplyCustomStyle()
 	// Windows & Panels
 	c[ImGuiCol_WindowBg] = baseBg;
 	c[ImGuiCol_ChildBg] = panelBg;
-	c[ImGuiCol_PopupBg] = panelBg;
+	c[ImGuiCol_PopupBg] = baseBg;
 	c[ImGuiCol_Border] = borderCol;
 	c[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 
@@ -606,7 +607,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 		meta.id = newID;
 		meta.name = m_NewName[0] ? m_NewName : "Entity";
 		m_Entities.push_back(meta);
-
+		 
 		m_SelectedID = newID;
 		SyncEditCacheFromWorld();
 
@@ -900,73 +901,110 @@ void DebugUIEditor::DrawBVHStatsInline()
 }
 
 
+nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<float> pos(0.0f, 100.0f);
+	std::uniform_real_distribution<float> Scale(0.5f, 5.0f);
+	std::uniform_int_distribution<int> collision(1, 2); 
+	std::uniform_real_distribution<float> color(0.0f, 1.0f);
+	 
+	auto Transf = nNewton::nTransform({ pos(gen),pos(gen),pos(gen) },
+										nNewton::nQuaternion(),
+										{Scale(gen),Scale(gen),Scale(gen)}) ;
+	int shapeRoll = collision(gen);
+	nNewton::nCollisionShapeType shapeType = (shapeRoll == 1)
+		? nNewton::nCollisionShapeType::Box
+		: nNewton::nCollisionShapeType::Sphere;
+
+	std::string name;
+	name = "Entity" + std::to_string(m_Entities.size());
+	
+	nNewton::nVector4 Col(color(gen), color(gen), color(gen), 1.0f);
+	auto id = CreateEntity(name, 1.0f ,isStatic, shapeType, Transf,nNewton::nVector3(), Col);
+	
+	return id;
+}
+
+nEntity_ID DebugUIEditor::CreateEntity(const std::string& name, float mass, bool isStatic,nNewton::nCollisionShapeType shape,
+	const nNewton::nTransform& Transform,const nNewton::nVector3& init_velocity, const nNewton::nVector4& color )
+{
+	if (!m_RenderSystem) {
+		AddLog("Rander Fails System: {}", name);
+		return INVALID_ENTITY;
+	}
+
+	nNewton::nRigidBodyInfo ShapeInfo;
+	ShapeInfo.MASS_ = mass;
+	ShapeInfo.INIT_VELOCITY_ = init_velocity;
+	ShapeInfo.INIT_TRANSFORM_ = Transform;
+	ShapeInfo.IS_STATIC_ = isStatic;
+
+	if (shape == nCollisionShapeType::Box){
+		ShapeInfo.SetBoxShape({ 1,1,1 });
+	}
+	else{
+		ShapeInfo.SetSphereShape(1.0f);
+	}
+	
+	nNewton::nEntity_ID shapeID = m_World->Create_Entity(ShapeInfo, true);
+
+	EntityMeta meta;
+	meta.id = shapeID;
+	meta.name = name.empty() ? "Entity" : name;
+	m_Entities.push_back(meta);
+
+	m_RenderSystem->RegisterEntity(shapeID, color);
+	
+	return shapeID;
+}
+
 void DebugUIEditor::defaultScene()
 {
-	//render_Map.clear();
+	// Box1
+	CreateEntity(
+		"box1",
+		1.0f,
+		false,
+		nNewton::nCollisionShapeType::Box,
+		nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1)),
+		nNewton::nVector3(0, 0, 0),
+		nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f)
+	);
 
-	// Create a box 
-	nNewton::nRigidBodyInfo DefaultBoxInfo;
-	DefaultBoxInfo.MASS_ = 1;
-	DefaultBoxInfo.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultBoxInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
-	DefaultBoxInfo.IS_STATIC_ = false;
-	DefaultBoxInfo.SetBoxShape({ 1,1,1 });
+	// Box2
+	CreateEntity(
+		"box2",
+		1.0f,
+		false,
+		nNewton::nCollisionShapeType::Box,
+		nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1)),
+		nNewton::nVector3(0, 0, 0),
+		nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f)
+	);
 
-	//another box
-	nNewton::nRigidBodyInfo DefaultBoxInfo2;
-	DefaultBoxInfo2.MASS_ = 1;
-	DefaultBoxInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultBoxInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1));
-	DefaultBoxInfo2.IS_STATIC_ = false;
-	DefaultBoxInfo2.SetBoxShape({ 1,1,1 });
+	// Sphere
+	CreateEntity(
+		"Sphere",
+		1.0f,
+		false,
+		nNewton::nCollisionShapeType::Sphere,
+		nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1)),
+		nNewton::nVector3(0, 0, 0),
+		nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f)
+	);
 
-	//golakar bhuj
-	nNewton::nRigidBodyInfo DefaultSphereInfo2;
-	DefaultSphereInfo2.MASS_ = 1;
-	DefaultSphereInfo2.INIT_VELOCITY_ = nNewton::nVector3(0, 0, 0);
-	DefaultSphereInfo2.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1));
-	DefaultSphereInfo2.IS_STATIC_ = false;
-	DefaultSphereInfo2.SetSphereShape(1);
-
-	//Plane
-	nNewton::nRigidBodyInfo DefaultPlaneInfo;
-	DefaultPlaneInfo.INIT_TRANSFORM_ = nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5));
-	DefaultPlaneInfo.IS_STATIC_ = true;
-	DefaultPlaneInfo.SetBoxShape({ 1,1,1 });
-
-
-	nNewton::nEntity_ID boxID = m_World->Create_Entity(DefaultBoxInfo, false);
-	nNewton::nEntity_ID boxID2 = m_World->Create_Entity(DefaultBoxInfo2, false);
-	nNewton::nEntity_ID SphereID = m_World->Create_Entity(DefaultSphereInfo2, false);
-	nNewton::nEntity_ID planeID = m_World->Create_Entity(DefaultPlaneInfo, false);
-
-
-	EntityMeta metabox1;
-	metabox1.id = boxID;
-	metabox1.name =  "box1";
-	m_Entities.push_back(metabox1);
-
-	EntityMeta metabox2;
-	metabox2.id = boxID2;
-	metabox2.name = "box2";
-	m_Entities.push_back(metabox2);
-
-	EntityMeta metasphere;
-	metasphere.id = SphereID;
-	metasphere.name = "Sphere";
-	m_Entities.push_back(metasphere);
-
-
-	EntityMeta metaplane;
-	metaplane.id = planeID;
-	metaplane.name = "ground_plane";
-	m_Entities.push_back(metaplane);
-
-	m_RenderSystem->RegisterEntity(boxID, { nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f) });
-	m_RenderSystem->RegisterEntity(boxID2, { nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f) });
-	m_RenderSystem->RegisterEntity(SphereID, { nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f) });
-	m_RenderSystem->RegisterEntity(planeID, { nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f) });
-
+	// Ground plane
+	CreateEntity(
+		"ground_plane",
+		0.0f,
+		true,
+		nNewton::nCollisionShapeType::Box,
+		nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5)),
+		nNewton::nVector3(0, 0, 0),
+		nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f)
+	);
 }
 
 //======== Console panel
@@ -979,7 +1017,7 @@ DebugConsole::DebugConsole()
 	Commands.push_back("HELP");
 	Commands.push_back("HISTORY");
 	Commands.push_back("CLEAR");
-	Commands.push_back("CLASSIFY");
+	Commands.push_back("CREATE");
 	AutoScroll = true;
 	ScrollToBottom = false;
 	FilterDirty = true;
@@ -1091,18 +1129,14 @@ void DebugConsole::Draw(const char* title, bool* p_open)
 	static char search_buf[128] = "";
 
 	//ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
-	ImGui::SetNextItemWidth(250.0f); // Use negative for right-alignment or ImGui::GetContentRegionAvail().x for full
+	ImGui::SetNextItemWidth(250.0f); 
 
-	// 1. Use the Hint version for the "faded text"
 	if (ImGui::InputTextWithHint("##ConsoleSearch", "Search logs...", search_buf, IM_ARRAYSIZE(search_buf)))
 	{
-		// 2. THE FIX: Manually update the Filter's internal buffer
 		strcpy(Filter.InputBuf, search_buf);
 
-		// 3. Tell the filter to rebuild its internal state
 		Filter.Build();
 
-		// 4. Mark your indices as dirty so the clipper updates
 		FilterDirty = true;
 	}
 
@@ -1235,6 +1269,11 @@ void    DebugConsole::ExecCommand(const std::string command_line)
 		for (int i = first > 0 ? first : 0; i < History.size(); i++)
 			DebugUIEditor::AddLog("{:3}: {}\n", i, History[i].c_str());
 	}
+	else if (CaseInsensitiveMatch(command_line, "CREATE"))
+	{
+		DebugUIEditor::AddLog("BOX		: 1\n");
+		DebugUIEditor::AddLog("SPHERE	: 2\n");
+	}
 	else
 	{
 		DebugUIEditor::AddLog("Unknown command: '{}'\n", command_line.c_str());
@@ -1265,13 +1304,13 @@ int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 		// Build a list of candidates
 		ImVector<const char*> candidates;
 		for (int i = 0; i < Commands.size(); i++)
-			if (CaseInsensitiveMatch(std::string_view(Commands[i]), std::string_view(word_start, (int)(word_end - word_start))))
+			if (CaseInsensitiveMatchStart(std::string_view(Commands[i]), std::string_view(word_start, (int)(word_end - word_start))))
 				candidates.push_back(Commands[i]);
 
 		if (candidates.Size == 0)
 		{
 			// No match
-			DebugUIEditor::AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
+			DebugUIEditor::AddLog("No match for \"{:.{}}\"!\n", word_start ,(int)(word_end - word_start));
 		}
 		else if (candidates.Size == 1)
 		{
@@ -1308,7 +1347,7 @@ int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 			// List matches
 			DebugUIEditor::AddLog("Possible matches:\n");
 			for (int i = 0; i < candidates.Size; i++)
-				DebugUIEditor::AddLog("- %s\n", candidates[i]);
+				DebugUIEditor::AddLog("- {}\n", candidates[i]);
 		}
 
 		break;
@@ -1357,6 +1396,14 @@ static std::string Strtrim(const std::string& str) {
 static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2) {
 	if (str1.size() != str2.size()) return false;
 	return std::equal(str1.begin(), str1.end(), str2.begin(),
+		[](unsigned char c1, unsigned char c2) {
+			return std::tolower(c1) == std::tolower(c2);
+		});
+}
+
+static bool CaseInsensitiveMatchStart(std::string_view str, std::string_view pref) {
+	if (pref.size() > str.size()) return false;
+	return std::equal(pref.begin(), pref.end(), str.begin(),
 		[](unsigned char c1, unsigned char c2) {
 			return std::tolower(c1) == std::tolower(c2);
 		});

@@ -18,7 +18,7 @@
 
 static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2);
 static std::string Strtrim(const std::string& str);
-
+static bool CaseInsensitiveMatchStart(std::string_view str, std::string_view pref);
 struct EntityMeta {
 	nNewton::nEntity_ID id;
 	std::string         name;
@@ -179,6 +179,14 @@ public:
 	static void AddLog(std::format_string<Args...> fmt, Args&&... args);
 
 	void defaultScene();
+
+	nEntity_ID CreateEntity(const std::string& name, float mass = 1.0f, bool isStatic = true, nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::Box,
+		const nNewton::nTransform& Transform = nNewton::nTransform(),
+		const nNewton::nVector3& init_velocity = nNewton::nVector3(),
+		const nNewton::nVector4& color = { 0.2f,0.7f,0.8f,1.0f });
+	nEntity_ID CreateEntityRand(bool isStatic);
+
+
 	
 	bool IsViewportFocused()const { return m_ViewportFocused; }
 	bool IsViewportHovered()const { return m_ViewportHovered; }
