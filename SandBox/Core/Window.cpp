@@ -51,6 +51,7 @@ bool Window::CreateWindow()
 
 
     SDL_GL_MakeCurrent(m_window, m_glContext);
+    SDL_GL_SetSwapInterval(0);
 
     if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
         std::cerr << "Failed to initialize GLAD (OpenGL)" << std::endl;

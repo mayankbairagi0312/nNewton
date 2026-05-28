@@ -74,7 +74,7 @@ public:
 	void DrawLine(const nNewton::nVector3& from , const nNewton::nVector3& to ,const nNewton::nVector4& Color );
 	void DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size = 0.1);
 	void DrawBox(const nNewton::nVector3& min, const nNewton::nVector3& max, const nNewton::nVector3& Center, const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
-	void DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color,const float Radius = 1, const uint8_t Segments = 32);
+	void DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color,const float Radius = 1, const uint8_t Segments = 16);
 	void DrawCapsule(const nNewton::nVector3& Center,const float, const nNewton::nVector4& Color, const float Radius = 1, const uint8_t Segments = 16);
 	void drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to,float headsize , const nNewton::nVector4& Color);
 	void DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size = 1.0f);

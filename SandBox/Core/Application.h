@@ -33,7 +33,7 @@ private :
 
 	Uint64 m_CurrTime;
 	Uint64 m_PrevTime;
-	double m_DeltaTime;
+	float m_DeltaTime;
 
 public : 
 

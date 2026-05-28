@@ -114,7 +114,7 @@ namespace nNewton
 	constexpr nVector3::nVector3() : x(0), y(0), z(0)
 	{
 	}
-	constexpr nVector3::nVector3(float m) : x(m), y(m), z(0)
+	constexpr nVector3::nVector3(float m) : x(m), y(m), z(m)
 	{
 	}
 	constexpr nVector3::nVector3(float m_, float k_, float c_) : x(m_), y(k_), z(c_)
@@ -241,7 +241,7 @@ namespace nNewton
 	constexpr nVector4::nVector4() : x(0), y(0), z(0), w(0)
 	{
 	}
-	constexpr nVector4::nVector4(float m) : x(m), y(m), z(0), w(m)
+	constexpr nVector4::nVector4(float m) : x(m), y(m), z(m), w(m)
 	{
 	}
 	constexpr nVector4::nVector4(float b_, float s_, float d_, float k_) : x(b_), y(s_), z(d_), w(k_)

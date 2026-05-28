@@ -51,8 +51,8 @@ bool Application::Initialize() {
 
 	m_running = true;
 	std::cout << "=== > Application initialized successfully < ===.\n";
-	DebugUIEditor::AddLog("===> Application initialized successfully <===");
-	DebugUIEditor::AddLog("===> Welcome to nNewton <===");
+	DebugUIEditor::AddLog("===> Application initialized Successfully <===");
+	DebugUIEditor::AddLog("===>        Welcome to nNewton            <===");
 	return true;
 
 }
@@ -70,7 +70,9 @@ void Application::Run() {
 	{
 		
 		m_CurrTime = SDL_GetPerformanceCounter();
-		m_DeltaTime = (double)((m_CurrTime - m_PrevTime) / (double)SDL_GetPerformanceFrequency());
+		m_DeltaTime = static_cast<float>(
+			(m_CurrTime - m_PrevTime) / static_cast<double>(SDL_GetPerformanceFrequency())
+			);
 		m_PrevTime = m_CurrTime;
 
 		m_input.BeginFrame();
@@ -84,9 +86,10 @@ void Application::Run() {
 			m_input.ProcessEvent(&event);
 		}
 
+		SandboxFramebuffer::ClearFrameBuff();
 		m_physicsSystem->UpdatePhysicsSystem(m_DeltaTime);
 		
-		SandboxFramebuffer::ClearFrameBuff();
+		
 		//======================
 		m_DebugUI->BeginUIFrame();
 		m_DebugUI->ViewportBegin(&m_camera);

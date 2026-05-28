@@ -7,7 +7,7 @@
 #include<vector>
 
 
-
+constexpr size_t MAX_LINES = 65536;
 
 class OpneGLDebugRenderer : public IDebugRenderer
 {
@@ -35,5 +35,5 @@ private:
 
 	std::unique_ptr<Shader> m_Shader;
 	Camera* m_Camera;
-
+	
 };

@@ -54,8 +54,12 @@ void OpneGLDebugRenderer::EndFrameRenderer() {
 	glBindVertexArray(m_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, m_lines.size() * sizeof(vertex), m_lines.data(), GL_DYNAMIC_DRAW);
-
+	if (m_lines.size() > MAX_LINES) {
+		glBufferData(GL_ARRAY_BUFFER, m_lines.size() * sizeof(vertex), m_lines.data(), GL_DYNAMIC_DRAW);
+	}
+	else {
+		glBufferSubData(GL_ARRAY_BUFFER, 0, m_lines.size() * sizeof(vertex), m_lines.data());
+	}
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -82,7 +86,8 @@ void OpneGLDebugRenderer::DrawLine(const nNewton::nVector3& from, const nNewton:
 
 }
 void OpneGLDebugRenderer::InitialzedBuf() {
-
+	// need to update num when idx have 20 bits  
+	
 	//create
 	glGenVertexArrays(1, &m_VAO);
 	glGenBuffers(1, &m_VBO);
@@ -90,6 +95,8 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 
 	glBindVertexArray(m_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, MAX_LINES * sizeof(vertex), nullptr, GL_DYNAMIC_DRAW);
 
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex, from));
 	glEnableVertexAttribArray(0);
@@ -100,7 +107,7 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-
+	m_lines.reserve(MAX_LINES);
 }
 void OpneGLDebugRenderer::clearRenderer()
 {

@@ -25,6 +25,9 @@ struct EntityMeta {
 	bool                visible = true;
 };
 
+
+
+class DebugUIEditor;
 //======== Console 
 
 class DebugConsole
@@ -43,9 +46,9 @@ public:
 	void ClearLog();
 	void AddLog(char* buf);
 	void    Draw(const char* title, bool* p_open);
-	void    ExecCommand(const std::string command_line);
+	void    ExecCommand(const std::vector<std::string>& command_line);
 	int TextEditCallback(ImGuiInputTextCallbackData* data);
-
+	void SetEditorForConsole(DebugUIEditor* UI) { m_Owner = UI; }
 private:
 
 	char							InputBuf[256];
@@ -59,6 +62,7 @@ private:
 	bool							AutoScroll;
 	bool							ScrollToBottom;
 
+	DebugUIEditor* m_Owner = nullptr;
 
 	void UpdateFilter()
 	{
@@ -185,6 +189,7 @@ public:
 		const nNewton::nVector3& init_velocity = nNewton::nVector3(),
 		const nNewton::nVector4& color = { 0.2f,0.7f,0.8f,1.0f });
 	nEntity_ID CreateEntityRand(bool isStatic);
+	bool DeleteEntity(nEntity_ID id);
 
 
 	

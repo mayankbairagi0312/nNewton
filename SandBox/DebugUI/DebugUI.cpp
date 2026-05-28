@@ -38,6 +38,7 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	
 	m_FrameBuff->Initialize(m_ViewportSize.x,m_ViewportSize.y);
 
+	GetConsole().SetEditorForConsole(this);
 	defaultScene();
 	
 	return true;
@@ -871,8 +872,8 @@ void DebugUIEditor::DrawBVHStatsInline()
 	bool drawSta = debugRenderer->IsFlagEnabled(flags::BVH_Static);
 	bool drawFatAABB = debugRenderer->IsFlagEnabled(flags::BVH_FatAABB);
 	
-	int  maxDepth = std::max(dynStats.maxDepth, staStats.maxDepth);
-	debugRenderer->SetBVHMaxDepth(std::max(maxDepth, 1));
+	//int  maxDepth = std::max(dynStats.maxDepth, staStats.maxDepth);
+	//debugRenderer->SetBVHMaxDepth(std::max(maxDepth, 1));
 
 	if (ImGui::Checkbox("Draw Dynamic", &drawDyn))
 		drawDyn ? debugRenderer->SetFlagEnabled(flags::BVH_Dynamic)
@@ -889,15 +890,15 @@ void DebugUIEditor::DrawBVHStatsInline()
 		drawFatAABB ? debugRenderer->SetFlagEnabled(flags::BVH_FatAABB)
 		: debugRenderer->SetDisableFlag(flags::BVH_FatAABB);
 
-	static int uiMaxDepth = std::clamp(debugRenderer->GetBVHMaxDepth(), 1,
-		std::max({ dynStats.maxDepth, staStats.maxDepth, 1 }));
-
 	int maxAllowed = std::max({ dynStats.maxDepth, staStats.maxDepth, 1 });
+	static int uiMaxDepth = maxAllowed;
+
 	uiMaxDepth = std::clamp(uiMaxDepth, 1, maxAllowed);
 
-	if (ImGui::SliderInt("Max Depth", &uiMaxDepth, 1, maxAllowed))
-		debugRenderer->SetBVHMaxDepth(uiMaxDepth);
+	if (ImGui::SliderInt("Depth", &uiMaxDepth, 1, maxAllowed))
+		debugRenderer->SetBVHMaxDepth(uiMaxDepth); //printf("Set max depth to %d, getter returns %d\n", uiMaxDepth, debugRenderer->GetBVHMaxDepth());
 	
+	debugRenderer->SetBVHMaxDepth(uiMaxDepth);
 }
 
 
@@ -905,18 +906,25 @@ nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> pos(0.0f, 100.0f);
+	std::uniform_real_distribution<float> pos(-50.0f, 50.0f);
 	std::uniform_real_distribution<float> Scale(0.5f, 5.0f);
 	std::uniform_int_distribution<int> collision(1, 2); 
 	std::uniform_real_distribution<float> color(0.0f, 1.0f);
 	 
-	auto Transf = nNewton::nTransform({ pos(gen),pos(gen),pos(gen) },
-										nNewton::nQuaternion(),
-										{Scale(gen),Scale(gen),Scale(gen)}) ;
+	nNewton::nVector3 tscale(Scale(gen),Scale(gen),Scale(gen));
+
 	int shapeRoll = collision(gen);
 	nNewton::nCollisionShapeType shapeType = (shapeRoll == 1)
 		? nNewton::nCollisionShapeType::Box
 		: nNewton::nCollisionShapeType::Sphere;
+
+	if (shapeType == nNewton::nCollisionShapeType::Sphere)
+	{
+		tscale = nNewton::nVector3(1);
+	}
+	auto Transf = nNewton::nTransform({ pos(gen),pos(gen),pos(gen) },
+		nNewton::nQuaternion(),
+		tscale);
 
 	std::string name;
 	name = "Entity" + std::to_string(m_Entities.size());
@@ -958,6 +966,23 @@ nEntity_ID DebugUIEditor::CreateEntity(const std::string& name, float mass, bool
 	m_RenderSystem->RegisterEntity(shapeID, color);
 	
 	return shapeID;
+}
+
+
+bool DebugUIEditor::DeleteEntity(nEntity_ID id)
+{
+	auto remove_it = std::remove_if(m_Entities.begin(), m_Entities.end(),
+		[id](const EntityMeta& m) { return m.id == id; });
+
+	if (remove_it == m_Entities.end())
+	{
+		return false;
+	}
+	
+	m_Entities.erase(remove_it, m_Entities.end());
+	m_World->DestroyEntity(id);
+
+	return true;
 }
 
 void DebugUIEditor::defaultScene()
@@ -1018,6 +1043,8 @@ DebugConsole::DebugConsole()
 	Commands.push_back("HISTORY");
 	Commands.push_back("CLEAR");
 	Commands.push_back("CREATE");
+	Commands.push_back("DELETE");
+	Commands.push_back("nCREATE");
 	AutoScroll = true;
 	ScrollToBottom = false;
 	FilterDirty = true;
@@ -1050,12 +1077,17 @@ void DebugConsole::AddLog(char* buf)
 		entry.Text = start;
 		entry.HasColor = false;
 
-		if (entry.Text.find("[error]") != std::string::npos) {
+		if (entry.Text.find("[Error]") != std::string::npos) {
 			entry.Color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
 			entry.HasColor = true;
 		}
-		else if (entry.Text.starts_with("# ")) {
+		else if (entry.Text.starts_with("> ")) {
 			entry.Color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f);
+			entry.HasColor = true;
+		}
+		else if (entry.Text.find("[Success]") != std::string::npos)
+		{
+			entry.Color = ImVec4(0.2f, 0.8f, 0.5f, 1.0f);
 			entry.HasColor = true;
 		}
 
@@ -1070,7 +1102,7 @@ void DebugConsole::AddLog(char* buf)
 		entry.Text = start;
 		entry.HasColor = false;
 
-		if (entry.Text.find("[error]") != std::string::npos) {
+		if (entry.Text.find("[Error]") != std::string::npos) {
 			entry.Color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
 			entry.HasColor = true;
 		}
@@ -1078,7 +1110,11 @@ void DebugConsole::AddLog(char* buf)
 			entry.Color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f);
 			entry.HasColor = true;
 		}
-
+		else if (entry.Text.find("[Success]") != std::string::npos)
+		{
+			entry.Color = ImVec4(0.2f, 0.8f, 0.5f, 1.0f);
+			entry.HasColor = true;
+		}
 		Items.push_back(entry);
 	}
 
@@ -1218,11 +1254,20 @@ void DebugConsole::Draw(const char* title, bool* p_open)
 	{
 		std::string s = InputBuf;
 
-		Strtrim(s);
+		if (!s.empty())
+		{
+			std::vector<std::string> tokens;
+			std::stringstream ss(s);
+			std::string temp;
 
-		if (s[0])
-			ExecCommand(s);
+			while (ss >> temp) {
+				tokens.push_back(temp);
+			}
 
+			//std::string cmdName = tokens[0];
+
+			ExecCommand(tokens);
+		}
 		InputBuf[0] = '\0';             
 		reclaim_focus = true;
 	}
@@ -1237,46 +1282,180 @@ void DebugConsole::Draw(const char* title, bool* p_open)
 	ImGui::End();
 }
 
-void    DebugConsole::ExecCommand(const std::string command_line)
+void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
 {
-	DebugUIEditor::AddLog("> {}\n", command_line.c_str());
+	size_t total_size = 0;
+	for (const auto& s : command_line) total_size += s.size() + 1;
 
-	// Insert into history. First find match and delete it so it can be pushed to the back.
-	// This isn't trying to be smart or optimal.
+	std::string full_command_line;
+	full_command_line.reserve(total_size); 
+
+	for (size_t i = 0; i < command_line.size(); ++i) {
+		full_command_line += command_line[i];
+		if (i < command_line.size() - 1) full_command_line += " ";
+	}
+
+
+	DebugUIEditor::AddLog("> {}\n", full_command_line.c_str());
+	
 	HistoryPos = -1;
-	for (int i = History.size() - 1; i >= 0; i--)
-		if (Stricmp(History[i].c_str(), command_line.c_str()) == 0)
-		{
-			History.erase(History.begin() + i);
-			break;
-		}
-	History.push_back(command_line);
+	History.erase(std::remove(History.begin(), History.end(), full_command_line), History.end());
+	History.push_back(full_command_line);
+
+	const auto& cmd = command_line[0];
 
 	// Process command
-	if (CaseInsensitiveMatch(command_line, "CLEAR"))
+	if (CaseInsensitiveMatch(cmd, "CLEAR"))
 	{
 		Items.clear();
 	}
-	else if (CaseInsensitiveMatch(command_line, "HELP"))
+	else if (CaseInsensitiveMatch(cmd, "HELP"))
 	{
 		DebugUIEditor::AddLog("Commands:");
 		for (int i = 0; i < Commands.size(); i++)
 			DebugUIEditor::AddLog("- {}", Commands[i]);
 	}
-	else if (CaseInsensitiveMatch(command_line, "HISTORY"))
+	else if (CaseInsensitiveMatch(cmd, "HISTORY"))
 	{
 		int first = History.size() - 10;
 		for (int i = first > 0 ? first : 0; i < History.size(); i++)
 			DebugUIEditor::AddLog("{:3}: {}\n", i, History[i].c_str());
 	}
-	else if (CaseInsensitiveMatch(command_line, "CREATE"))
+	else if (CaseInsensitiveMatch(cmd, "CREATE"))
 	{
-		DebugUIEditor::AddLog("BOX		: 1\n");
-		DebugUIEditor::AddLog("SPHERE	: 2\n");
+		if (command_line.size() < 4) {
+			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <BOX|SPHERE> <NAME>");
+			return;
+		}
+
+		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
+		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
+
+		if (!isStatic && !isDynamic) {
+			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
+			return;
+		}
+
+		nNewton::nCollisionShapeType shapeType;
+		if (CaseInsensitiveMatch(command_line[2], "BOX")) {
+			shapeType = nCollisionShapeType::Box;
+		}
+		else if (CaseInsensitiveMatch(command_line[2], "SPHERE")) {
+			shapeType = nCollisionShapeType::Sphere;
+		}
+		else {
+			DebugUIEditor::AddLog("[Error] Unknown shape '{}'. Supported: BOX, SPHERE.", command_line[2]);
+			return;
+		}
+
+		float mass = isStatic ? 0.0f : 1.0f;
+		m_Owner->CreateEntity(command_line[3], mass, isStatic, shapeType);
+
+		DebugUIEditor::AddLog("[Success] Created {} {} named {}", command_line[1], command_line[2], command_line[3]);
+	}
+	else if (CaseInsensitiveMatch(cmd, "nCREATE"))
+	{
+		if (command_line.size() < 3)
+		{
+			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <COUNT>");
+			return;
+		}
+
+		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
+		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
+
+		if (!isStatic && !isDynamic) {
+			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
+			return;
+		}
+
+		auto input = command_line[2];
+
+		if (input[1] == '-')
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+
+		uint16_t count;
+		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), count);
+
+		if (err == std::errc::invalid_argument)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else if (err == std::errc::result_out_of_range)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else if (ptr != input.data() + input.size())
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else
+		{
+			DebugUIEditor::AddLog("[Log] Started Creating {} Random Entity ",count);
+			for (size_t i = 0; i <= count; i++)
+			{
+				auto id = m_Owner->CreateEntityRand(isStatic);
+				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);
+			}
+			DebugUIEditor::AddLog("[Log] Created {} Random Entity ", count);
+		}
+
+	}
+	else if (CaseInsensitiveMatch(cmd, "DELETE"))
+	{
+		if (command_line.size() < 2)
+		{	
+			DebugUIEditor::AddLog("[Error] Usage: DELETE <ID>");
+			return;
+		}
+
+		std::string input = command_line[1];
+
+		if (input[1] == '-')
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		
+
+		uint32_t id;
+		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), id);
+
+		if (err == std::errc::invalid_argument)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else if (err == std::errc::result_out_of_range)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else if (ptr != input.data() + input.size())
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else
+		{
+			if (!m_Owner->DeleteEntity(id)) {
+				DebugUIEditor::AddLog("[Error] No entity found with ID: {}", id);
+				return;
+			}
+
+			DebugUIEditor::AddLog("[Success] Entity {} deleted.", id);
+		}
+
 	}
 	else
 	{
-		DebugUIEditor::AddLog("Unknown command: '{}'\n", command_line.c_str());
+		DebugUIEditor::AddLog("Unknown command: '{}'\n", cmd.c_str());
 	}
 
 	// On command input, we scroll to bottom even if AutoScroll==false
