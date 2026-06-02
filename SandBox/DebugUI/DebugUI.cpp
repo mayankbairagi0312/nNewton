@@ -908,7 +908,7 @@ nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> pos(-50.0f, 50.0f);
 	std::uniform_real_distribution<float> Scale(0.5f, 5.0f);
-	std::uniform_int_distribution<int> collision(1, 2); 
+	std::uniform_int_distribution<int> collision(1, 1); 
 	std::uniform_real_distribution<float> color(0.0f, 1.0f);
 	 
 	nNewton::nVector3 tscale(Scale(gen),Scale(gen),Scale(gen));
@@ -1369,7 +1369,7 @@ void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
 			return;
 		}
 
-		auto input = command_line[2];
+		auto& input = command_line[2];
 
 		if (input[1] == '-')
 		{

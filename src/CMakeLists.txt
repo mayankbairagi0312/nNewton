@@ -42,10 +42,7 @@ target_include_directories(nNewton
 
 # Dependencies
 
-target_link_libraries(nNewton 
-    PUBLIC 
-        glm::glm)
-target_compile_definitions(nNewton PUBLIC   GLM_ENABLE_EXPERIMENTAL)
+
 
 
 # Warnings

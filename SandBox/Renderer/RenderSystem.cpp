@@ -1,4 +1,5 @@
 #include "RenderSystem.hpp"
+#include <chrono>
 
 void nRenderSystem::DrawBVHTree(nNewton::nAABBTree * tree, int maxDepth )
 {
@@ -51,12 +52,8 @@ void nRenderSystem::ShutDown_DebugRender()
 	m_Renderer->clear();
 }
 
-
-
 void nRenderSystem::Debug_Render()
 {
-
-	m_Renderer->DrawGrid(128);
 	auto IsShapes = m_Renderer->IsFlagEnabled(flags::Shapes);
 	auto IsAABB = m_Renderer->IsFlagEnabled(flags::AABB);
 	auto IsContacts = m_Renderer->IsFlagEnabled(flags::Contacts);
@@ -71,35 +68,39 @@ void nRenderSystem::Debug_Render()
 				m_Renderer->GetBVHMaxDepth());
 	}
 
-
-	/*auto* dynRoot = m_collisionWorld->GetDynamicTree()->GetRoot();
-	auto* staRoot = m_collisionWorld->GetStaticTree()->GetRoot();
-	*/
-
-	for (auto& [id, ro] : render_Map)
+	for (const auto& n : m_RenderEntities)
 	{
-		//std::cout << id << "\n";
-		if (!m_physics->IsValid(id))
-			continue;
+		if (!m_physics->IsValid(n.idx))continue;
 
-		const nNewton::nTransform* tr = m_physics->GetTransform(id);
-
-		auto model = nNewton::Translate(tr->GetPosition()) *
-			nNewton::to_nMatrix4(tr->GetRotation()) * nNewton::Scale(tr->GetScale());
-
+		const nNewton::nTransform* tr = m_physics->GetTransform(n.idx);
+		const nNewton::nMatrix4& model = nNewton::Translate(tr->GetPosition()) *
+			nNewton::to_nMatrix4(tr->GetRotation()) *
+			nNewton::Scale(tr->GetScale());
 
 		if (IsShapes)
 		{
-			Debug_DrawShape(id, model, ro.color);
+			auto shape = m_physics->GetShape(n.idx);
+			if (!shape) return;
+
+			switch (shape->GetType())
+			{
+			case nNewton::nCollisionShapeType::Box:
+				m_Renderer->DrawBox(n.color, model);
+				break;
+
+			case nNewton::nCollisionShapeType::Sphere:
+				m_Renderer->DrawSphere({ 0,0,0 }, model, n.color);
+				break;
+			}
 		}
-		
+
 		if (IsContacts)
 		{
 
 		}
+
 	}
 }
-
 
 void nRenderSystem::Debug_DrawAxis(const nNewton::nVector3& camPOS)
 {
@@ -112,13 +113,7 @@ void nRenderSystem::Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton:
 
 	auto model = nNewton::Translate(center) * nNewton::Scale(halfSize);
 
-	m_Renderer->DrawBox(
-		nNewton::nVector3(-1, -1, -1),
-		nNewton::nVector3(1, 1, 1),
-		nNewton::nVector3(0, 0, 0),
-		color,
-		model
-	);
+	m_Renderer->DrawBox(color,model);
 }
 void nRenderSystem::Debug_DrawContactPoint(const nNewton::nVector3& position, const nNewton::nVector3& normal, const nNewton::nVector4& color)
 {
@@ -127,37 +122,17 @@ void nRenderSystem::Debug_DrawContactPoint(const nNewton::nVector3& position, co
 		color);
 }
 
-void nRenderSystem::Debug_DrawShape(nNewton::nEntity_ID id, const nNewton::nMatrix4& model, const nNewton::nVector4& color)
-{
-	auto shape = m_physics->GetShape(id);
-	if (!shape) return;
-
-	switch (shape->GetType())
-	{
-	case nNewton::nCollisionShapeType::Box:
-		m_Renderer->DrawBox(
-			nNewton::nVector3(-1, -1, -1),
-			nNewton::nVector3(1, 1, 1),
-			nNewton::nVector3(model.A[12], model.A[13], model.A[14]),
-			color, model);
-		break;
-		
-	case nNewton::nCollisionShapeType::Sphere:
-		m_Renderer->DrawSphere({ 0,0,0 }, model, color);
-		break;
-	}
-}
-
-
 void nRenderSystem::RegisterEntity(nNewton::nEntity_ID id,
 	nNewton::nVector4   color)
 {
 	//render_Map[id] = RenderObject{ type, color };
-	render_Map.insert({ id,RenderObject{color} });
+	m_RenderEntities.push_back({ id,color});
 }
 
 void nRenderSystem::UnregisterEntity(nNewton::nEntity_ID id)
 {
-	render_Map.erase(id);
+	std::erase_if(m_RenderEntities, [id](const render_entity& item) {
+		return item.idx == id;
+		});
 }
 

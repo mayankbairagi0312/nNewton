@@ -7,7 +7,6 @@ namespace nNewton
     public:
         void Rebuild(std::vector<nCollisionEntity*>& entities) override
         {
-            std::cout << "Tree rbuild func called " << std::endl;
             Clear();
             BuildAABBTree(entities);
         }

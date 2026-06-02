@@ -1,5 +1,5 @@
 #include "Application.h"
-
+#include<chrono>
 Application::Application()
 	: m_testWindow(nullptr), m_running(false), m_CurrTime(0), m_PrevTime(SDL_GetPerformanceCounter()), m_DeltaTime(0.0f) {
 }
@@ -48,6 +48,7 @@ bool Application::Initialize() {
 
 	//build Tree 
 	m_nWorld->GetCollisionWorld()->BuildTrees();
+	//m_Render_System.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
 
 	m_running = true;
 	std::cout << "=== > Application initialized successfully < ===.\n";
@@ -105,7 +106,7 @@ void Application::Run() {
 		}
 
 
-		ImGui::ShowDemoWindow(&demo);
+		//ImGui::ShowDemoWindow(&demo);
 		m_DebugUI->RenderUI( &demo);
 		
         m_DebugUI->EndUIFrame();
@@ -120,17 +121,29 @@ void Application::Run() {
 
 void Application::TRender()
 {
+	auto t0 = std::chrono::high_resolution_clock::now();
 	m_FrameBuffer->Bind();
-	
+	auto t1 = std::chrono::high_resolution_clock::now();
 	m_Render_System.Start_Debug_Draw();
-	m_Render_System.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
+	auto t2 = std::chrono::high_resolution_clock::now();
 
 	m_Debug_Renderer->SetFlagEnabled(flags::Shapes);
-
+	m_Render_System.Debug_DrawAxis(m_camera.GetPosition());
 	m_Render_System.Debug_Render();
+	auto t3 = std::chrono::high_resolution_clock::now();
 	m_Render_System.End_Debug_Draw();
-
+	auto t4 = std::chrono::high_resolution_clock::now();
 	m_FrameBuffer->Unbind();
+	auto t5 = std::chrono::high_resolution_clock::now();
+
+	printf(
+		"Bind: %.3f ms | Start: %.3f ms | DebugRender: %.3f ms | End: %.3f ms | Unbind: %.3f ms\n",
+		std::chrono::duration<double, std::milli>(t1 - t0).count(),
+		std::chrono::duration<double, std::milli>(t2 - t1).count(),
+		std::chrono::duration<double, std::milli>(t3 - t2).count(),
+		std::chrono::duration<double, std::milli>(t4 - t3).count(),
+		std::chrono::duration<double, std::milli>(t5 - t4).count()
+	);
 }
 
 void Application::Shutdown() {

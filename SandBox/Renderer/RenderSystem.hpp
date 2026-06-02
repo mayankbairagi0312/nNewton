@@ -13,15 +13,16 @@
 #include <nNewton/nSphereShape.hpp>
 
 
-struct RenderObject
+struct render_entity
 {
+	nNewton::nEntity_ID idx;
 	nNewton::nVector4 color;
 };
 
 class nRenderSystem
 {
 private:
-	std::unordered_map<nNewton::nEntity_ID, RenderObject> render_Map;
+	std::vector<render_entity> m_RenderEntities;
 	nNewton::nDynamicsWorld* m_physics;
 	nNewton::nCollisionWorld* m_collisionWorld;
 	std::shared_ptr<DebugRenderer> m_Renderer;
@@ -35,7 +36,6 @@ public:
 	void Debug_DrawAxis(const nNewton::nVector3& camPOS);
 	void Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color);
 	void Debug_DrawContactPoint(const nNewton::nVector3& position, const nNewton::nVector3& normal, const nNewton::nVector4& color);
-	void Debug_DrawShape(nNewton::nEntity_ID id ,const nNewton::nMatrix4& model, const nNewton::nVector4& color);
 
 	void Start_Debug_Draw();
 	void End_Debug_Draw();

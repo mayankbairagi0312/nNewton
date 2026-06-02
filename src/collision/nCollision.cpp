@@ -65,8 +65,7 @@ namespace nNewton
 			m_Static_Entities.push_back(std::move(ent));
 			
 			auto sentity = ToRawPtrs(m_Static_Entities); 
-			m_StaticTree->Rebuild(sentity);
-				
+			//m_StaticTree->Rebuild(sentity);
 		}
 		else
 		{

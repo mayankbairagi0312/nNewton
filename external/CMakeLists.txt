@@ -3,20 +3,6 @@ find_package(OpenGL REQUIRED)
 
 include(FetchContent)
 
-
-# GLM (header-only, private external)
-
-
-FetchContent_Declare(
-	glm
-	GIT_REPOSITORY	https://github.com/g-truc/glm.git
-	GIT_TAG 	    e7970a8b26732f1b0df9690f7180546f8c30e48e #refs/tags/
-    GIT_SHALLOW    TRUE
-)
-
-FetchContent_MakeAvailable(glm)
-
-
 #add_library(glm INTERFACE)
 #target_include_directories(glm INTERFACE
 #   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glm>

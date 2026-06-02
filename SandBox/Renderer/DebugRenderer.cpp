@@ -1,6 +1,7 @@
 #include "DebugRenderer.hpp"
 #include <iostream>
 #include <cmath>
+#include <chrono>
 DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false), m_Drawer(nullptr), m_flag(flags::All) {}
 DebugRenderer::~DebugRenderer(){}
 
@@ -19,7 +20,7 @@ void DebugRenderer::BeginFrame()
 }
 void DebugRenderer::DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color, const float Radius , const uint8_t Segments )
 {
-
+    if (!m_Inframe)return;
     float PI = 3.1459265f;
     float x, y, z;
     uint8_t lati = Segments;
@@ -76,46 +77,14 @@ void DebugRenderer::DrawLine(const nNewton::nVector3& from, const nNewton::nVect
 }
 void DebugRenderer::DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size )
 {
+    if (!m_Inframe)return;
 	m_Drawer->DrawPoint(Position, Color, size);
 }
-void DebugRenderer::DrawBox(const nNewton::nVector3& min, const nNewton::nVector3& max, const nNewton::nVector3& Center, const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)
+void DebugRenderer::DrawBox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)
 {
-    nNewton::nVector3 vert_[8] =
-    {
-        nNewton::nVector3(min.x, min.y, min.z),
-        nNewton::nVector3(max.x, min.y, min.z),
-        nNewton::nVector3(max.x, min.y, max.z),
-        nNewton::nVector3(min.x, min.y, max.z),
-
-        nNewton::nVector3(min.x, max.y, min.z),
-        nNewton::nVector3(max.x, max.y, min.z),
-        nNewton::nVector3(max.x, max.y, max.z),
-        nNewton::nVector3(min.x, max.y, max.z)
-    };
-
-    for(int i = 0; i < 8; ++i)
-    {
-        nNewton::nVector4 world = model_mat * nNewton::nVector4(vert_[i].x, vert_[i].y, vert_[i].z, 1.0f);
-        vert_[i] = nNewton::nVector3(world.x, world.y, world.z);
-        //std::cout << "vert " << i << ": " << vert_[i].x << " " << vert_[i].y << " " << vert_[i].z << std::endl;
-    }
-
-    DrawLine(vert_[0], vert_[1], Color);
-    DrawLine(vert_[1], vert_[2], Color);
-    DrawLine(vert_[2], vert_[3], Color);
-    DrawLine(vert_[3], vert_[0], Color);
-
-    DrawLine(vert_[4], vert_[5], Color);
-    DrawLine(vert_[5], vert_[6], Color);
-    DrawLine(vert_[6], vert_[7], Color);
-    DrawLine(vert_[7], vert_[4], Color);
-
-    DrawLine(vert_[0], vert_[4], Color);
-    DrawLine(vert_[1], vert_[5], Color);
-    DrawLine(vert_[2], vert_[6], Color);
-    DrawLine(vert_[3], vert_[7], Color);
-
-	DrawPoint(Center, Color);
+    if (!m_Inframe)return;
+    m_LineCount += 12;
+    m_Drawer->Drawbox(Color, model_mat);
 }
 
 void DebugRenderer::DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size)
@@ -224,6 +193,8 @@ void DebugRenderer::DrawGrid(const uint16_t GridLength)
 
 void DebugRenderer::DrawAxis(const nNewton::nVector3& camPOS, float MaxLength )
 {
+    if (!m_Inframe)return;
+
     // X Axis
     nNewton::nVector3 xfrom(camPOS.x - MaxLength, 0, 0);
     nNewton::nVector3 xto(camPOS.x + MaxLength, 0, 0);
