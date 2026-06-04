@@ -2,9 +2,13 @@
 #include <iostream>
 #include <cmath>
 #include <chrono>
+
+static nNewton::nMatrix4 rotX90 = nNewton::RotateX(nNewton::PI * 0.5f);
+static nNewton::nMatrix4 rotZ90 = nNewton::RotateZ(nNewton::PI * 0.5f);
+static nNewton::nMatrix4 rotY90 = nNewton::RotateY(nNewton::PI * 0.5f);
+
 DebugRenderer::DebugRenderer() : m_Inframe(false), m_enabled(false), m_Drawer(nullptr), m_flag(flags::All) {}
 DebugRenderer::~DebugRenderer(){}
-
 
 
 void DebugRenderer::BeginFrame()
@@ -18,56 +22,14 @@ void DebugRenderer::BeginFrame()
 	}
 	m_Drawer->BeginFrameRenderer();
 }
-void DebugRenderer::DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color, const float Radius , const uint8_t Segments )
+void DebugRenderer::DrawSphere(const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color)
 {
-    if (!m_Inframe)return;
-    float PI = 3.1459265f;
-    float x, y, z;
-    uint8_t lati = Segments;
-    uint8_t longi = Segments;
-    float longiAngle, latiAngle;
-    std::vector <nNewton::nVector3> PointsOnSphere;
-    for (int i = 0; i <= lati; ++i)
-    {
-        latiAngle = i*PI/ lati ;
-        
-        for (int j = 0; j <= longi; ++j)
-        {
-            longiAngle = 2 * PI - (j *2*PI)/ longi;
-
-            x = Center.x + (Radius * sin(latiAngle)) * cos(longiAngle);
-            y = Center.y + Radius * cos(latiAngle); 
-            z = Center.z + (Radius * sin(longiAngle)) * sin(latiAngle);
-            
-            auto vert_ = model_mat * nNewton::nVector4(x, y, z, 1.0f);
-            PointsOnSphere.emplace_back(vert_.x,vert_.y,vert_.z);
-
-        }
-
-    }
-
-    for (int i = 0; i < lati; ++i)  
-    {
-        for (int j = 0; j < longi; ++j)  
-        {
-            int current = i * (longi + 1) + j;
-            int nextInLongitude = current + 1;
-            int nextInLatitude = (i + 1) * (longi + 1) + j;
-
-            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLongitude], Color);
-            DrawLine(PointsOnSphere[current], PointsOnSphere[nextInLatitude], Color);
-        }
-    }
-
+    if (!m_Inframe) return;
     
-    for (int i = 0; i < lati; ++i)
-    {
-        int lastInRow = i * (longi + 1) + longi;
-        int firstInNextRow = (i + 1) * (longi + 1) + longi;
-        DrawLine(PointsOnSphere[lastInRow], PointsOnSphere[firstInNextRow], Color);
-    }
-
-    DrawPoint(Center, Color);
+    m_Drawer->DrawCircle(Color, model_mat);
+    m_Drawer->DrawCircle(Color,model_mat * rotX90);
+    m_Drawer->DrawCircle(Color , model_mat * rotY90);
+    m_LineCount += 64*3;
 }
 
 void DebugRenderer::DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const nNewton::nVector4& Color) {
@@ -109,27 +71,11 @@ void DebugRenderer::DrawPlane(const nNewton::nVector3& Center, const nNewton::nV
 	DrawPoint(Center, Color);
 }
 
-void DebugRenderer::DrawCircle(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float Radius, uint8_t Segments)
+void DebugRenderer::DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)
 {
-    nNewton::nVector3 up(0.0f, 1.0f, 0.0f);
-    if (abs(nNewton::DotProduct(up, Normal)) > 0.99)
-    {
-        up = nNewton::nVector3(1, 0, 0);
-    }
-    auto right = nNewton::Normalized(nNewton::CrossProduct(Normal, up));
-    up = nNewton::Normalized(nNewton::CrossProduct(right, Normal));
-    std::vector<nNewton::nVector3> points;
-    for (uint8_t i = 0; i < Segments; ++i)
-    {
-        float angle = (2 * nNewton::PI * i) / Segments;
-        nNewton::nVector3 point = Center + right * cos(angle) * Radius + up * sin(angle) * Radius;
-        points.push_back(point);
-    }
-    for (uint8_t i = 0; i < Segments; ++i)
-    {
-        DrawLine(points[i], points[(i + 1) % Segments], Color);
-    }
-    DrawPoint(Center, Color);
+    if (!m_Inframe)return;
+    m_LineCount += 32;
+    m_Drawer->DrawCircle(Color, model_mat);
 }
 
 void DebugRenderer::drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to, float headsize, const nNewton::nVector4& Color)

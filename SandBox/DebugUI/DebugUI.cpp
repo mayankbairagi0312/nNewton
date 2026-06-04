@@ -39,7 +39,7 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	m_FrameBuff->Initialize(m_ViewportSize.x,m_ViewportSize.y);
 
 	GetConsole().SetEditorForConsole(this);
-	defaultScene();
+	//defaultScene();
 	
 	return true;
 
@@ -908,7 +908,7 @@ nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
 	std::mt19937 gen(rd());
 	std::uniform_real_distribution<float> pos(-50.0f, 50.0f);
 	std::uniform_real_distribution<float> Scale(0.5f, 5.0f);
-	std::uniform_int_distribution<int> collision(1, 1); 
+	std::uniform_int_distribution<int> collision(1, 2); 
 	std::uniform_real_distribution<float> color(0.0f, 1.0f);
 	 
 	nNewton::nVector3 tscale(Scale(gen),Scale(gen),Scale(gen));
@@ -1398,7 +1398,7 @@ void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
 		else
 		{
 			DebugUIEditor::AddLog("[Log] Started Creating {} Random Entity ",count);
-			for (size_t i = 0; i <= count; i++)
+			for (size_t i = 0; i < count; i++)
 			{
 				auto id = m_Owner->CreateEntityRand(isStatic);
 				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);

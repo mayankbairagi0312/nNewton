@@ -20,7 +20,7 @@ public:
 
 	inline void DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const  nNewton::nVector4& color)override;
 	void Drawbox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
-
+	void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
 	void InitialzedBuf();
 	void clearRenderer()override;
 private:
@@ -34,9 +34,13 @@ private:
 	unsigned int m_VBO;
 	unsigned int m_VAO;
 
-	GLuint m_CubeVBO, m_CubeVAO;
-	GLuint m_PointVBO,m_PointVAO;
+	GLuint m_PointVBO, m_PointVAO;
+	GLuint m_CubeVBO, m_CubeEBO, m_CubeVAO;
+	GLuint m_CirVBO, m_CirVAO;
 	GLuint m_InstanceVBO;
+	GLuint m_InstanceCirVBO;
+
+	std::vector<float> m_instanceCir;
 	std::vector<float> m_instanceData;
 
 	size_t m_vertexCount = 0;

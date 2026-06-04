@@ -89,7 +89,7 @@ void nRenderSystem::Debug_Render()
 				break;
 
 			case nNewton::nCollisionShapeType::Sphere:
-				m_Renderer->DrawSphere({ 0,0,0 }, model, n.color);
+				m_Renderer->DrawSphere(model, n.color);
 				break;
 			}
 		}

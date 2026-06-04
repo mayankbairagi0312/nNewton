@@ -21,7 +21,8 @@ public:
 		offset = nNewton::nVector3(0.0f, 0.0f,Size);
 		DrawLine(position + offset, position - offset, color);
 	}
-	
+	virtual void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat) {};
+
 	virtual void Drawbox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat) {};
 
 	virtual void BeginFrameRenderer() {};
@@ -75,11 +76,11 @@ public:
 	void DrawLine(const nNewton::nVector3& from , const nNewton::nVector3& to ,const nNewton::nVector4& Color );
 	void DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size = 0.1);
 	void DrawBox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
-	void DrawSphere(const nNewton::nVector3& Center, const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color,const float Radius = 1, const uint8_t Segments = 16);
+	void DrawSphere(const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color);
 	void DrawCapsule(const nNewton::nVector3& Center,const float, const nNewton::nVector4& Color, const float Radius = 1, const uint8_t Segments = 16);
 	void drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to,float headsize , const nNewton::nVector4& Color);
 	void DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size = 1.0f);
-	void DrawCircle(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float Radius = 1.0f, uint8_t Segments = 32);
+	void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
 	void DrawGrid(const uint16_t GridLength);
 	void DrawAxis(const nNewton::nVector3& camPOS, float);
 	void BeginFrame();
@@ -113,7 +114,7 @@ public:
 	int  GetBVHMaxDepth() const { return m_BVHMaxDepth; }
 
 private:
-	int m_LineCount;
+	long m_LineCount;
 	IDebugRenderer* m_Drawer;
 	flags m_flag;
 	bool m_enabled;

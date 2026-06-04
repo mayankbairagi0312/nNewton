@@ -100,7 +100,7 @@ void Application::Run() {
 		m_DebugUI->ViewportEnd(&demo);
 	
 
-		if(m_DebugUI->IsProcessMouse()) m_input.ProcessMosueInput();;
+		if(m_DebugUI->IsProcessMouse()) m_input.ProcessMosueInput();
 		if (m_DebugUI->IsViewportFocused() && m_DebugUI->IsViewportHovered()) {
 			m_input.ProcessInputKey(m_DeltaTime);
 		}

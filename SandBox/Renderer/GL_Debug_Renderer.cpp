@@ -39,17 +39,14 @@ void OpneGLDebugRenderer::BeginFrameRenderer() {
 	m_vertexCount = 0;
 	m_lines.clear();          
 	m_instanceData.clear();
+	m_instanceCir.clear();
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 }
 void OpneGLDebugRenderer::EndFrameRenderer() {
-	//std::cout << "Lines count: " << m_lines.size() << std::endl;
-	if (m_vertexCount == 0 && m_instanceData.empty()) return;	
+	if (m_vertexCount == 0 && m_instanceData.empty() && m_instanceCir.empty()) return;
 	
-	GLboolean depthTestEnabled;
-	glGetBooleanv(GL_DEPTH_TEST, &depthTestEnabled);
-
 	if (!m_lines.empty() && m_vertexCount > 0)
 	{
 
@@ -63,11 +60,6 @@ void OpneGLDebugRenderer::EndFrameRenderer() {
 
 		m_Shader->Set_Mat4("uView", view);
 		m_Shader->Set_Mat4("uProjection", projection);
-
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glLineWidth(2.0f);
 
 		glBindVertexArray(m_VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
@@ -85,7 +77,8 @@ void OpneGLDebugRenderer::EndFrameRenderer() {
 		glDrawArrays(GL_LINES, 0, m_vertexCount);
 	
 	}
-	if (!m_instanceData.empty())
+	
+	if (!m_instanceData.empty() || !m_instanceCir.empty())
 	{
 		if (m_InstancedShader)
 			m_InstancedShader->Use();
@@ -98,35 +91,48 @@ void OpneGLDebugRenderer::EndFrameRenderer() {
 		m_InstancedShader->Set_Mat4("uView", view);
 		m_InstancedShader->Set_Mat4("uProjection", projection);
 
+		if (!m_instanceData.empty())
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO);
+			size_t instanceSize = (m_instanceData.size()) * sizeof(float);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO);
-		size_t instanceSize = (m_instanceData.size()) * sizeof(float);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, instanceSize, m_instanceData.data());
+			glBufferSubData(GL_ARRAY_BUFFER, 0, instanceSize, m_instanceData.data());
+
+			//=================================================
+			glBindVertexArray(m_CubeVAO);
+			GLsizei instanceCount = (GLsizei)(m_instanceData.size() / 20);
+			glDrawElementsInstanced(GL_LINES, 24, GL_UNSIGNED_INT, 0, instanceCount);
+			//=================================================
+			glBindVertexArray(m_PointVAO);
+
+			glEnable(GL_PROGRAM_POINT_SIZE);
+			glPointSize(4.0f);
+			glDrawArraysInstanced(GL_POINTS, 0, 1, instanceCount);
+			//=================================================
+
+			glBindVertexArray(0);
 
 
-		glBindVertexArray(m_CubeVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_CubeVBO);
+		}
 
-		GLsizei instanceCount = (GLsizei)(m_instanceData.size() / 20);
+		if (!m_instanceCir.empty())
+		{
+			//=================================================
+			glBindBuffer(GL_ARRAY_BUFFER, m_InstanceCirVBO);
 
-		glDrawArraysInstanced(GL_LINES, 0, 24, instanceCount);
-
-		glBindVertexArray(m_PointVAO);
-		
-		glEnable(GL_PROGRAM_POINT_SIZE);  
-		glPointSize(4.0f);
-		glDrawArraysInstanced(GL_POINTS, 0, 1, instanceCount);
-
-		glBindVertexArray(0);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, m_instanceCir.size() * sizeof(float), m_instanceCir.data());
 
 
+			glBindVertexArray(m_CirVAO);
+			GLsizei CirCount = (GLsizei)(m_instanceCir.size() / 20);
+			glDrawArraysInstanced(GL_LINE_LOOP, 0, 64, CirCount);
+			glBindVertexArray(0);
+		}
 	}
 	glBindVertexArray(0);
 
-	if (depthTestEnabled)
-		glEnable(GL_DEPTH_TEST);
-	else
-		glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+	
 }
 
 inline void OpneGLDebugRenderer::DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const  nNewton::nVector4& color) {
@@ -153,7 +159,12 @@ void OpneGLDebugRenderer::Drawbox(const nNewton::nVector4& Color, const nNewton:
 	m_instanceData.insert(m_instanceData.end(), &Color.x, &Color.x + 4);
 }
 
-
+void OpneGLDebugRenderer::DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)
+{
+	const float* matPtr = (const float*)&model_mat;
+	m_instanceCir.insert(m_instanceCir.end(), matPtr, matPtr + 16);
+	m_instanceCir.insert(m_instanceCir.end(), &Color.x, &Color.x + 4);
+}
 
 void OpneGLDebugRenderer::InitialzedBuf() {
 	// need to update num when idx have 20 bits  
@@ -180,24 +191,53 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 	m_lines.resize(MAX_LINES * 2);
 
 
-	float cubeVerts[] = {
-		// bottom face (y = -1)
-		-1,-1,-1,1,   1,-1,-1,1,
-		 1,-1,-1,1,   1,-1, 1,1,
-		 1,-1, 1,1,  -1,-1, 1,1,
-		-1,-1, 1,1,  -1,-1,-1,1,
+	//====================
+	
+	
+	const int seg = 64;
+	std::vector<float> circleVerts;
+	circleVerts.reserve(seg * 4); 
 
-		// top face (y = 1)
-		-1, 1,-1,1,   1, 1,-1,1,
-		 1, 1,-1,1,   1, 1, 1,1,
-		 1, 1, 1,1,  -1, 1, 1,1,
-		-1, 1, 1,1,  -1, 1,-1,1,
+	for (int i = 0; i < seg; ++i)
+	{
+		float theta = 2.0f * nNewton::PI * float(i) / float(seg);
 
-		// vertical edges (x = -1, x = 1, z = -1, z = 1)
-		-1,-1,-1,1,  -1, 1,-1,1,
-		 1,-1,-1,1,   1, 1,-1,1,
-		 1,-1, 1,1,   1, 1, 1,1,
-		-1,-1, 1,1,  -1, 1, 1,1
+		float x = cosf(theta);
+		float y = sinf(theta);
+		float z = 0.0f;
+		float w = 1.0f;
+
+		circleVerts.push_back(x);
+		circleVerts.push_back(y);
+		circleVerts.push_back(z);
+		circleVerts.push_back(w);
+	}
+	
+	glGenVertexArrays(1, &m_CirVAO);
+	glGenBuffers(1, &m_CirVBO);
+	glBindVertexArray(m_CirVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_CirVBO);
+	glBufferData(GL_ARRAY_BUFFER, seg * 4* sizeof(float), circleVerts.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(0);
+
+
+
+	float cubeVerts[8][4] = {
+	{-1, -1, -1, 1},  
+	{ 1, -1, -1, 1},  
+	{ 1, -1,  1, 1},  
+	{-1, -1,  1, 1},  
+	{-1,  1, -1, 1},  
+	{ 1,  1, -1, 1},  
+	{ 1,  1,  1, 1},  
+	{-1,  1,  1, 1}   
+	};
+
+	unsigned int indices[] = {
+	0,1, 1,2, 2,3, 3,0,  
+	4,5, 5,6, 6,7, 7,4, 
+	0,4, 1,5, 2,6, 3,7
 	};
 
 	glGenVertexArrays(1, &m_CubeVAO);
@@ -208,7 +248,12 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
 
-	float pointVerts[] = { 0.5f,0.5f,0.5f,1 };
+	glGenBuffers(1, &m_CubeEBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_CubeEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+
+	float pointVerts[] = { 0,0,0,1 };
 
 	glGenVertexArrays(1, &m_PointVAO);
 	glGenBuffers(1, &m_PointVBO);
@@ -221,7 +266,11 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 	glGenBuffers(1, &m_InstanceVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO);
 	glBufferData(GL_ARRAY_BUFFER, MAX_INSTANCES*(20)*sizeof(float), nullptr, GL_DYNAMIC_DRAW); // (16 + 4)
-	
+
+	glGenBuffers(1, &m_InstanceCirVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceCirVBO);
+	glBufferData(GL_ARRAY_BUFFER, MAX_INSTANCES * (20) * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+
 	glBindVertexArray(m_CubeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceVBO);
 	
@@ -249,8 +298,23 @@ void OpneGLDebugRenderer::InitialzedBuf() {
 	glEnableVertexAttribArray(5);
 	glVertexAttribDivisor(5, 1);
 
+	glBindVertexArray(m_CirVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_InstanceCirVBO);
+
+	for (int i = 0; i < 4; ++i)
+	{
+		glVertexAttribPointer(1 + i, 4, GL_FLOAT, GL_FALSE, 20 * sizeof(float), (void*)(i * 4 * sizeof(float)));
+		glEnableVertexAttribArray(i + 1);
+		glVertexAttribDivisor(1 + i, 1);
+	}
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 20 * sizeof(float), (void*)(16 * sizeof(float)));
+	glEnableVertexAttribArray(5);
+	glVertexAttribDivisor(5, 1);
+
+
 	glBindVertexArray(0);
 	m_instanceData.reserve(MAX_INSTANCES * (16 + 4));
+	m_instanceCir.reserve(MAX_INSTANCES* (16 + 4));
 }
 void OpneGLDebugRenderer::clearRenderer()
 {
@@ -262,11 +326,20 @@ void OpneGLDebugRenderer::clearRenderer()
 		glDeleteVertexArrays(1, &m_VAO);
 		m_VAO = 0;
 	}
+
 	if (m_InstanceVBO)glDeleteBuffers(1, &m_InstanceVBO);
+	if (m_InstanceCirVBO)glDeleteBuffers(1, &m_InstanceCirVBO);
+
+
 	if (m_CubeVBO) glDeleteBuffers(1, &m_CubeVBO);
 	if (m_CubeVAO) glDeleteVertexArrays(1, &m_CubeVAO);
+
 	if (m_PointVBO) glDeleteBuffers(1, &m_PointVBO);
 	if (m_PointVAO) glDeleteVertexArrays(1, &m_PointVAO);
-	m_InstanceVBO = m_CubeVBO = m_CubeVAO= m_PointVBO= m_PointVAO = 0;
+
+	if (m_CirVBO) glDeleteBuffers(1, &m_CirVBO);
+	if (m_CirVAO) glDeleteVertexArrays(1, &m_CirVAO);
+
+	m_InstanceVBO =  m_CubeVBO = m_CubeEBO = m_CubeVAO= m_PointVBO= m_PointVAO = m_CirVBO =m_CirVAO= 0;
 
 }
