@@ -34,6 +34,8 @@ namespace nNewton {
 		nVector3 InvTransfromPt(const nVector3& WPoint_)const;
 		nVector3 InvTransfromVec(const nVector3& WVector_)const;
 
+		static nMatrix4  ConstrTRS(const nVector3& T, const nQuaternion& R, const nVector3& S);
+
 		void Inverse();
 	};
 }

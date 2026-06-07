@@ -47,7 +47,7 @@ namespace nNewton
 			return supportPoint;
 		}
 
-		nCollisionShapeType GetType() const override { return nCollisionShapeType::Box; }
+		inline nCollisionShapeType GetType() const override { return nCollisionShapeType::Box; }
 
 	};
 }

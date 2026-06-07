@@ -41,6 +41,30 @@ namespace nNewton {
 		return Vec_Rotate(QInverse(m_ROT), WVector_);
 	}
 
+	nMatrix4  nTransform::ConstrTRS(const nVector3& T , const nQuaternion& R , const nVector3& S){
+		
+		nMatrix4 model;
+		model = to_nMatrix4(R);
+
+		model.A[0] *= S.x;
+		model.A[1] *= S.x;
+		model.A[2] *= S.x;
+
+		model.A[4] *= S.y;
+		model.A[5] *= S.y;
+		model.A[6] *= S.y;
+
+		model.A[8] *= S.z;
+		model.A[9] *= S.z;
+		model.A[10] *= S.z;
+
+		model.A[12] = T.x;
+		model.A[13] = T.y;
+		model.A[14] = T.z;
+		
+		return model;
+	}
+
 	void nTransform::Inverse()
 	{
 		nTransform inve;

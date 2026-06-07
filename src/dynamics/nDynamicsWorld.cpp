@@ -86,7 +86,6 @@ namespace nNewton
 
 		if (!e.alive || e.Gen != gen)
 			return nullptr;
-
 		return &e.Entity;
 	}
 

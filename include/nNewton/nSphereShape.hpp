@@ -32,6 +32,6 @@ namespace nNewton
 		}
 
 
-		nCollisionShapeType GetType() const override { return nCollisionShapeType::Sphere; }
+		inline nCollisionShapeType GetType() const override { return nCollisionShapeType::Sphere; }
 	};
 }

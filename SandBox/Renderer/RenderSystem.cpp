@@ -67,39 +67,50 @@ void nRenderSystem::Debug_Render()
 			DrawBVHTree(m_collisionWorld->GetDynamicTree(),
 				m_Renderer->GetBVHMaxDepth());
 	}
+	double matTime = 0.0;
+	double DrawTime = 0.0;
+	auto t0 = std::chrono::high_resolution_clock::now();
 
 	for (const auto& n : m_RenderEntities)
 	{
+		//auto s0 = std::chrono::high_resolution_clock::now();
 		if (!m_physics->IsValid(n.idx))continue;
 
 		const nNewton::nTransform* tr = m_physics->GetTransform(n.idx);
-		const nNewton::nMatrix4& model = nNewton::Translate(tr->GetPosition()) *
+		/*const nNewton::nMatrix4& model = nNewton::Translate(tr->GetPosition()) *
 			nNewton::to_nMatrix4(tr->GetRotation()) *
-			nNewton::Scale(tr->GetScale());
+			nNewton::Scale(tr->GetScale());*/
 
+		const auto& model = nNewton::nTransform::ConstrTRS(tr->GetPosition(), tr->GetRotation(), tr->GetScale());
+		//auto s1 = std::chrono::high_resolution_clock::now();
 		if (IsShapes)
 		{
 			auto shape = m_physics->GetShape(n.idx);
 			if (!shape) return;
 
-			switch (shape->GetType())
-			{
-			case nNewton::nCollisionShapeType::Box:
-				m_Renderer->DrawBox(n.color, model);
-				break;
+		
+			if(shape->GetType() == nNewton::nCollisionShapeType::Box)
+				 m_Renderer->DrawBox(n.color, model);
 
-			case nNewton::nCollisionShapeType::Sphere:
-				m_Renderer->DrawSphere(model, n.color);
-				break;
-			}
+			else if (shape->GetType() == nNewton::nCollisionShapeType::Sphere)
+				 m_Renderer->DrawSphere(model, n.color);
+			
 		}
+		//auto s2 = std::chrono::high_resolution_clock::now();
 
 		if (IsContacts)
 		{
 
 		}
+		//matTime += std::chrono::duration<double, std::milli>(s1 - s0).count();
+		//DrawTime += std::chrono::duration<double, std::milli>(s2 - s1).count();
 
 	}
+	auto t1 = std::chrono::high_resolution_clock::now();
+	printf("-----------------------------------------\n");
+	//printf("Matrix build time: %.3f ms\n", matTime);
+	//printf("Draw time: %.3f ms\n", DrawTime);
+	printf("loop time : %.3f \n", std::chrono::duration<double, std::milli>(t1 - t0).count());
 }
 
 void nRenderSystem::Debug_DrawAxis(const nNewton::nVector3& camPOS)

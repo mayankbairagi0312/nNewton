@@ -9,19 +9,21 @@
 constexpr size_t MAX_INSTANCES = 524288;
 constexpr size_t MAX_LINES = 524288;
 
+
+
 class OpneGLDebugRenderer : public IDebugRenderer
 {
 public:
 	OpneGLDebugRenderer();
 	~OpneGLDebugRenderer();
 	bool init_renderer(Camera* camera);
-	void BeginFrameRenderer()override;
-	void EndFrameRenderer()override;
+	inline void BeginFrameRenderer()override;
+	inline void EndFrameRenderer()override;
 
 	inline void DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const  nNewton::nVector4& color)override;
-	void Drawbox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
-	void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
-	void InitialzedBuf();
+	inline void Drawbox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
+	inline void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat)override;
+	inline void InitialzedBuf();
 	void clearRenderer()override;
 private:
 	struct vertex {
