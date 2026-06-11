@@ -19,7 +19,10 @@ namespace nNewton
 		nBVHNode* parent;
 		nCollisionEntity* Entity;
 
-		uint64_t refPoint = 0;
+		bool inQueue = false;
+		nBVHNode* qPrev = nullptr;
+		nBVHNode* qNext = nullptr;
+
 		bool isRefit = false;
 
 		bool isLeaf() const { return Entity != nullptr; }

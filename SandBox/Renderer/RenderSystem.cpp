@@ -12,7 +12,10 @@ void nRenderSystem::DrawBVHTree(nNewton::nAABBTree * tree, int maxDepth )
 		else if (isLeaf) color = { 0.1,0.1,0.8 ,0.0 };
 		else color = { 0.7 ,0.7 , 0.1,0.0 };
 
-		float alpha = 1.0f - ((float)depth / (float)maxDepth) * 0.7f;
+		float alpha = 1.0f;
+
+		if (maxDepth > 0)
+			alpha = 1.0f - ((float)depth / (float)maxDepth) * 0.7f;
 		color.w = alpha;
 
 		Debug_DrawAABB(aabb.min, aabb.max, color);

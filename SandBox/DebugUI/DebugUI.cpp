@@ -890,12 +890,12 @@ void DebugUIEditor::DrawBVHStatsInline()
 		drawFatAABB ? debugRenderer->SetFlagEnabled(flags::BVH_FatAABB)
 		: debugRenderer->SetDisableFlag(flags::BVH_FatAABB);
 
-	int maxAllowed = std::max({ dynStats.maxDepth, staStats.maxDepth, 1 });
+	int maxAllowed = std::max({ dynStats.maxDepth, staStats.maxDepth, 0 });
 	static int uiMaxDepth = maxAllowed;
 
-	uiMaxDepth = std::clamp(uiMaxDepth, 1, maxAllowed);
+	uiMaxDepth = std::clamp(uiMaxDepth, 0, maxAllowed);
 
-	if (ImGui::SliderInt("Depth", &uiMaxDepth, 1, maxAllowed))
+	if (ImGui::SliderInt("Depth", &uiMaxDepth, 0, maxAllowed))
 		debugRenderer->SetBVHMaxDepth(uiMaxDepth); //printf("Set max depth to %d, getter returns %d\n", uiMaxDepth, debugRenderer->GetBVHMaxDepth());
 	
 	debugRenderer->SetBVHMaxDepth(uiMaxDepth);
