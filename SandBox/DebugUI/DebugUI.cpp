@@ -1039,12 +1039,13 @@ DebugConsole::DebugConsole()
 	ClearLog();
 	memset(InputBuf, 0, sizeof(InputBuf));
 	HistoryPos = -1;
-	Commands.push_back("HELP");
-	Commands.push_back("HISTORY");
-	Commands.push_back("CLEAR");
-	Commands.push_back("CREATE");
-	Commands.push_back("DELETE");
-	Commands.push_back("nCREATE");
+	RegisterCommands();
+	Commands.push_back("help");
+	Commands.push_back("history");
+	Commands.push_back("clear");
+	Commands.push_back("create");
+	Commands.push_back("delete");
+	Commands.push_back("ncreate");
 	AutoScroll = true;
 	ScrollToBottom = false;
 	FilterDirty = true;
@@ -1302,156 +1303,13 @@ void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
 	History.erase(std::remove(History.begin(), History.end(), full_command_line), History.end());
 	History.push_back(full_command_line);
 
-	const auto& cmd = command_line[0];
+	std::string cmd = command_line[0];	
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 
-	// Process command
-	if (CaseInsensitiveMatch(cmd, "CLEAR"))
+	auto it = m_CommandMap.find(cmd);
+	if (it != m_CommandMap.end())
 	{
-		Items.clear();
-	}
-	else if (CaseInsensitiveMatch(cmd, "HELP"))
-	{
-		DebugUIEditor::AddLog("Commands:");
-		for (int i = 0; i < Commands.size(); i++)
-			DebugUIEditor::AddLog("- {}", Commands[i]);
-	}
-	else if (CaseInsensitiveMatch(cmd, "HISTORY"))
-	{
-		int first = History.size() - 10;
-		for (int i = first > 0 ? first : 0; i < History.size(); i++)
-			DebugUIEditor::AddLog("{:3}: {}\n", i, History[i].c_str());
-	}
-	else if (CaseInsensitiveMatch(cmd, "CREATE"))
-	{
-		if (command_line.size() < 4) {
-			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <BOX|SPHERE> <NAME>");
-			return;
-		}
-
-		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
-		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
-
-		if (!isStatic && !isDynamic) {
-			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
-			return;
-		}
-
-		nNewton::nCollisionShapeType shapeType;
-		if (CaseInsensitiveMatch(command_line[2], "BOX")) {
-			shapeType = nCollisionShapeType::Box;
-		}
-		else if (CaseInsensitiveMatch(command_line[2], "SPHERE")) {
-			shapeType = nCollisionShapeType::Sphere;
-		}
-		else {
-			DebugUIEditor::AddLog("[Error] Unknown shape '{}'. Supported: BOX, SPHERE.", command_line[2]);
-			return;
-		}
-
-		float mass = isStatic ? 0.0f : 1.0f;
-		m_Owner->CreateEntity(command_line[3], mass, isStatic, shapeType);
-
-		DebugUIEditor::AddLog("[Success] Created {} {} named {}", command_line[1], command_line[2], command_line[3]);
-	}
-	else if (CaseInsensitiveMatch(cmd, "nCREATE"))
-	{
-		if (command_line.size() < 3)
-		{
-			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <COUNT>");
-			return;
-		}
-
-		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
-		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
-
-		if (!isStatic && !isDynamic) {
-			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
-			return;
-		}
-
-		auto& input = command_line[2];
-
-		if (input[1] == '-')
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-
-		uint16_t count;
-		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), count);
-
-		if (err == std::errc::invalid_argument)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else if (err == std::errc::result_out_of_range)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else if (ptr != input.data() + input.size())
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else
-		{
-			DebugUIEditor::AddLog("[Log] Started Creating {} Random Entity ",count);
-			for (size_t i = 0; i < count; i++)
-			{
-				auto id = m_Owner->CreateEntityRand(isStatic);
-				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);
-			}
-			DebugUIEditor::AddLog("[Log] Created {} Random Entity ", count);
-		}
-
-	}
-	else if (CaseInsensitiveMatch(cmd, "DELETE"))
-	{
-		if (command_line.size() < 2)
-		{	
-			DebugUIEditor::AddLog("[Error] Usage: DELETE <ID>");
-			return;
-		}
-
-		std::string input = command_line[1];
-
-		if (input[1] == '-')
-		{
-			DebugUIEditor::AddLog("[Error] Invalid ID");
-			return;
-		}
-		
-
-		uint32_t id;
-		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), id);
-
-		if (err == std::errc::invalid_argument)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid ID");
-			return;
-		}
-		else if (err == std::errc::result_out_of_range)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid ID");
-			return;
-		}
-		else if (ptr != input.data() + input.size())
-		{
-			DebugUIEditor::AddLog("[Error] Invalid ID");
-			return;
-		}
-		else
-		{
-			if (!m_Owner->DeleteEntity(id)) {
-				DebugUIEditor::AddLog("[Error] No entity found with ID: {}", id);
-				return;
-			}
-
-			DebugUIEditor::AddLog("[Success] Entity {} deleted.", id);
-		}
-
+		it->second(command_line);
 	}
 	else
 	{
@@ -1559,6 +1417,151 @@ int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 	}
 	}
 	return 0;
+}
+
+void DebugConsole::RegisterCommands()
+{
+	m_CommandMap["CLEAR"] = [this](const std::vector<std::string>& command_line) {
+		Items.clear();
+		};
+
+	m_CommandMap["HELP"] = [this](const std::vector<std::string>& command_line) {
+		DebugUIEditor::AddLog("Commands:");
+		for (const auto& cmd : Commands)
+			DebugUIEditor::AddLog("- {}", cmd);
+		};
+
+	//CREATE CMD
+	m_CommandMap["CREATE"] = [this](const std::vector<std::string>& command_line) {
+		if (command_line.size() < 4) {
+			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYNAMIC/STATIC> <BOX|SPHERE> <NAME>");
+			return;
+		}
+		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
+		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
+
+		if (!isStatic && !isDynamic) {
+			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
+			return;
+		}
+
+		nNewton::nCollisionShapeType shapeType;
+		if (CaseInsensitiveMatch(command_line[2], "BOX")) {
+			shapeType = nCollisionShapeType::Box;
+		}
+		else if (CaseInsensitiveMatch(command_line[2], "SPHERE")) {
+			shapeType = nCollisionShapeType::Sphere;
+		}
+		else {
+			DebugUIEditor::AddLog("[Error] Unknown shape '{}'. Supported: BOX, SPHERE.", command_line[2]);
+			return;
+		}
+
+		float mass = isStatic ? 0.0f : 1.0f;
+		m_Owner->CreateEntity(command_line[3], mass, isStatic, shapeType);
+
+		DebugUIEditor::AddLog("[Success] Created {} {} named {}", command_line[1], command_line[2], command_line[3]);
+	};
+
+	//nCREATE CMD
+	m_CommandMap["NCREATE"] = [this](const std::vector<std::string> command_line) {
+		if (command_line.size() < 3)
+		{
+			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <COUNT>");
+			return;
+		}
+
+		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
+		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
+
+		if (!isStatic && !isDynamic) {
+			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
+			return;
+		}
+
+		auto& input = command_line[2];
+
+		if (input[1] == '-')
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+
+		uint16_t count;
+		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), count);
+
+		if (err == std::errc::invalid_argument)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else if (err == std::errc::result_out_of_range)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else if (ptr != input.data() + input.size())
+		{
+			DebugUIEditor::AddLog("[Error] Invalid count");
+			return;
+		}
+		else
+		{
+			DebugUIEditor::AddLog("[Log] Started Creating {} Random Entity ", count);
+			for (size_t i = 0; i < count; i++)
+			{
+				auto id = m_Owner->CreateEntityRand(isStatic);
+				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);
+			}
+			DebugUIEditor::AddLog("[Log] Created {} Random Entity ", count);
+		}
+	};
+
+	m_CommandMap["DELETE"] = [this](const std::vector<std::string> command_line) {
+		if (command_line.size() < 2)
+		{
+			DebugUIEditor::AddLog("[Error] Usage: DELETE <ID>");
+			return;
+		}
+
+		std::string input = command_line[1];
+
+		if (input[1] == '-')
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+
+
+		uint32_t id;
+		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), id);
+
+		if (err == std::errc::invalid_argument)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else if (err == std::errc::result_out_of_range)
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else if (ptr != input.data() + input.size())
+		{
+			DebugUIEditor::AddLog("[Error] Invalid ID");
+			return;
+		}
+		else
+		{
+			if (!m_Owner->DeleteEntity(id)) {
+				DebugUIEditor::AddLog("[Error] No entity found with ID: {}", id);
+				return;
+			}
+
+			DebugUIEditor::AddLog("[Success] Entity {} deleted.", id);
+		}
+	};
+
 }
 
 static std::string Strtrim(const std::string& str) {

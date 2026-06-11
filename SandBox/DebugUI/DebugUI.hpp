@@ -61,7 +61,8 @@ private:
 	bool							FilterDirty;
 	bool							AutoScroll;
 	bool							ScrollToBottom;
-
+	using CommandHandler = std::function<void(const std::vector<std::string>&)>;
+	std::unordered_map<std::string, CommandHandler> m_CommandMap;
 	DebugUIEditor* m_Owner = nullptr;
 
 	void UpdateFilter()
@@ -74,6 +75,7 @@ private:
 		}
 		FilterDirty = false;
 	}
+	void RegisterCommands();
 };
 
 
