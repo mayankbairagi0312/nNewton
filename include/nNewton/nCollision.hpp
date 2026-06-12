@@ -25,6 +25,7 @@ namespace nNewton
 		void QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nCollisionEntity* A);
 		nAABBTree* GetStaticTree() { return m_StaticTree.get(); }
 		nAABBTree* GetDynamicTree() { return m_DynamicTree.get(); }
+		bool RebuildBVH(bool isStatic);
 
 	private:
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Static_Entities;

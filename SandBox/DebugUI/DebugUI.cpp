@@ -985,6 +985,21 @@ bool DebugUIEditor::DeleteEntity(nEntity_ID id)
 	return true;
 }
 
+void DebugUIEditor::DestroyAllEntities()
+{
+	for (auto& n : m_Entities)
+	{
+		m_World->DestroyEntity(n.id);
+	}
+	m_Entities.clear();
+}
+
+bool DebugUIEditor::RebuildBVHTree(bool isStatic)
+{
+	
+	return m_World->GetCollisionWorld()->RebuildBVH(isStatic);
+}
+
 void DebugUIEditor::defaultScene()
 {
 	// Box1
@@ -1046,6 +1061,7 @@ DebugConsole::DebugConsole()
 	Commands.push_back("create");
 	Commands.push_back("delete");
 	Commands.push_back("ncreate");
+	Commands.push_back("rebuild-bvh");
 	AutoScroll = true;
 	ScrollToBottom = false;
 	FilterDirty = true;
@@ -1382,7 +1398,7 @@ int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 			}
 
 			// List matches
-			DebugUIEditor::AddLog("Possible matches:\n");
+			DebugUIEditor::AddLog("\nPossible matches:\n");
 			for (int i = 0; i < candidates.Size; i++)
 				DebugUIEditor::AddLog("- {}\n", candidates[i]);
 		}
@@ -1513,7 +1529,7 @@ void DebugConsole::RegisterCommands()
 				auto id = m_Owner->CreateEntityRand(isStatic);
 				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);
 			}
-			DebugUIEditor::AddLog("[Log] Created {} Random Entity ", count);
+			DebugUIEditor::AddLog("[Info] Created {} Random Entity ", count);
 		}
 	};
 
@@ -1525,6 +1541,12 @@ void DebugConsole::RegisterCommands()
 		}
 
 		std::string input = command_line[1];
+		if (CaseInsensitiveMatch(input, "ALL"))
+		{
+			m_Owner->DestroyAllEntities();
+			DebugUIEditor::AddLog("[Success] Entities deleted ");
+			return;
+		}
 
 		if (input[1] == '-')
 		{
@@ -1562,6 +1584,30 @@ void DebugConsole::RegisterCommands()
 		}
 	};
 
+	m_CommandMap["REBUILD-BVH"] = [this](const std::vector<std::string> command_line) {
+
+		if (command_line.size() < 2)
+		{
+			DebugUIEditor::AddLog("[Error] Usage: rebuild-bvh <static/dynamic>");
+			return;
+		}
+
+		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
+		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
+
+		if (!isStatic && !isDynamic) {
+			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
+			return;
+		}
+		
+		 if(m_Owner->RebuildBVHTree(isStatic)){
+			 DebugUIEditor::AddLog("{}", isStatic ? "[Success] Static BVH Tree Rebuild." : "[Success] Dynamic BVH Tree Rebuild.");
+			 return;
+		 }
+		 
+		 DebugUIEditor::AddLog("[Error] Failed to Rebuild {} Tree.", isStatic ? "Static" : "Dynamic");
+
+		};
 }
 
 static std::string Strtrim(const std::string& str) {

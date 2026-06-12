@@ -103,12 +103,32 @@ namespace nNewton
 
 		if (isStatic) {
 			auto sentity = ToRawPtrs(m_Static_Entities);
-			m_StaticTree->Rebuild(sentity);
+			//m_StaticTree->Rebuild(sentity);
 		}
 
 		return true;
 	}
 	
+	bool nCollisionWorld::RebuildBVH(bool isStatic)
+	{
+		if (isStatic)
+		{
+			if (m_Static_Entities.empty() || !m_StaticTree)
+				return false;
+
+			auto entities = ToRawPtrs(m_Static_Entities);
+			m_StaticTree->Rebuild(entities);
+		}
+		else
+		{
+			if (m_Dynamic_Entities.empty() || !m_DynamicTree)
+				return false;
+
+			auto entities = ToRawPtrs(m_Dynamic_Entities);
+			m_DynamicTree->Rebuild(entities);
+		}
+		return true;
+	}
 
 	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities)
 	{

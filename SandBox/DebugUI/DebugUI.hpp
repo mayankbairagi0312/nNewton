@@ -192,8 +192,8 @@ public:
 		const nNewton::nVector4& color = { 0.2f,0.7f,0.8f,1.0f });
 	nEntity_ID CreateEntityRand(bool isStatic);
 	bool DeleteEntity(nEntity_ID id);
-
-
+	void DestroyAllEntities();
+	bool RebuildBVHTree(bool isStatic);
 	
 	bool IsViewportFocused()const { return m_ViewportFocused; }
 	bool IsViewportHovered()const { return m_ViewportHovered; }
