@@ -65,11 +65,49 @@ namespace nNewton {
 		return model;
 	}
 
-	void nTransform::Inverse()
+	nMatrix4 nTransform::ToMatrix()const
+	{
+		return ConstrTRS(m_POS, m_ROT, m_SCALE);
+	}
+
+
+	nTransform nTransform::Inverse() const
 	{
 		nTransform inve;
 		inve.m_ROT = QInverse(m_ROT);
 		inve.m_POS = Vec_Rotate(inve.m_ROT, -m_POS);
+		inve.m_SCALE = { 1.0f / m_SCALE.x, 1.0f / m_SCALE.y, 1.0f / m_SCALE.z };
+
+		return inve;
+	}
+	
+	void nTransform::Invert()
+	{
+		*this = Inverse();
 	}
 
+	nTransform nTransform::operator*(const nTransform& rhs)const
+	{
+		return ComposeTransform(*this, rhs);
+	}
+
+	nTransform nTransform::ComposeTransform(const nTransform& parent, const nTransform& child)
+	{
+		nTransform compose;
+		compose.m_POS = parent.TransformPt(child.m_POS);
+		compose.m_ROT = QNormalize(parent.m_ROT * child.m_ROT);
+		compose.m_SCALE = parent.m_SCALE * child.m_SCALE;
+		return compose;
+	}
+
+
+
+	nTransform nTransform::Lerp(const nTransform& a, const nTransform& b, float t)
+	{
+		nTransform lerp;
+		lerp.m_POS = a.m_POS + (b.m_POS - a.m_POS) * t;
+		lerp.m_SCALE = a.m_SCALE + (b.m_SCALE - a.m_SCALE) * t;
+		lerp.m_ROT = QSlerp(a.m_ROT, b.m_ROT, t);
+		return lerp;
+	}
 }

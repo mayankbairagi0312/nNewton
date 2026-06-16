@@ -25,6 +25,11 @@ namespace nNewton {
 		nQuaternion GetRotation()const { return m_ROT; }
 		nVector3 GetScale()const { return m_SCALE; }
 
+
+		nVector3 Right()const { return Vec_Rotate(m_ROT, { 1.0f, 0.0f, 0.0f }); }
+		nVector3 Up()const { return Vec_Rotate(m_ROT, { 0.0f, 1.0f, 0.0f }); }
+		nVector3 Forward()const { return Vec_Rotate(m_ROT, { 0.0f, 0.0f, 1.0f }); }
+
 		void Rotate(const nVector3& axis_,float Rad_);
 		void Rotate(const nQuaternion& Quat_);
 
@@ -35,7 +40,14 @@ namespace nNewton {
 		nVector3 InvTransfromVec(const nVector3& WVector_)const;
 
 		static nMatrix4  ConstrTRS(const nVector3& T, const nQuaternion& R, const nVector3& S);
+		nMatrix4 ToMatrix()const;
 
-		void Inverse();
+		nTransform operator*(const nTransform& rhs)const;
+		static nTransform ComposeTransform(const nTransform& parent, const nTransform& child);
+		nTransform Inverse() const;
+		void Invert();
+
+		static nTransform Lerp(const nTransform& a, const nTransform& b, float t);
+
 	};
 }
