@@ -94,21 +94,37 @@ namespace nNewton
 
 		nCollisionEntity* ent = it->get();
 
-		if (!isStatic) {
-			if (ent->BVHNodePtr)
+		if (!isStatic && ent->BVHNodePtr) {
 				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
+				ent->BVHNodePtr = nullptr;
 		}
-
+		if (isStatic && ent->BVHNodePtr)
+		{
+			ent->BVHNodePtr = nullptr;
+		}
+		
 		container.erase(it);
-
-		if (isStatic) {
-			auto sentity = ToRawPtrs(m_Static_Entities);
-			//m_StaticTree->Rebuild(sentity);
-		}
 
 		return true;
 	}
-	
+	void  nCollisionWorld::RemoveAll()
+	{
+		for (auto& entity : m_Dynamic_Entities)
+		{
+			if (entity->BVHNodePtr)
+			{
+				m_DynamicTree->RemoveEntity(entity->BVHNodePtr);
+				entity->BVHNodePtr = nullptr;
+			}
+		}
+		for (auto& entity : m_Static_Entities){
+			entity->BVHNodePtr = nullptr;
+		}
+		m_Dynamic_Entities.clear();
+		m_Static_Entities.clear();
+		m_DynamicTree->Clear();
+		m_StaticTree->Clear();
+	}
 	bool nCollisionWorld::RebuildBVH(bool isStatic)
 	{
 		if (isStatic)
