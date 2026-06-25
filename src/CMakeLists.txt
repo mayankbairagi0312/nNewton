@@ -14,14 +14,14 @@ set(NNEWTON_SOURCES
 "dynamics/nRigidBody.cpp"
 
 
-"collision/Collision_Broadphase/nStaticAABBTree.cpp"
-"collision/Collision_Broadphase/nDynamicAABBTree.cpp"
+
+
 
 
     
 
     
- "collision/AABBTree.cpp" "collision/nCollision.cpp")
+  "collision/nCollision.cpp")
 
 add_library(nNewton ${NNEWTON_LIB_TYPE} ${NNEWTON_SOURCES}    )
 

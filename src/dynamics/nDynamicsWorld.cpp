@@ -58,6 +58,13 @@ namespace nNewton
 		m_FreeList.push_back(index);
 	}
 
+	void nDynamicsWorld::DestroyAllEntity()
+	{
+		m_CollisionWorld->RemoveAll();
+		m_Entity.clear();
+		m_FreeList.clear();
+	}
+
 	nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id)
 	{
 		auto index = INDEX_FROM_ID(id);
@@ -139,6 +146,6 @@ namespace nNewton
 		
 		}
 
-		//m_CollisionWorld->StepCollision();
+		m_CollisionWorld->StepCollision();
 	}
 }

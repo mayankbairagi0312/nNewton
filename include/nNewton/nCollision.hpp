@@ -3,6 +3,9 @@
 #include "nCollisionTypes.hpp"
 #include "nTypes.hpp"
 #include "nAABBTree.hpp"
+#include"nAABBTraits.hpp"
+#include "nDynamicAABBTree.hpp"
+#include "nStaticAABBTree.hpp"
 #include <memory>
 
 namespace nNewton
@@ -24,16 +27,16 @@ namespace nNewton
 
 		void QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*,nCollisionEntity*>>& OverlapEntities);
 		void QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nCollisionEntity* A);
-		nAABBTree* GetStaticTree() { return m_StaticTree.get(); }
-		nAABBTree* GetDynamicTree() { return m_DynamicTree.get(); }
+		nAABBTree<nCollisionEntity>* GetStaticTree() { return m_StaticTree.get(); }
+		nAABBTree<nCollisionEntity>* GetDynamicTree() { return m_DynamicTree.get(); }
 		bool RebuildBVH(bool isStatic);
 
 	private:
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Static_Entities;
 		std::vector<std::unique_ptr<nCollisionEntity>> m_Dynamic_Entities;
 
-		std::unique_ptr<nAABBTree> m_DynamicTree;
-		std::unique_ptr<nAABBTree> m_StaticTree;
+		std::unique_ptr<nAABBTree<nCollisionEntity>> m_DynamicTree;
+		std::unique_ptr<nAABBTree<nCollisionEntity>> m_StaticTree;
 		
 		template<typename T>
 		std::vector<T*> ToRawPtrs(std::vector<std::unique_ptr<T>>& entities)

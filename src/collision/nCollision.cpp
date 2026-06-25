@@ -1,18 +1,16 @@
 
 #include <nNewton/nCollision.hpp>
-#include "Collision_Broadphase/nDynamicAABBTree.cpp"
-#include "Collision_Broadphase/nStaticAABBTree.cpp"
 #include <list>
 #include <iostream>
 
 namespace nNewton
 {
-	
 	nCollisionWorld::nCollisionWorld()
 	{
-		m_StaticTree = std::make_unique<nStaticAABBTree>();
-		m_DynamicTree = std::make_unique<nDynamicAABBTree>();
+		m_StaticTree = std::make_unique<nStaticAABBTree<nCollisionEntity>>();
+		m_DynamicTree = std::make_unique<nDynamicAABBTree<nCollisionEntity>>();
 	}
+	
 	bool nCollisionWorld::INIT_COLLISION_WORLD()
 	{
 		return true;
@@ -34,6 +32,8 @@ namespace nNewton
 			// write phase
 		auto dentity = ToRawPtrs(m_Dynamic_Entities);
 		for (auto& ent : dentity) {
+			ent->currentAABB = ent->EntityShape->getAABB(ent->EntityTransform);
+			ent->marginAABB = Expand(ent->currentAABB, FAT_MARGIN);
 			m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
 		}
 
@@ -98,10 +98,9 @@ namespace nNewton
 				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
 				ent->BVHNodePtr = nullptr;
 		}
-		if (isStatic && ent->BVHNodePtr)
-		{
+		else
 			ent->BVHNodePtr = nullptr;
-		}
+	
 		
 		container.erase(it);
 
@@ -149,11 +148,11 @@ namespace nNewton
 	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities)
 	{
 		if (m_StaticTree->GetRoot())
-			nAABBTree::TraverseOverlaps(OverlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
 		if (m_DynamicTree->GetRoot())
-			nAABBTree::TraverseOverlaps(OverlapEntities, m_DynamicTree->GetRoot(), m_DynamicTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, m_DynamicTree->GetRoot(), m_DynamicTree->GetRoot());
 		if (m_DynamicTree->GetRoot() && m_StaticTree->GetRoot())
-			nAABBTree::TraverseCrossOverlaps(OverlapEntities,m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities,m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
 	}
 
 	void nCollisionWorld::QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nCollisionEntity* Entity)
@@ -163,16 +162,16 @@ namespace nNewton
 		if (Entity->isStatic)
 		{
 			if (m_StaticTree->GetRoot())
-				nAABBTree::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
 			if (m_DynamicTree->GetRoot())
-				nAABBTree::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
 		}
 		else
 		{
 			if (m_StaticTree->GetRoot())
-				nAABBTree::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
 			if (m_DynamicTree->GetRoot())
-				nAABBTree::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
 		}
 	}
 

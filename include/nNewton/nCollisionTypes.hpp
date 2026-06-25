@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include"nBVHNode.hpp"
 #include"nCollisionShapes.hpp"
 #include "nTransform.hpp"
 #include "nTypes.hpp"
@@ -8,10 +8,10 @@
 
 namespace nNewton
 {
-	struct nBVHNode;   
+	constexpr float FAT_MARGIN = 0.01f;
 	struct nCollisionEntity
 	{
-		nBVHNode* BVHNodePtr;
+		nBVHNode<nCollisionEntity>* BVHNodePtr;
 		std::shared_ptr<nCollisionShape> EntityShape;
 		nTransform EntityTransform;
 		nAABB marginAABB;

@@ -25,6 +25,7 @@ namespace nNewton {
 		nEntity_ID Create_Entity(const nRigidBodyInfo& _info, bool insertNow);
 
 		void DestroyEntity(nEntity_ID id);
+		void DestroyAllEntity();
 
 		nRigidBody* GetBody(nEntity_ID id);
 		const nRigidBody* GetBody(nEntity_ID id) const;
