@@ -23,7 +23,7 @@ public:
 	void UpdatePhysicsSystem(float DETLA_TIME)
 	{
 		m_PhysicsWorld->Step(DETLA_TIME);
-		m_PhysicsWorld->GetCollisionWorld()->StepCollision();
+		//m_PhysicsWorld->GetCollisionWorld()->StepCollision();
 	}
 
 

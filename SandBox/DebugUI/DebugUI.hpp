@@ -19,10 +19,11 @@
 static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2);
 static std::string Strtrim(const std::string& str);
 static bool CaseInsensitiveMatchStart(std::string_view str, std::string_view pref);
-struct EntityMeta {
+struct Editor_Entity {
 	nNewton::nEntity_ID id;
 	std::string         name;
 	bool                visible = true;
+	int folderId = -1;
 };
 
 
@@ -30,7 +31,7 @@ struct EntityMeta {
 class DebugUIEditor;
 //======== Console 
 
-class DebugConsole
+class EditorConsole
 {
 private:
 	struct LogEntry {
@@ -40,8 +41,8 @@ private:
 	};
 
 public:
-	DebugConsole();
-	~DebugConsole();
+	EditorConsole();
+	~EditorConsole();
 
 	void ClearLog();
 	void AddLog(char* buf);
@@ -89,10 +90,46 @@ private:
 
 	SandboxFramebuffer* m_FrameBuff;
 
-
-	std::vector<EntityMeta>        m_Entities;
+	size_t m_EntitiesCount = 0;
 	nNewton::nEntity_ID            m_SelectedID = {};       
 	char                           m_RenameBuffer[64] = {};
+	Editor_Entity* m_RenamingEntity = nullptr;
+
+	//---------entity list floder
+	struct Editor_FolderNode
+	{
+		std::string folderName;
+		int floderID ;
+		std::vector<Editor_FolderNode> ChildFolders;
+		std::vector<Editor_Entity> ChildEntities;
+		
+		
+	};
+
+	std::vector<Editor_FolderNode> m_RootFolders;
+	std::vector<Editor_Entity> m_RootEntities;
+	int m_NextFolderID = 0;               
+	Editor_FolderNode* m_RenamingFolder = nullptr;
+	char m_RenamingFolderBuf[64];
+	int m_FolderToDelete;
+	bool m_NeedRebuildTree;
+	int m_ActiveFolderID = -1;
+	int m_FolderPopupParentID = -1;
+	char m_NewFolderName[64];
+	bool m_OpenRenameFolderPopup = false;
+	bool m_OpenRenameEntityPopup = false;
+	bool isAddFolderPopUp = false;
+	void DrawFolderNode(Editor_FolderNode& node);
+	void DrawEntityRow(Editor_Entity& meta, int parentFolderID);
+	void AddFolder();
+	void RenameFolder();
+	void RenameEntity();
+	void AddSubFolder(int parentID, const std::string& name);
+	void RemoveFolder(int FolderId);
+	void MoveEntityToFolder(int entityId, int TargetFolderID);
+	//void MoveFolderToFolder(int entityId, int folderParentID);
+	void RemoveEntityNodeTree(nNewton::nEntity_ID id);
+
 
 
 	ImVec2      m_ViewportSize = { 1280.0f, 720.0f };
@@ -129,15 +166,15 @@ private:
 	};
 	std::vector<TransformSnapshot> m_PlaySnapshot;
 
-	void DrawEntityList();
+	void DrawFolderNodeTree();
 	void DrawAddEntityPopup();
 	void DrawInspector();
 	void DrawTransformSection();
 	void DrawPhysicsSection();
 	//void DrawPlayBar();
 
-	EntityMeta* FindMeta(nNewton::nEntity_ID id);
-	const EntityMeta* FindMeta(nNewton::nEntity_ID id) const;
+	Editor_Entity* FindMetaEntity(nNewton::nEntity_ID id);
+	const Editor_Entity* FindMetaEntity(nNewton::nEntity_ID id) const;
 
 	void SyncEditCacheFromWorld();          
 	void FlushEditCacheToWorld();
@@ -170,13 +207,13 @@ public:
 	nNewton::nEntity_ID   GetSelectedID()      const { return m_SelectedID; }
 
 	
-	void DrawEntityListPanel(bool* open);
+	void DrawWorldOutlinerPanel(bool* open);
 	void DrawPropertiesPanel(bool* open);
 	void DrawDiagnosticsPanel(bool* open);
 
-	static DebugConsole& GetConsole()
+	static EditorConsole& GetConsole()
 	{
-		static DebugConsole console;
+		static EditorConsole console;
 		return console;
 	}
 	static void DrawConsole(bool* p_open);

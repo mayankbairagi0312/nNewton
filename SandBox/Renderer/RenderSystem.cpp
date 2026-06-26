@@ -1,7 +1,7 @@
 #include "RenderSystem.hpp"
 #include <chrono>
 
-void nRenderSystem::DrawBVHTree(nNewton::nAABBTree * tree, int maxDepth )
+void nRenderSystem::DrawBVHTree(nNewton::nAABBTree<nNewton::nCollisionEntity> * tree, int maxDepth )
 {
 	tree->DebugDrawTree([&](const nNewton::nAABB aabb, int depth, bool isLeaf, bool isRefit) {
 
@@ -110,10 +110,10 @@ void nRenderSystem::Debug_Render()
 
 	}
 	auto t1 = std::chrono::high_resolution_clock::now();
-	printf("-----------------------------------------\n");
+	//printf("-----------------------------------------\n");
 	//printf("Matrix build time: %.3f ms\n", matTime);
 	//printf("Draw time: %.3f ms\n", DrawTime);
-	printf("loop time : %.3f \n", std::chrono::duration<double, std::milli>(t1 - t0).count());
+	//printf("loop time : %.3f \n", std::chrono::duration<double, std::milli>(t1 - t0).count());
 }
 
 void nRenderSystem::Debug_DrawAxis(const nNewton::nVector3& camPOS)

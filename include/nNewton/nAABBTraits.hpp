@@ -67,7 +67,6 @@ namespace nNewton
 	template<>
 	inline std::unique_ptr<nBVHNode<nCollisionEntity>> nAABBTreeTraits<nCollisionEntity>::CreateLeafNode(nCollisionEntity* entity)
 	{
-		printf("leaf to Node create got called\n");
 		auto leaf = std::make_unique<nBVHNode<nCollisionEntity>>();
 		leaf->CollEntity = entity;
 		leaf->nodeAABB = entity->marginAABB;
@@ -108,7 +107,6 @@ namespace nNewton
 		using EntityType = Entity;  
 
 		static std::unique_ptr<nBVHNode<EntityType>> CreateLeafNode(nBVHNode<EntityType>* Node) {
-			printf("Node to Node create got called\n");
 			return std::unique_ptr<nBVHNode<EntityType>>(Node);
 		}
 	};

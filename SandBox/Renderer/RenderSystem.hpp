@@ -11,7 +11,7 @@
 #include<nNewton/nCollisionShapes.hpp>
 #include<nNewton/nBoxShape.hpp>
 #include <nNewton/nSphereShape.hpp>
-
+#include<nNewton/nCollisionTypes.hpp>
 
 struct render_entity
 {
@@ -29,7 +29,7 @@ private:
 	std::unique_ptr<OpneGLDebugRenderer> m_DebugDrawer;
 	
 public:
-	void DrawBVHTree(nNewton::nAABBTree* tree, int maxDepth = 10);
+	void DrawBVHTree(nNewton::nAABBTree<nNewton::nCollisionEntity>* tree, int maxDepth = 10);
 	bool INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW,
 		nNewton::nDynamicsWorld* dynamicW);
 	void Debug_Render();

@@ -106,7 +106,7 @@ void Application::Run() {
 		}
 
 
-		//ImGui::ShowDemoWindow(&demo);
+		ImGui::ShowDemoWindow(&demo);
 		m_DebugUI->RenderUI( &demo);
 		
         m_DebugUI->EndUIFrame();
@@ -136,14 +136,14 @@ void Application::TRender()
 	m_FrameBuffer->Unbind();
 	auto t5 = std::chrono::high_resolution_clock::now();
 
-	printf(
+	/*printf(
 		"Bind: %.3f ms | Start: %.3f ms | DebugRender: %.3f ms | End: %.3f ms | Unbind: %.3f ms\n",
 		std::chrono::duration<double, std::milli>(t1 - t0).count(),
 		std::chrono::duration<double, std::milli>(t2 - t1).count(),
 		std::chrono::duration<double, std::milli>(t3 - t2).count(),
 		std::chrono::duration<double, std::milli>(t4 - t3).count(),
 		std::chrono::duration<double, std::milli>(t5 - t4).count()
-	);
+	);*/
 }
 
 void Application::Shutdown() {

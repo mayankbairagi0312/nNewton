@@ -40,7 +40,6 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 
 	GetConsole().SetEditorForConsole(this);
 	//defaultScene();
-	
 	return true;
 
 }
@@ -60,13 +59,13 @@ void DebugUIEditor::ApplyCustomStyle()
 
 	//Spacing 
 	s.WindowPadding = ImVec2(8, 8);
-	s.FramePadding = ImVec2(5, 4);
-	s.ItemSpacing = ImVec2(8, 5);
+	s.FramePadding = ImVec2(6, 4);
+	s.ItemSpacing = ImVec2(8, 4);
 	s.ItemInnerSpacing = ImVec2(4, 4);
-	s.IndentSpacing = 14.0f;
+	s.IndentSpacing = 21.0f;
 	s.ScrollbarSize = 14.0f;
 	s.GrabMinSize = 10.0f;
-
+	s.CellPadding = ImVec2(4, 2);
 	//Borders
 	s.WindowBorderSize = 1.0f;
 	s.ChildBorderSize = 1.0f;
@@ -76,17 +75,17 @@ void DebugUIEditor::ApplyCustomStyle()
 	ImVec4* c = s.Colors;
 
 	// Darks
-	ImVec4 baseBg = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
-	ImVec4 panelBg = ImVec4(0.12f, 0.13f, 0.13f, 1.00f);
-	ImVec4 borderCol = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
+	ImVec4 baseBg = ImVec4(0.09f, 0.09f, 0.09f, 1.00f);
+	ImVec4 panelBg = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
+	ImVec4 borderCol = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
 
 	// Accent
-	ImVec4 accent = ImVec4(0.24f, 0.36f, 0.48f, 1.00f);
-	ImVec4 accentHover = ImVec4(0.31f, 0.44f, 0.58f, 1.00f);
-	ImVec4 accentActive = ImVec4(0.19f, 0.29f, 0.40f, 1.00f);
+	ImVec4 accent = ImVec4(0.20f, 0.50f, 0.90f, 1.00f);
+	ImVec4 accentHover = ImVec4(0.30f, 0.60f, 0.98f, 1.00f);
+	ImVec4 accentActive = ImVec4(0.15f, 0.40f, 0.80f, 1.00f);
 
 	// Text - Soft off-white
-	c[ImGuiCol_Text] = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+	c[ImGuiCol_Text] = ImVec4(0.88f, 0.88f, 0.88f, 1.00f);
 	c[ImGuiCol_TextDisabled] = ImVec4(0.45f, 0.45f, 0.45f, 1.00f);
 
 	// Windows & Panels
@@ -97,14 +96,14 @@ void DebugUIEditor::ApplyCustomStyle()
 	c[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 
 	// Frames
-	c[ImGuiCol_FrameBg] = panelBg;
-	c[ImGuiCol_FrameBgHovered] = ImVec4(0.10f, 0.10f, 0.10f, 1.00f);
-	c[ImGuiCol_FrameBgActive] = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
+	c[ImGuiCol_FrameBg] = ImVec4(0.11f, 0.11f, 0.11f, 1.00f);
+	c[ImGuiCol_FrameBgHovered] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
+	c[ImGuiCol_FrameBgActive] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
 
 	// Headers
 	c[ImGuiCol_Header] = ImVec4(0.16f, 0.16f, 0.16f, 1.00f);
-	c[ImGuiCol_HeaderHovered] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-	c[ImGuiCol_HeaderActive] = ImVec4(0.24f, 0.24f, 0.24f, 1.00f);
+	c[ImGuiCol_HeaderHovered] = ImVec4(0.20f, 0.20f, 0.25f, 1.00f);
+	c[ImGuiCol_HeaderActive] = ImVec4(0.24f, 0.24f, 0.30f, 1.00f);
 
 	// Buttons
 	c[ImGuiCol_Button] = ImVec4(0.17f, 0.17f, 0.17f, 1.00f);
@@ -112,16 +111,19 @@ void DebugUIEditor::ApplyCustomStyle()
 	c[ImGuiCol_ButtonActive] = accentActive;
 
 	// Tabs
-	c[ImGuiCol_Tab] = baseBg;
+	c[ImGuiCol_Tab] = panelBg;
 	c[ImGuiCol_TabHovered] = accentHover;
-	c[ImGuiCol_TabActive] = panelBg; 
-	c[ImGuiCol_TabUnfocused] = baseBg;
-	c[ImGuiCol_TabUnfocusedActive] = panelBg;
+	c[ImGuiCol_TabActive] = baseBg;
+	c[ImGuiCol_TabUnfocused] = panelBg;
+	c[ImGuiCol_TabUnfocusedActive] = baseBg;
 
 	// Title
 	c[ImGuiCol_TitleBg] = baseBg;
 	c[ImGuiCol_TitleBgActive] = baseBg;
 	c[ImGuiCol_TitleBgCollapsed] = baseBg;
+	c[ImGuiCol_TableBorderStrong] = baseBg;
+	c[ImGuiCol_TableBorderLight] = panelBg;
+	c[ImGuiCol_TextSelectedBg] = ImVec4(0.20f, 0.45f, 0.70f, 0.60f);
 	c[ImGuiCol_MenuBarBg] = baseBg;
 
 	// Scrollbars
@@ -144,6 +146,8 @@ void DebugUIEditor::ApplyCustomStyle()
 	c[ImGuiCol_Separator] = borderCol;
 	c[ImGuiCol_SeparatorHovered] = accentHover;
 	c[ImGuiCol_SeparatorActive] = accentActive;
+
+	c[ImGuiCol_TableHeaderBg] = ImVec4(0.13f, 0.13f, 0.13f, 1.00f); 
 }
 
 
@@ -174,7 +178,7 @@ void DebugUIEditor::ShutDownUI()
 
 void DebugUIEditor::RenderUI(bool* IsPanels )
 {	
-		DrawEntityListPanel(IsPanels);
+		DrawWorldOutlinerPanel(IsPanels);
 		DrawPropertiesPanel(IsPanels);
 		DrawConsole(IsPanels);
 		DrawDiagnosticsPanel(IsPanels);
@@ -325,7 +329,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 		buffer
 	);
 
-	sprintf(buffer, "Entity Count: %d",(int)m_Entities.size());
+	sprintf(buffer, "Entity Count: %d",(int)m_EntitiesCount);
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 76),
@@ -446,27 +450,34 @@ bool DebugUIEditor::TickSimulation(float deltaTime)
 }
 
 
-void DebugUIEditor::DrawEntityListPanel(bool* open) 
+void DebugUIEditor::DrawWorldOutlinerPanel(bool* open)
 {
 	
-	if (!ImGui::Begin("Entity List", open)) {
+	if (!ImGui::Begin("World Outliner", open)) {
 		ImGui::End();
 		return;
 	}
-	DrawEntityList();
+	DrawFolderNodeTree();
 
 	ImGui::End();
 }
 
-void DebugUIEditor::DrawEntityList()
+void DebugUIEditor::DrawFolderNodeTree()
 {
-	
-	ImGui::TextDisabled("ENTITIES %d ", (int)m_Entities.size());
+	auto countEntitiesInFolder = [](const Editor_FolderNode& node, auto&& self) -> int {
+		int count = (int)node.ChildEntities.size();
+		for (auto& child : node.ChildFolders)
+			count += self(child, self);
+		return count;
+		};
 
-	float windowWidth = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-	float buttonWidth = ImGui::CalcTextSize("  +  ").x + ImGui::GetStyle().FramePadding.x * 2;
+	m_EntitiesCount = (int)m_RootEntities.size();
+	for (auto& root : m_RootFolders)
+		m_EntitiesCount += countEntitiesInFolder(root, countEntitiesInFolder);
+	ImGui::TextDisabled(" Entities %d ", m_EntitiesCount);
+
+	//float windowWidth = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 	
-	ImGui::SameLine(ImGui::GetWindowContentRegionMax().x  - buttonWidth * 2 - 8.f);
 
 	if (ImGui::SmallButton("Add"))
 		ImGui::OpenPopup("AddEntityPopup");
@@ -478,77 +489,425 @@ void DebugUIEditor::DrawEntityList()
 	if (!hasSelection) ImGui::BeginDisabled();
 	if (ImGui::SmallButton("remove")) {
 		m_World->DestroyEntity(m_SelectedID);
-		m_Entities.erase(std::remove_if(m_Entities.begin(), m_Entities.end(),
-			[this](const EntityMeta& m) { return m.id == m_SelectedID; }),
-			m_Entities.end());
+
+		RemoveEntityNodeTree(m_SelectedID);
+
 		m_SelectedID = {};
 	}
 	if (!hasSelection) ImGui::EndDisabled();
 	if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 		ImGui::SetTooltip("Destroy selected entity");
 
+	float buttonWidth = ImGui::CalcTextSize("Folder").x + ImGui::GetStyle().FramePadding.x * 2;
+	ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - buttonWidth  );
+	if (ImGui::SmallButton("Folder")) {
+		m_FolderPopupParentID = -1;
+		m_NewFolderName[0] = '\0';
+		ImGui::OpenPopup("AddFolderPopup");
+	}
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Add Folder");
 	//ImGui::Separator();
 
-	DrawAddEntityPopup();
+	
+	float listH = ImGui::GetContentRegionAvail().y;
 
-	float listH = ImGui::GetContentRegionAvail().y ; 
-	ImGui::BeginChild("##list_scroll", ImVec2(0, listH));
-	int i = 1;
-	for (auto& meta : m_Entities)
-	{
-		// Stale guard 
-		if (!m_World->IsValid(meta.id)) continue;
-
-		bool selected = (meta.id == m_SelectedID);
-
-		ImGui::PushID(nNewton::INDEX_FROM_ID(meta.id));  
-
-		// Coloured dot based on mass
-		const nNewton::nRigidBody* body = m_World->GetBody(meta.id);
-		bool isStatic = body && (body->MASS_ == 0.f);
-		ImVec4 dot = isStatic
-			? ImVec4(0.45f, 0.75f, 0.45f, 1.f)   
-			: ImVec4(0.35f, 0.60f, 0.95f, 1.f);   
+	const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+	const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+	
 		
-		ImGui::PushStyleColor(ImGuiCol_Text, dot);
-		ImGui::Text(" %d. ", i);
-		ImGui::PopStyleColor();
-		ImGui::SameLine();
-
-		if (ImGui::Selectable(meta.name.c_str(), selected,
-			ImGuiSelectableFlags_SpanAllColumns))
+	static ImGuiTableFlags table_flags = 
+		ImGuiTableFlags_Resizable ;
+		
+	if (ImGui::BeginTable("##entity list", 2, table_flags, ImVec2(0, listH)))
+	{
+		// The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
+		ImGui::TableSetupColumn(" Name ", ImGuiTableColumnFlags_NoHide);
+		ImGui::TableSetupColumn(" Type ", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 20.0f);
+		ImGui::TableHeadersRow();
+		for (auto& rootFolder : m_RootFolders)
 		{
-			m_SelectedID = meta.id;
-
-			
-			SyncEditCacheFromWorld();
+			DrawFolderNode(rootFolder);
 		}
+		for (auto& entity : m_RootEntities)
+			DrawEntityRow(entity, entity.folderId);
 
-		// Double-click -> rename inline
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-			std::strncpy(m_RenameBuffer, meta.name.c_str(),
-				sizeof(m_RenameBuffer));
-			ImGui::OpenPopup("##rename");
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
+		{
+			m_ActiveFolderID = -1;
 		}
-
-		if (ImGui::BeginPopup("##rename")) {
-			ImGui::SetKeyboardFocusHere();
-			if (ImGui::InputText("Name", m_RenameBuffer,
-				sizeof(m_RenameBuffer),
-				ImGuiInputTextFlags_EnterReturnsTrue)) {
-				meta.name = m_RenameBuffer;
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::EndPopup();
-		}
-
-		ImGui::PopID();
-		i++;
+		ImGui::EndTable();
 	}
 
-	ImGui::EndChild();
+	if (m_OpenRenameFolderPopup)
+	{
+		ImGui::OpenPopup("##renameFolder");
+		m_OpenRenameFolderPopup = false;
+	}
+	if (m_OpenRenameEntityPopup)
+	{
+		ImGui::OpenPopup("##renameEntity");
+		m_OpenRenameEntityPopup = false;
+	}
+	if (isAddFolderPopUp)
+	{
+		ImGui::OpenPopup("AddFolderPopup");
+		isAddFolderPopUp = false;
+	}
+	DrawAddEntityPopup();
+	AddFolder();
+	RenameFolder();
+	RenameEntity();
 
-	//DrawPlayBar();
+
+	if (m_FolderToDelete != -1)
+	{
+		RemoveFolder(m_FolderToDelete);
+		m_FolderToDelete = -1;
+	}
+
+}
+
+void DebugUIEditor::RemoveFolder(int folderId)
+{
+	std::function<void(Editor_FolderNode&, std::vector<Editor_Entity>&)> collectEntities =
+		[&](Editor_FolderNode& node, std::vector<Editor_Entity>& out) {
+		out.insert(out.end(), node.ChildEntities.begin(), node.ChildEntities.end());
+		for (auto& child : node.ChildFolders)
+			collectEntities(child, out);
+		};
+	for (auto it = m_RootFolders.begin(); it != m_RootFolders.end(); ++it)
+	{
+		if (it->floderID == folderId)
+		{
+			collectEntities(*it, m_RootEntities);
+			m_RootFolders.erase(it);
+			return;
+		}
+	}
+
+	std::function<bool(Editor_FolderNode&)> removeFrom = [&](Editor_FolderNode& parent) -> bool {
+		auto& children = parent.ChildFolders;
+		for (auto it = children.begin(); it != children.end(); ++it)
+		{
+			if (it->floderID == folderId)
+			{
+				collectEntities(*it, m_RootEntities);
+				children.erase(it);
+				return true;
+			}
+			if (removeFrom(*it)) return true;
+		}
+		return false;
+		};
+
+	for (auto& root : m_RootFolders)
+		if (removeFrom(root)) return;
+}
+void DebugUIEditor::RemoveEntityNodeTree(nNewton::nEntity_ID id) {
+
+	for (auto it = m_RootEntities.begin(); it != m_RootEntities.end(); ++it)
+	{
+		if (it->id == id) { m_RootEntities.erase(it); return; }
+	}
+	std::function<bool(const Editor_FolderNode&)> RemoveEntity = [&](const Editor_FolderNode& node) -> bool {
+		auto& children = node.ChildEntities;
+		for (auto it = children.begin(); it != children.end(); ++it)
+		{
+			if (it->id == id) { m_RootEntities.erase(it); 
+			return true; }
+			
+		}
+		for (auto& child : node.ChildFolders)
+			if (RemoveEntity(child))return true;
+		return false;
+	};
+	for (auto& root : m_RootFolders)
+		if (RemoveEntity(root))return; 
+
+	AddLog("Something Wants Wrong {}", id);
+	return;
+}
+void DebugUIEditor::MoveEntityToFolder(int entityId, int TargetFolderID)
+{
+	Editor_Entity meta;
+	bool found = false;
+	
+
+	auto it = std::find_if(m_RootEntities.begin(), m_RootEntities.end(), [&](Editor_Entity& e) {
+		return e.id == entityId; });
+
+	if (it != m_RootEntities.end())
+	{
+		meta = *it;
+		if (meta.folderId == TargetFolderID)return;
+		m_RootEntities.erase(it);
+		found = true;
+	}
+	else
+	{
+		std::function<bool(Editor_FolderNode&)> findRec = [&](Editor_FolderNode& node){
+			
+			auto& vec = node.ChildEntities;
+			for (auto it = vec.begin(); it != vec.end(); ++it)
+			{
+				if (it->id == entityId)
+				{
+					if (it->folderId == TargetFolderID) return false;  
+					meta = *it;
+					vec.erase(it);
+					return true;
+				}
+			}
+			for (auto& child : node.ChildFolders)
+				if (findRec(child))return true;
+			return false;
+		};
+		for (auto& root : m_RootFolders)
+			if (findRec(root)) { found = true; break; }
+	}
+
+	if (!found) return;
+
+	meta.folderId = TargetFolderID;
+
+	std::function<bool(Editor_FolderNode&)> place = [&](Editor_FolderNode& node) -> bool {
+		if (node.floderID == TargetFolderID)
+		{
+			node.ChildEntities.push_back(meta);
+			return true;
+		}
+		for (auto& child : node.ChildFolders)
+			if (place(child)) return true;
+		return false;
+		};
+	for (auto& root : m_RootFolders)
+		if (place(root)) return;
+
+}
+
+//void DebugUIEditor::MoveFolderToFolder(int entityId, int folderParentID)
+//{
+//}
+
+void DebugUIEditor::DrawFolderNode(Editor_FolderNode& node)
+{
+	ImGui::PushID(node.floderID);
+	
+	ImGui::TableNextRow();
+	ImGui::TableSetColumnIndex(0);
+	ImGui::Spacing();
+	static ImGuiTreeNodeFlags tree_node_flags_base = ImGuiTreeNodeFlags_SpanAllColumns | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_DrawLinesFull | ImGuiTreeNodeFlags_FramePadding;
+
+	ImGuiTreeNodeFlags node_flags = tree_node_flags_base;
+
+	bool open = ImGui::TreeNodeEx(node.folderName.c_str(), node_flags);
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsItemToggledOpen())
+	{
+		m_ActiveFolderID = node.floderID;
+	}
+
+	//folder contex menu
+	if (ImGui::BeginPopupContextItem("FolderContext",1))
+	{
+		if (ImGui::MenuItem("Add Subfolder"))
+		{
+			m_FolderPopupParentID = node.floderID;
+			m_NewFolderName[0] = '\0';
+			isAddFolderPopUp = true;
+		}
+		if (ImGui::MenuItem("Rename"))
+		{
+			m_RenamingFolder = &node;
+			std::strncpy(m_RenamingFolderBuf, node.folderName.c_str(), sizeof(m_RenamingFolderBuf));
+			m_OpenRenameFolderPopup = true;
+		}
+		if (ImGui::MenuItem("Delete"))
+		{
+			m_FolderToDelete = node.floderID;
+			m_NeedRebuildTree = true;
+		}
+		ImGui::EndPopup();
+	}
+	
+	if (ImGui::BeginDragDropTarget())
+	{
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY"))
+		{
+			int moveId = *static_cast<const int*>(payload->Data);
+
+			MoveEntityToFolder(moveId, node.floderID);
+		}
+		ImGui::EndDragDropTarget();
+	}
+
+	
+
+	ImGui::TableSetColumnIndex(1);
+	ImGui::TextUnformatted("---");
+	if (open)
+	{
+		for (auto& meta : node.ChildEntities)
+			DrawEntityRow(meta, node.floderID);
+
+		for (auto& childFolder : node.ChildFolders)
+		{
+			DrawFolderNode(childFolder);
+		}
+		ImGui::TreePop();
+	}
+	ImGui::PopID();
+}
+
+void DebugUIEditor::DrawEntityRow(Editor_Entity& meta ,  int parentFolderID)
+{
+	if (!m_World->IsValid(meta.id)) return;
+	bool selected = (meta.id == m_SelectedID);
+	ImGui::PushID(nNewton::INDEX_FROM_ID(meta.id));
+	// Coloured dot based on mass
+	const nNewton::nRigidBody* body = m_World->GetBody(meta.id);
+	bool isStatic = body->IS_STATIC_ || (body->MASS_ == 0.f);
+	ImVec4 dot = isStatic
+		? ImVec4(0.45f, 0.75f, 0.45f, 1.f)
+		: ImVec4(0.35f, 0.60f, 0.95f, 1.f);
+
+	ImGui::TableNextRow();
+
+	ImGui::TableSetColumnIndex(0);
+
+	const float pad_left = 8.0f;
+	const float pad_top = 4.0f;
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + pad_left);
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + pad_top);
+
+	ImGui::PushStyleColor(ImGuiCol_Text, dot);
+	if (ImGui::Selectable(meta.name.c_str(), selected,
+		ImGuiSelectableFlags_SpanAllColumns))
+	{
+		m_SelectedID = meta.id;
+		m_ActiveFolderID = meta.folderId;
+		SyncEditCacheFromWorld();
+	}
+	ImGui::PopStyleColor();
+
+
+	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+	{
+		int eid = meta.id;
+		ImGui::SetDragDropPayload("ENTITY", &eid, sizeof(int));
+		ImGui::Text("Move %s", meta.name.c_str());
+		ImGui::EndDragDropSource();
+	}
+
+	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+	{
+		std::strncpy(m_RenameBuffer, meta.name.c_str(), sizeof(m_RenameBuffer));
+		m_RenamingEntity = &meta;
+		m_OpenRenameEntityPopup = true; 
+	}
+	// Context menu 
+	if (ImGui::BeginPopupContextItem("EntityContext"))
+	{
+		if (ImGui::MenuItem("Rename"))
+		{
+			std::strncpy(m_RenameBuffer, meta.name.c_str(), sizeof(m_RenameBuffer));
+			m_RenamingEntity = &meta;
+			m_OpenRenameEntityPopup = true;   // or direct open
+		}
+		ImGui::EndPopup();
+	}
+	
+	ImGui::TableSetColumnIndex(1);
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + pad_left);
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + pad_top);
+	ImGui::TextUnformatted(isStatic ? "Static" : "Dynamic");
+
+	ImGui::PopID();
+	
+	
+}
+void DebugUIEditor::AddFolder()
+{
+	if (ImGui::BeginPopup("AddFolderPopup"))
+	{
+		ImGui::SetKeyboardFocusHere();
+		if (ImGui::InputText("##Name", m_NewFolderName,
+			sizeof(m_NewFolderName),
+			ImGuiInputTextFlags_EnterReturnsTrue)) {
+		
+			if (m_NewFolderName[0] != '\0')
+			{
+				if (m_FolderPopupParentID == -1)
+				{
+					// Add to root level
+					Editor_FolderNode newFolder;
+					newFolder.floderID = m_NextFolderID++;
+					newFolder.folderName = m_NewFolderName;
+					m_RootFolders.push_back(newFolder);
+				}
+				else
+				{
+					AddSubFolder(m_FolderPopupParentID, m_NewFolderName);
+				}
+			}
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+		
+}
+void DebugUIEditor::RenameFolder()
+{
+	if (ImGui::BeginPopup("##renameFolder"))
+	{
+		ImGui::SetKeyboardFocusHere();
+		if (ImGui::InputText("##Name", m_RenamingFolderBuf, sizeof(m_RenamingFolderBuf), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+		{
+			if (m_RenamingFolder)
+			{
+				m_RenamingFolder->folderName = m_RenamingFolderBuf;
+			}
+			ImGui::CloseCurrentPopup();
+			m_RenamingFolder = nullptr;
+		}
+		ImGui::EndPopup();
+	}
+}
+void DebugUIEditor::RenameEntity()
+{
+	if (ImGui::BeginPopup("##renameEntity")) {
+		ImGui::SetKeyboardFocusHere();
+		if (ImGui::InputText("##Name", m_RenameBuffer,
+			sizeof(m_RenameBuffer),
+			ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+			if (m_RenamingEntity)
+				m_RenamingEntity->name = m_RenameBuffer;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+
+}
+void DebugUIEditor::AddSubFolder(int parentID, const std::string& name)
+{
+	std::function<Editor_FolderNode* (Editor_FolderNode&)> find = [&](Editor_FolderNode& node) -> Editor_FolderNode* {
+		if (node.floderID == parentID) return &node;
+		for (auto& child : node.ChildFolders)
+			if (auto* found = find(child)) return found;
+		return nullptr;
+		};
+
+	for (auto& root : m_RootFolders)
+	{
+		if (auto* parent = find(root))
+		{
+			Editor_FolderNode newFolder;
+			newFolder.floderID = m_NextFolderID++;
+			newFolder.folderName = name;
+			parent->ChildFolders.push_back(newFolder);
+			return;
+		}
+	}
+	
 }
 
 void DebugUIEditor::DrawAddEntityPopup()
@@ -575,44 +934,36 @@ void DebugUIEditor::DrawAddEntityPopup()
 
 	if (ImGui::Button("Create", ImVec2(80, 0)))
 	{
-		nNewton::nRigidBodyInfo info{};
-		info.MASS_ = m_NewMass;
-		info.IS_STATIC_ = m_NewIsStatic;
-		info.INIT_VELOCITY_ = { m_NewVelocity[0], m_NewVelocity[1], m_NewVelocity[2] };
-		info.INIT_TRANSFORM_.SetPosition({ m_NewPos[0],   m_NewPos[1],   m_NewPos[2] });
-		info.INIT_TRANSFORM_.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
+		nNewton::nTransform baseTransform;
+		baseTransform.SetPosition({ m_NewPos[0], m_NewPos[1], m_NewPos[2] });
+		baseTransform.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
 
-		
+		nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::Box;
 
 		switch (m_NewShapeType) {
 		case 0:
-			info.INIT_TRANSFORM_.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
-			info.SetBoxShape({ 1.f, 1.f, 1.f });
+			baseTransform.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
 			break;
 		case 1:
-			info.INIT_TRANSFORM_.SetScale({ m_NewRadius, m_NewRadius, m_NewRadius });
-			info.SetSphereShape(1.f);
+			shape = nNewton::nCollisionShapeType::Sphere;
+			baseTransform.SetScale({ m_NewRadius, m_NewRadius, m_NewRadius });
 			break;
 		}
 
-		nNewton::nEntity_ID newID = m_World->Create_Entity(info,true);
+		nNewton::nEntity_ID newID = CreateEntity(
+			m_NewName[0] ? m_NewName : "Entity",
+			m_NewMass,
+			m_NewIsStatic,
+			shape,
+			baseTransform,
+			{ m_NewVelocity[0], m_NewVelocity[1], m_NewVelocity[2] },
+			m_NewColor
+		);
 
-
-		//m_World->GetCollisionWorld()->CreateCollisionEntity(newID, info.IS_STATIC_, info.INIT_TRANSFORM_, info.INIT_VELOCITY_, info.getCollisionShape());
-
-		if (m_RenderSystem)
-			m_RenderSystem->RegisterEntity(newID, m_NewColor);
-
-
-		EntityMeta meta;
-		meta.id = newID;
-		meta.name = m_NewName[0] ? m_NewName : "Entity";
-		m_Entities.push_back(meta);
-		 
 		m_SelectedID = newID;
 		SyncEditCacheFromWorld();
 
-		
+
 		std::snprintf(m_NewName, sizeof(m_NewName), "Entity");
 		m_NewMass = 1.f;
 		m_NewPos[0] = m_NewPos[1] = m_NewPos[2] = 0.f;
@@ -631,7 +982,6 @@ void DebugUIEditor::DrawAddEntityPopup()
 	
 
 	ImGui::EndPopup();
-
 }
 
 
@@ -654,13 +1004,13 @@ void DebugUIEditor::DrawInspector()
 		ImGui::TextDisabled("Select an entity");
 		return;
 	}
-
-	EntityMeta* meta = FindMeta(m_SelectedID);
+	
+	const Editor_Entity* meta = FindMetaEntity(m_SelectedID);
 	const char* displayName = meta ? meta->name.c_str() : "?";
 
-	ImGui::TextDisabled("INSPECTOR");
+	ImGui::TextDisabled("Inspector:");
 	ImGui::SameLine();
-	ImGui::Text("  %s", displayName);
+	ImGui::Text("%s", displayName);
 	ImGui::SameLine();
 	ImGui::TextDisabled("[id %u  gen %u]",
 		nNewton::INDEX_FROM_ID(m_SelectedID),
@@ -713,8 +1063,6 @@ void DebugUIEditor::DrawPhysicsSection()
 
 	ImGui::EndDisabled();
 }
-
-
 
 void DebugUIEditor::DrawTransformSection()
 {
@@ -783,7 +1131,6 @@ void DebugUIEditor::DrawTransformSection()
 		FlushEditCacheToWorld();
 }
 
-
 void DebugUIEditor::SyncEditCacheFromWorld()
 {
 	if (!m_World || !m_World->IsValid(m_SelectedID)) return;
@@ -821,17 +1168,57 @@ void DebugUIEditor::FlushEditCacheToWorld()
 		body->ColEnt->EntityTransform = body->TRANSFORM_;
 }
 
-EntityMeta* DebugUIEditor::FindMeta(nNewton::nEntity_ID id)
+Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id)
 {
-	for (auto& m : m_Entities)
-		if (m.id == id) return &m;
+	for (auto it = m_RootEntities.begin(); it != m_RootEntities.end(); ++it)
+	{
+		if (it->id == id) {
+			return &(*it);
+		}
+	}
+	std::function<Editor_Entity* (Editor_FolderNode&)> RemoveEntity = [&](Editor_FolderNode& node) -> Editor_Entity* {
+		auto& children = node.ChildEntities;
+		for (auto it = children.begin(); it != children.end(); ++it)
+		{
+			if (it->id == id) {
+				return &(*it);
+			}
+
+		}
+		for (auto& child : node.ChildFolders)
+			return RemoveEntity(child);
+		return nullptr;
+		};
+	for (auto& root : m_RootFolders)
+		return RemoveEntity(root);
+
 	return nullptr;
 }
 
-const EntityMeta* DebugUIEditor::FindMeta(nNewton::nEntity_ID id) const
+const Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id) const
 {
-	for (const auto& m : m_Entities)
-		if (m.id == id) return &m;
+	for (auto it = m_RootEntities.begin(); it != m_RootEntities.end(); ++it)
+	{
+		if (it->id == id) {
+			Editor_Entity m = *it; return &m;
+		}
+	}
+	std::function<const Editor_Entity* (const Editor_FolderNode&)> RemoveEntity = [&](const Editor_FolderNode& node) -> const Editor_Entity* {
+		auto& children = node.ChildEntities;
+		for (auto it = children.begin(); it != children.end(); ++it)
+		{
+			if (it->id == id) {
+				Editor_Entity m = *it; return &m;
+			}
+
+		}
+		for (auto& child : node.ChildFolders)
+			return RemoveEntity(child);
+		return nullptr;
+		};
+	for (auto& root : m_RootFolders)
+		return RemoveEntity(root);
+
 	return nullptr;
 }
 
@@ -927,7 +1314,7 @@ nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
 		tscale);
 
 	std::string name;
-	name = "Entity" + std::to_string(m_Entities.size());
+	name = "Entity" + std::to_string(m_EntitiesCount);
 	
 	nNewton::nVector4 Col(color(gen), color(gen), color(gen), 1.0f);
 	auto id = CreateEntity(name, 1.0f ,isStatic, shapeType, Transf,nNewton::nVector3(), Col);
@@ -958,28 +1345,46 @@ nEntity_ID DebugUIEditor::CreateEntity(const std::string& name, float mass, bool
 	
 	nNewton::nEntity_ID shapeID = m_World->Create_Entity(ShapeInfo, true);
 
-	EntityMeta meta;
+	Editor_Entity meta;
 	meta.id = shapeID;
 	meta.name = name.empty() ? "Entity" : name;
-	m_Entities.push_back(meta);
+	if (m_ActiveFolderID < 0)
+		m_RootEntities.push_back(meta);
+	else
+	{
+		bool found = false;
+		std::function<bool(Editor_FolderNode&)> findActiveFolder = [&](Editor_FolderNode& node)-> bool
+			{
+				if (node.floderID == m_ActiveFolderID) {
+					node.ChildEntities.push_back(meta);
+					return true;
+				}
+				for (auto& child : node.ChildFolders) {
+					if (findActiveFolder(child)) return true;
+				}
+				return false;
+			};
+
+		for (auto& root : m_RootFolders)
+		{
+			if (findActiveFolder(root)) { found = true; break; }
+		}
+
+		if (!found)
+			m_RootEntities.push_back(meta);
+	}
 
 	m_RenderSystem->RegisterEntity(shapeID, color);
 	
+	m_EntitiesCount++;
+
 	return shapeID;
 }
 
 
 bool DebugUIEditor::DeleteEntity(nEntity_ID id)
 {
-	auto remove_it = std::remove_if(m_Entities.begin(), m_Entities.end(),
-		[id](const EntityMeta& m) { return m.id == id; });
-
-	if (remove_it == m_Entities.end())
-	{
-		return false;
-	}
-	
-	m_Entities.erase(remove_it, m_Entities.end());
+	RemoveEntityNodeTree(id);
 	m_World->DestroyEntity(id);
 
 	return true;
@@ -987,11 +1392,21 @@ bool DebugUIEditor::DeleteEntity(nEntity_ID id)
 
 void DebugUIEditor::DestroyAllEntities()
 {
-	for (auto& n : m_Entities)
+	m_RootEntities.clear();
+
+	std::function<void(Editor_FolderNode&)> ClearAll = [&](Editor_FolderNode& n)->void {
+		n.ChildEntities.clear();
+
+		for (auto& m : n.ChildFolders)
+		{
+			ClearAll(m);
+		}
+	};
+	for (auto& folder : m_RootFolders)
 	{
-		m_World->DestroyEntity(n.id);
+		ClearAll(folder);
 	}
-	m_Entities.clear();
+	m_World->DestroyAllEntity();
 }
 
 bool DebugUIEditor::RebuildBVHTree(bool isStatic)
@@ -1049,7 +1464,7 @@ void DebugUIEditor::defaultScene()
 
 //======== Console panel
 
-DebugConsole::DebugConsole()
+EditorConsole::EditorConsole()
 {
 	ClearLog();
 	memset(InputBuf, 0, sizeof(InputBuf));
@@ -1067,11 +1482,11 @@ DebugConsole::DebugConsole()
 	FilterDirty = true;
 }
 
-DebugConsole::~DebugConsole()
+EditorConsole::~EditorConsole()
 {
 }
 
-void DebugConsole::ClearLog()
+void EditorConsole::ClearLog()
 {
 	Items.clear();
 	FilterIndices.clear();
@@ -1079,7 +1494,7 @@ void DebugConsole::ClearLog()
 }
 
 
-void DebugConsole::AddLog(char* buf) 
+void EditorConsole::AddLog(char* buf) 
 {
 
 	char* start = buf;
@@ -1138,7 +1553,7 @@ void DebugConsole::AddLog(char* buf)
 	FilterDirty = true;
 }
 
-void DebugConsole::Draw(const char* title, bool* p_open)
+void EditorConsole::Draw(const char* title, bool* p_open)
 {
 	ImGui::SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
 	if (!ImGui::Begin(title, p_open))
@@ -1266,7 +1681,7 @@ void DebugConsole::Draw(const char* title, bool* p_open)
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 5));
 	ImGui::PushItemWidth(-1.0f);
 	if (ImGui::InputTextWithHint("##Input", "Type command here...", InputBuf, IM_COUNTOF(InputBuf), input_text_flags,
-		[](ImGuiInputTextCallbackData* data) { DebugConsole* console = (DebugConsole*)data->UserData;
+		[](ImGuiInputTextCallbackData* data) { EditorConsole* console = (EditorConsole*)data->UserData;
 	return console->TextEditCallback(data); }, (void*)this))
 	{
 		std::string s = InputBuf;
@@ -1299,7 +1714,7 @@ void DebugConsole::Draw(const char* title, bool* p_open)
 	ImGui::End();
 }
 
-void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
+void    EditorConsole::ExecCommand(const std::vector<std::string>& command_line)
 {
 	size_t total_size = 0;
 	for (const auto& s : command_line) total_size += s.size() + 1;
@@ -1336,7 +1751,7 @@ void    DebugConsole::ExecCommand(const std::vector<std::string>& command_line)
 	ScrollToBottom = true;
 }
 
-int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
+int EditorConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 {
 	//AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
 	switch (data->EventFlag)
@@ -1435,7 +1850,7 @@ int DebugConsole::TextEditCallback(ImGuiInputTextCallbackData* data)
 	return 0;
 }
 
-void DebugConsole::RegisterCommands()
+void EditorConsole::RegisterCommands()
 {
 	m_CommandMap["CLEAR"] = [this](const std::vector<std::string>& command_line) {
 		Items.clear();
@@ -1646,7 +2061,7 @@ template<typename... Args>
 void DebugUIEditor::AddLog(std::format_string<Args...> fmt, Args&&... args )
 {
 
-	static DebugConsole console;
+	static EditorConsole console;
 
 	std::string massage = std::format(fmt, std::forward<Args>(args)...);
 	
