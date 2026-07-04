@@ -920,6 +920,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 	ImGui::InputText("Name", m_NewName, sizeof(m_NewName));
 	ImGui::DragFloat("Mass", &m_NewMass, 0.1f, 0.f, 1000.f, "%.2f kg");
 	ImGui::DragFloat3("Position", m_NewPos, 0.1f);
+	ImGui::DragFloat3("Rotation", m_NewRotation, 0.5f, -360.0f, 360.0f, "%.1f deg");
 	ImGui::Checkbox("Static", &m_NewIsStatic);
 
 	const char* shapes[] = { "Box", "Sphere", "Capsule" };
@@ -936,7 +937,12 @@ void DebugUIEditor::DrawAddEntityPopup()
 	{
 		nNewton::nTransform baseTransform;
 		baseTransform.SetPosition({ m_NewPos[0], m_NewPos[1], m_NewPos[2] });
-		baseTransform.SetRotation(nQuaternion{ 0.f, 0.f, 0.f, 1.f });
+
+		float radX = m_NewRotation[0] * nNewton::PI/ 180.0f;
+		float radY = m_NewRotation[1] * nNewton::PI / 180.0f;
+		float radZ = m_NewRotation[2] * nNewton::PI / 180.0f;
+		nQuaternion Rquat = from_EulerXYZ(radX, radY, radZ);
+		baseTransform.SetRotation(Rquat);
 
 		nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::Box;
 
@@ -967,6 +973,7 @@ void DebugUIEditor::DrawAddEntityPopup()
 		std::snprintf(m_NewName, sizeof(m_NewName), "Entity");
 		m_NewMass = 1.f;
 		m_NewPos[0] = m_NewPos[1] = m_NewPos[2] = 0.f;
+		m_NewRotation[0] = m_NewRotation[1] = m_NewRotation[2] = 0.f;
 		m_NewHalfExt[0] = m_NewHalfExt[1] = m_NewHalfExt[2] = 0.5f;
 		m_NewScale[0] = m_NewScale[1] = m_NewScale[2] = 1.f;
 		m_NewRadius = .5f;
@@ -1142,14 +1149,17 @@ void DebugUIEditor::SyncEditCacheFromWorld()
 	m_EditPos[1] = tf->GetPosition().y;
 	m_EditPos[2] = tf->GetPosition().z;
 
-	//quat to euler yet to imple
-	//   m_EditRot[0] = euler.x;
-	//   m_EditRot[1] = euler.y;
-	//   m_EditRot[2] = euler.z;
-
 	m_EditScale[0] = tf->GetScale().x;
 	m_EditScale[1] = tf->GetScale().y;
 	m_EditScale[2] = tf->GetScale().z;
+
+	nQuaternion rot = tf->GetRotation();   
+	nVector3 eulerRad = QuaternionToEuler(rot);
+
+	m_EditRot[0] = eulerRad.x * (180.0f / nNewton::PI);
+	m_EditRot[1] = eulerRad.y * (180.0f / nNewton::PI);
+	m_EditRot[2] = eulerRad.z * (180.0f / nNewton::PI);
+
 }
 
 void DebugUIEditor::FlushEditCacheToWorld()
@@ -1161,11 +1171,19 @@ void DebugUIEditor::FlushEditCacheToWorld()
 
 	
 	body->TRANSFORM_.SetPosition({ m_EditPos[0], m_EditPos[1], m_EditPos[2] });
-
 	body->TRANSFORM_.SetScale({ m_EditScale[0], m_EditScale[1], m_EditScale[2] });
+	float radX = m_EditRot[0] * (PI / 180.0f);
+	float radY = m_EditRot[1] * (PI / 180.0f);
+	float radZ = m_EditRot[2] * (PI/ 180.0f);
+	nQuaternion rotQuat = from_EulerXYZ(radX, radY, radZ); 
+	body->TRANSFORM_.SetRotation(rotQuat);
 
 	if (body->ColEnt)
 		body->ColEnt->EntityTransform = body->TRANSFORM_;
+
+	/*if (body->ColEnt->BVHNodePtr && m_World->) {
+		m_World->m_DynamicTree->RemoveEntity(body->BVHNodePtr);
+		m_World->m_DynamicTree->InsertEntity(body);*/
 }
 
 Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id)

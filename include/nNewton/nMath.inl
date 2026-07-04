@@ -373,7 +373,7 @@ namespace nNewton
 	}
 	constexpr  nMatrix3::nMatrix3(float m)
 	{
-		for (int i = 0; i < 16; ++i)
+		for (int i = 0; i < 9; ++i)
 		{
 			A[i] = m;
 		}

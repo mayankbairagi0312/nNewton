@@ -141,6 +141,7 @@ private:
 	char                           m_NewName[64] = "Entity";
 	float                          m_NewMass = 1.0f;
 	float                          m_NewPos[3] = {};
+	float						   m_NewRotation[3] = {};
 	bool						   m_NewIsStatic = false;;
 	float						   m_NewVelocity[3] = { 0.f, 0.f, 0.f };
 	float						   m_NewScale[3] = { 1.f, 1.f, 1.f };

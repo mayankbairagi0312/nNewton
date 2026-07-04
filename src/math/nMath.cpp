@@ -437,4 +437,32 @@ namespace nNewton
 
 		return QNormalize((1.0f - t_) * Q1 + t_ * Q2);
 	}
+
+	nQuaternion from_EulerXYZ(float xRad, float yRad, float zRad) {
+		nQuaternion qX = from_AxisAngle(nVector3(1.0f, 0.0f, 0.0f), xRad);
+		nQuaternion qY = from_AxisAngle(nVector3(0.0f, 1.0f, 0.0f), yRad);
+		nQuaternion qZ = from_AxisAngle(nVector3(0.0f, 0.0f, 1.0f), zRad);
+
+		return qZ * qY * qX;
+	}
+
+	
+	nVector3 QuaternionToEuler(const nQuaternion& q) {
+		float sinPitch = 2.0f * (q.w * q.x + q.y * q.z);
+		float cosPitch = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+		float pitch = atan2f(sinPitch, cosPitch);
+
+		float sinYaw = 2.0f * (q.w * q.y - q.z * q.x);
+		float yaw;
+		if (fabsf(sinYaw) >= 1.0f)
+			yaw = copysignf(3.14159265f / 2.0f, sinYaw);
+		else
+			yaw = asinf(sinYaw);
+
+		float sinRoll = 2.0f * (q.w * q.z + q.x * q.y);
+		float cosRoll = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+		float roll = atan2f(sinRoll, cosRoll);
+
+		return nVector3(pitch, yaw, roll);
+	}
 }

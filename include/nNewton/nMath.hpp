@@ -262,7 +262,8 @@ namespace nNewton
 	nQuaternion QIntegrate(nQuaternion orientation_, const nVector3& angularV_, float dt_);
 	nQuaternion QSlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_);
 	nQuaternion QNlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_);
-
+	nQuaternion from_EulerXYZ(float xRad, float yRad, float zRad);
+	nVector3 QuaternionToEuler(const nQuaternion& q);
 }
 
 
