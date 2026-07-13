@@ -386,6 +386,59 @@ namespace nNewton
 			A[i++] = v;
 	}
 
+	constexpr nMatrix3 nMatrix3::operator*(float scalar) const
+	{
+		nMatrix3 result;
+		for (int i = 0; i < 9; ++i)
+			result.A[i] = A[i] * scalar;
+		return result;
+	}
+
+	constexpr nMatrix3 operator*(float scalar, const nMatrix3& m)
+	{
+		return m * scalar;   
+	}
+
+	constexpr nMatrix3 nMatrix3::Inverse() const
+	{
+		float m00 = A[0], m01 = A[3], m02 = A[6];
+		float m10 = A[1], m11 = A[4], m12 = A[7];
+		float m20 = A[2], m21 = A[5], m22 = A[8];
+
+		
+		float c00 = m11 * m22 - m12 * m21; 
+		float c01 = -m10 * m22 + m12 * m20; 
+		float c02 = m10 * m21 - m11 * m20;   
+
+		float c10 = -m01 * m22 + m02 * m21; 
+		float c11 = m00 * m22 - m02 * m20;  
+		float c12 = -m00 * m21 + m01 * m20; 
+
+		float c20 = m01 * m12 - m02 * m11;   
+		float c21 = -m00 * m12 + m02 * m10; 
+		float c22 = m00 * m11 - m01 * m10;   
+
+		float det = m00 * c00 + m01 * c01 + m02 * c02;   
+
+		if (det == 0.0f)
+			return Identity3();
+
+		float invDet = 1.0f / det;
+
+		nMatrix3 result;
+		
+		result.A[0] = c00 * invDet;    
+		result.A[1] = c01 * invDet;  
+		result.A[2] = c02 * invDet;   
+		result.A[3] = c10 * invDet; 
+		result.A[4] = c11 * invDet;  
+		result.A[5] = c12 * invDet;   
+		result.A[6] = c20 * invDet;  
+		result.A[7] = c21 * invDet;
+		result.A[8] = c22 * invDet;   
+		return result;
+	}
+
 	constexpr nMatrix3 Identity3()
 	{
 		return nMatrix3{
@@ -428,6 +481,68 @@ namespace nNewton
 			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 		};
+	}
+
+	constexpr nMatrix4 nMatrix4::operator*(float scalar) const
+	{
+		nMatrix4 result;
+		for (int i = 0; i < 16; ++i)
+			result.A[i] = A[i] * scalar;
+		return result;
+	}
+
+	constexpr nMatrix4 operator*(float scalar, const nMatrix4& m)
+	{
+		return m * scalar;
+	}
+
+	constexpr nMatrix4 nMatrix4::Inverse() const
+	{
+		float det = Determinant(*this);
+		if (det == 0.0f)
+			return Identity4();   
+
+		float invDet = 1.0f / det;
+
+		
+		auto det3 = [](float a, float b, float c,
+			float d, float e, float f,
+			float g, float h, float i) -> float
+			{
+				return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+			};
+
+		nMatrix4 result;
+
+		for (int r = 0; r < 4; ++r)          
+		{
+			for (int c = 0; c < 4; ++c)     
+			{
+				float m[9];
+				int idx = 0;
+				for (int i = 0; i < 4; ++i)       
+				{
+					if (i == c) continue;
+					for (int j = 0; j < 4; ++j)   
+					{
+						if (j == r) continue;
+						m[idx++] = A[i + j * 4];   
+					}
+				}
+
+				float cofactor = det3(m[0], m[1], m[2],
+					m[3], m[4], m[5],
+					m[6], m[7], m[8]);
+
+				// Apply the sign: (-1)^(c+r)
+				if ((c + r) & 1)
+					cofactor = -cofactor;
+
+				result.A[r + c * 4] = cofactor * invDet;
+			}
+		}
+
+		return result;
 	}
 
 	// Quaternions ===========>>>>>>>>>>>

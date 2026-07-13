@@ -181,6 +181,9 @@ namespace nNewton
 
 		nVector3 operator*(const nVector3& v) const;
 
+		constexpr nMatrix3 operator*(float scalar) const;
+		friend constexpr nMatrix3 operator*(float scalar, const nMatrix3& m);
+		constexpr nMatrix3 Inverse() const;
 		
 	};
 	
@@ -202,9 +205,11 @@ namespace nNewton
 					nMatrix4 operator+(const nMatrix4& otr)const;
 					nMatrix4 operator-(const nMatrix4& otr)const;
 					nMatrix4 operator*(const nMatrix4& otr)const;
-
 					nVector4 operator*(const nVector4& v) const;
-					
+		
+		constexpr	nMatrix4 Inverse() const;
+		constexpr nMatrix4 operator*(float scalar) const;
+		friend constexpr nMatrix4 operator*(float scalar, const nMatrix4& m);
 	};
 
 	constexpr	nMatrix4 Identity4();
@@ -217,7 +222,7 @@ namespace nNewton
 				nMatrix4 Scale		(const nVector3& s);
 
 				nMatrix4 Transpose	(const nMatrix4& otr);
-				nMatrix4 Inverse	(const nMatrix4& otr);
+				
 
 				nMatrix4 Rotate	    (float rad, const nVector3& axis);
 
