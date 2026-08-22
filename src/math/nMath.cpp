@@ -130,6 +130,55 @@ namespace nNewton
 			   m[12] * (m[5] * m[10] - m[6] * m[9]));
 	}
 
+	nMatrix4 nMatrix4::Inverse() const
+	{
+		float det = Determinant(*this);
+		if (det == 0.0f)
+			return Identity4();
+
+		float invDet = 1.0f / det;
+
+
+		auto det3 = [](float a, float b, float c,
+			float d, float e, float f,
+			float g, float h, float i) -> float
+			{
+				return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+			};
+
+		nMatrix4 result;
+
+		for (int r = 0; r < 4; ++r)
+		{
+			for (int c = 0; c < 4; ++c)
+			{
+				float m[9];
+				int idx = 0;
+				for (int i = 0; i < 4; ++i)
+				{
+					if (i == c) continue;
+					for (int j = 0; j < 4; ++j)
+					{
+						if (j == r) continue;
+						m[idx++] = A[i + j * 4];
+					}
+				}
+
+				float cofactor = det3(m[0], m[1], m[2],
+					m[3], m[4], m[5],
+					m[6], m[7], m[8]);
+
+				// Apply the sign: (-1)^(c+r)
+				if ((c + r) & 1)
+					cofactor = -cofactor;
+
+				result.A[r + c * 4] = cofactor * invDet;
+			}
+		}
+
+		return result;
+	}
+
 	nMatrix4 RotateX(float rad)
 	{
 		nVector3 x(1, 0, 0);
@@ -176,11 +225,6 @@ namespace nNewton
 		}
 
 		return otrT;
-	}
-
-	nMatrix4 Inverse(const nMatrix4& otr)
-	{	//todo .......
-		return otr;
 	}
 
 	nMatrix4 Rotate(float rad, const nVector3& axis) {

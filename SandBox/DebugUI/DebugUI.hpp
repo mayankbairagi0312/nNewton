@@ -6,6 +6,7 @@
 #include "Core/Window.h"
 #include"Renderer/DebugRenderer.hpp"
 #include <memory>
+#include <utility>
 #include "Renderer/RenderSystem.hpp"
 #include<nNewton/nAABBTree.hpp>
 #include <nNewton/nTransform.hpp>
@@ -14,23 +15,19 @@
 #include"common.hpp"
 #include "Renderer/GL_framebuffer.hpp"
 #include <format>
-
+#include "Core/Entity.h"
+#include "Core/EntityManager.h"
+#include "Core/Component.h"
 
 static bool CaseInsensitiveMatch(std::string_view str1, std::string_view str2);
 static std::string Strtrim(const std::string& str);
 static bool CaseInsensitiveMatchStart(std::string_view str, std::string_view pref);
-struct Editor_Entity {
-	nNewton::nEntity_ID id;
-	std::string         name;
-	bool                visible = true;
-	int folderId = -1;
-};
-
 
 
 class DebugUIEditor;
-//======== Console 
 
+//======== Console ------------------------------------------------------------
+//----------------------------------------------------------------------------
 class EditorConsole
 {
 private:
@@ -80,20 +77,32 @@ private:
 };
 
 
+struct Editor_Entity {
+	nNewton::nEntity_ID id;
+	int folderId = -1;
+};
+
+//--------------------------------------------------------------------------------
+
 class DebugUIEditor {
 
 private:
+
+//---------------------------------------------------------------
 	Window* SDL_Window;
 	std::shared_ptr<DebugRenderer>  debugRenderer;
-	nNewton::nDynamicsWorld* m_World;
+	nNewton::nDynamicsWorld* m_World = nullptr;
+	std::unique_ptr<eManager> m_EntityManager;
 	nRenderSystem* m_RenderSystem = nullptr;
-
 	SandboxFramebuffer* m_FrameBuff;
+
+
+
+	
 
 	size_t m_EntitiesCount = 0;
 	nNewton::nEntity_ID            m_SelectedID = {};       
 	char                           m_RenameBuffer[64] = {};
-	Editor_Entity* m_RenamingEntity = nullptr;
 
 	//---------entity list floder
 	struct Editor_FolderNode
@@ -108,7 +117,8 @@ private:
 
 	std::vector<Editor_FolderNode> m_RootFolders;
 	std::vector<Editor_Entity> m_RootEntities;
-	int m_NextFolderID = 0;               
+	int m_NextFolderID = 0;       
+	nNewton::nEntity_ID m_RenamingEntityID = nNewton::INVALID_ENTITY;
 	Editor_FolderNode* m_RenamingFolder = nullptr;
 	char m_RenamingFolderBuf[64];
 	int m_FolderToDelete;
@@ -119,17 +129,6 @@ private:
 	bool m_OpenRenameFolderPopup = false;
 	bool m_OpenRenameEntityPopup = false;
 	bool isAddFolderPopUp = false;
-	void DrawFolderNode(Editor_FolderNode& node);
-	void DrawEntityRow(Editor_Entity& meta, int parentFolderID);
-	void AddFolder();
-	void RenameFolder();
-	void RenameEntity();
-	void AddSubFolder(int parentID, const std::string& name);
-	void RemoveFolder(int FolderId);
-	void MoveEntityToFolder(int entityId, int TargetFolderID);
-	//void MoveFolderToFolder(int entityId, int folderParentID);
-	void RemoveEntityNodeTree(nNewton::nEntity_ID id);
-
 
 
 	ImVec2      m_ViewportSize = { 1280.0f, 720.0f };
@@ -139,18 +138,10 @@ private:
 
 
 	char                           m_NewName[64] = "Entity";
-	float                          m_NewMass = 1.0f;
-	float                          m_NewPos[3] = {};
-	float						   m_NewRotation[3] = {};
-	bool						   m_NewIsStatic = false;;
-	float						   m_NewVelocity[3] = { 0.f, 0.f, 0.f };
-	float						   m_NewScale[3] = { 1.f, 1.f, 1.f };
-
-	int                            m_NewShapeType = 0;       
-	float                          m_NewHalfExt[3] = { 0.5f, 0.5f, 0.5f };
-	float                          m_NewRadius = 0.5f;
-
-	nVector4 m_NewColor = { nColor::Magenta.r,nColor::Magenta.g,nColor::Magenta.b,nColor::Magenta.a };
+	    
+	float                          m_NewHalfExt[3] = { 1.0f, 1.0f, 1.0f };
+	float                          m_NewRadius = 1.0f;
+	nCollisionEntity m_Collider;
 
 
 	float m_EditPos[3] = {};
@@ -167,6 +158,9 @@ private:
 	};
 	std::vector<TransformSnapshot> m_PlaySnapshot;
 
+//------------draw func-----------------
+	void DrawFolderNode(Editor_FolderNode& node);
+	void DrawEntityRow(Editor_Entity& meta, int parentFolderID);
 	void DrawFolderNodeTree();
 	void DrawAddEntityPopup();
 	void DrawInspector();
@@ -174,14 +168,32 @@ private:
 	void DrawPhysicsSection();
 	//void DrawPlayBar();
 
+//--------------Support-------------
 	Editor_Entity* FindMetaEntity(nNewton::nEntity_ID id);
 	const Editor_Entity* FindMetaEntity(nNewton::nEntity_ID id) const;
 
-	void SyncEditCacheFromWorld();          
-	void FlushEditCacheToWorld();
+
+	void AddFolder();
+	void RenameFolder();
+	void RenameEntity();
+	void AddSubFolder(int parentID, const std::string& name);
+	void RemoveFolder(int FolderId);
+	void MoveEntityToFolder(int entityId, int TargetFolderID);
+	//void MoveFolderToFolder(int entityId, int folderParentID);
+	void RemoveEntityNodeTree(nNewton::nEntity_ID id);
+
+	void SyncEditCacheFromComponent(const TransformComponent* tf);
+	void FlushEditCacheToComponent(TransformComponent* tf);
+	void FlushComponentToWorld(const TransformComponent* tf);
 
 	static const char* ShapeTypeName(int t);
 
+
+	template <typename ComponentType, typename DrawFunc>
+	void DrawComponentCard(const char* componentName, DrawFunc&& drawContent, float height = 200.0f);
+	template <typename ComponentType, typename DrawFunc, typename OnRemoveFunc>
+	void DrawComponentCard(const char* name, DrawFunc&& draw,
+		float height, OnRemoveFunc&& onRemove);
 public:
 	
 	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* ,
@@ -212,6 +224,10 @@ public:
 	void DrawPropertiesPanel(bool* open);
 	void DrawDiagnosticsPanel(bool* open);
 
+	const eManager* GetEntityManager()  const { return m_EntityManager.get(); }
+	nNewton::nEntity_ID CreateEntity(const std::string& name,
+		const nNewton::nTransform& transform = nTransform());
+
 	static EditorConsole& GetConsole()
 	{
 		static EditorConsole console;
@@ -222,21 +238,59 @@ public:
 	template<typename... Args>
 	static void AddLog(std::format_string<Args...> fmt, Args&&... args);
 
-	void defaultScene();
-
-	nEntity_ID CreateEntity(const std::string& name, float mass = 1.0f, bool isStatic = true, nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::Box,
-		const nNewton::nTransform& Transform = nNewton::nTransform(),
-		const nNewton::nVector3& init_velocity = nNewton::nVector3(),
-		const nNewton::nVector4& color = { 0.2f,0.7f,0.8f,1.0f });
-	nEntity_ID CreateEntityRand(bool isStatic);
 	bool DeleteEntity(nEntity_ID id);
-	void DestroyAllEntities();
+	//void DestroyAllEntities();
 	bool RebuildBVHTree(bool isStatic);
 	
 	bool IsViewportFocused()const { return m_ViewportFocused; }
 	bool IsViewportHovered()const { return m_ViewportHovered; }
 	bool IsProcessMouse()const { return m_ProcessMouseInput; }
 };
+
+
+template <typename ComponentType, typename DrawFunc>
+void DebugUIEditor::DrawComponentCard(const char* componentName, DrawFunc&& drawContent, float height)
+{
+	DrawComponentCard<ComponentType>(componentName, std::forward<DrawFunc>(drawContent), height, [] {});
+}
+
+template<typename ComponentType, typename DrawFunc, typename OnRemoveFunc>
+inline void DebugUIEditor::DrawComponentCard(const char* name, DrawFunc&& draw, float height, OnRemoveFunc&& onRemove)
+{
+	bool alive = true;
+	if (m_EntityManager->HasComponent<ComponentType>(m_SelectedID))
+	{
+		if (ImGui::BeginChild(name, ImVec2(0, height),
+			ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
+		{
+			ImGui::Text("%s", name);
+			ImGui::SameLine();
+
+			float avail = ImGui::GetContentRegionAvail().x;
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + avail
+				- ImGui::CalcTextSize(" X ").x
+				- ImGui::GetStyle().FramePadding.x * 2);
+
+			ImGui::PushStyleColor(ImGuiCol_Button, { 0.8f, 0.2f, 0.2f, 1.f });
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 1.0f, 0.3f, 0.3f, 1.f });
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.6f, 0.1f, 0.1f, 1.f });
+			ImGui::PushID("rem");
+			if (ImGui::SmallButton(" X ")) alive = false;
+			ImGui::PopID();
+			ImGui::PopStyleColor(3);
+
+			ImGui::Separator();
+			draw();
+		}
+		ImGui::EndChild();
+
+		if (!alive)
+		{
+			onRemove();                                          
+			m_EntityManager->RemoveComponent<ComponentType>(m_SelectedID);
+		}
+	}
+}
 
 
 

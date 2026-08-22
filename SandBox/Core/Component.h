@@ -5,11 +5,10 @@
 
 enum class ComponentType : uint8_t {
     Transform,
-    RigidBody,
+    Physics,
     Color,
     Tag,
     Folder,
-    ColliderShape,
     cCount
 };
 
@@ -18,9 +17,11 @@ struct TransformComponent {
     nNewton::nTransform local;
 };
 
-struct RigidBodyComponent {
+struct PhysicsComponent {
     float mass = 0.0f;
-    bool  isStatic = true;
+    nBodyType       Type = nBodyType::Static;
+    bool            HasCollider = false;
+    nNewton::nCollisionShapeType ShapeType = nNewton::nCollisionShapeType::nBox;
 };
 
 struct ColorComponent {
@@ -35,9 +36,7 @@ struct FolderComponent {
     int folderId = -1;
 };
 
-struct ColliderShapeComponent {
-    nNewton::nCollisionShapeType type = nNewton::nCollisionShapeType::nBox;
-};
+
 
 // ---------- traits ----------
 template<typename T> struct ComponentTraits;
@@ -48,9 +47,7 @@ template<typename T> struct ComponentTraits;
     }
 
 REGISTER_COMPONENT(TransformComponent, Transform);
-REGISTER_COMPONENT(RigidBodyComponent, RigidBody);
+REGISTER_COMPONENT(PhysicsComponent, Physics);
 REGISTER_COMPONENT(ColorComponent, Color);
 REGISTER_COMPONENT(TagComponent, Tag);
 REGISTER_COMPONENT(FolderComponent, Folder);
-REGISTER_COMPONENT(ColliderShapeComponent, ColliderShape);
-

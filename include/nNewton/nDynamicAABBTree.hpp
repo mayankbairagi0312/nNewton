@@ -225,7 +225,7 @@ namespace nNewton
 
 		nAABB tight = nBVHTraits<Entity>::GetAABB(*(leaf->CollEntity));
 
-		if (!Contains(leaf->nodeAABB, tight) || !Contains(tight, leaf->nodeAABB))
+		if (!Contains(leaf->nodeAABB, tight))
 		{
 			
 			auto* entity = leaf->CollEntity;

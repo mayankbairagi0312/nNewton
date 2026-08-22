@@ -32,7 +32,9 @@ namespace nNewton
 			// write phase
 		auto dentity = ToRawPtrs(m_Dynamic_Entities);
 		for (auto& ent : dentity) {
-			ent->currentAABB = ent->EntityShape->getAABB(ent->EntityTransform);
+			
+			
+			ent->currentAABB = GetWorldAABB(ent->EntityShape,ent->EntityTransform,GetColliderPool());
 			ent->marginAABB = Expand(ent->currentAABB, FAT_MARGIN);
 			m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
 		}
@@ -42,72 +44,10 @@ namespace nNewton
 			//read phase
 	}
 
-	nCollisionEntity* nCollisionWorld::CreateCollisionEntity(nEntity_ID& ID, bool isStatic, const nTransform& EntityTransform, const nVector3& vel,
-		std::shared_ptr<nCollisionShape> ColisionShape, bool insertNow = true)
-	{
-
-		nCollisionEntity data;
-		data.EntityID = ID;
-		data.isStatic = isStatic;
-		data.EntityTransform = EntityTransform;
-		data.vel = vel;
-		data.EntityShape = ColisionShape;
-
-		data.currentAABB = ColisionShape->getAABB(EntityTransform);
-		data.marginAABB = Expand(data.currentAABB, FAT_MARGIN);
 	
-
-		auto ent = std::make_unique<nCollisionEntity>(std::move(data));
-		nCollisionEntity* ptr = ent.get();
-
-		if (ent->isStatic)
-		{
-			m_Static_Entities.push_back(std::move(ent));
-			
-			auto sentity = ToRawPtrs(m_Static_Entities); 
-			//m_StaticTree->Rebuild(sentity);
-		}
-		else
-		{
-			m_Dynamic_Entities.push_back(std::move(ent));
-			if (insertNow)
-				m_DynamicTree->InsertEntity(ptr);
-		}
-		
-		return ptr;
-
-	}
-
-
-	//later replace with swap and pop & id map somthing ...  
-	bool nCollisionWorld::RemoveCollisionEntity(nEntity_ID& ID, bool isStatic)
-	{
-		auto& container = isStatic ? m_Static_Entities : m_Dynamic_Entities;
-
-		
-		auto it = std::find_if(container.begin(), container.end(),
-			[&ID](const std::unique_ptr<nCollisionEntity>& ent) {
-				return ent->EntityID == ID;
-			});
-
-		if (it == container.end()) return false; 
-
-		nCollisionEntity* ent = it->get();
-
-		if (!isStatic && ent->BVHNodePtr) {
-				m_DynamicTree->RemoveEntity(ent->BVHNodePtr); 
-				ent->BVHNodePtr = nullptr;
-		}
-		else
-			ent->BVHNodePtr = nullptr;
-	
-		
-		container.erase(it);
-
-		return true;
-	}
 	void  nCollisionWorld::RemoveAll()
 	{
+		
 		for (auto& entity : m_Dynamic_Entities)
 		{
 			if (entity->BVHNodePtr)
@@ -142,6 +82,69 @@ namespace nNewton
 			auto entities = ToRawPtrs(m_Dynamic_Entities);
 			m_DynamicTree->Rebuild(entities);
 		}
+		return true;
+	}
+
+	bool nCollisionWorld::UpdateBodyType(
+		nEntity_ID id,
+		nBodyType newType,
+		bool insertNow)
+	{
+		const bool targetStatic = (newType == nBodyType::Static);
+
+		auto findIn = [&](std::vector<std::unique_ptr<nCollisionEntity>>& container)
+			-> std::vector<std::unique_ptr<nCollisionEntity>>::iterator
+			{
+				return std::find_if(
+					container.begin(),
+					container.end(),
+					[&](const std::unique_ptr<nCollisionEntity>& ent)
+					{
+						return ent->EntityID == id;
+					});
+			};
+
+	
+		auto& targetContainer = targetStatic ? m_Static_Entities : m_Dynamic_Entities;
+		auto targetIt = findIn(targetContainer);
+		if (targetIt != targetContainer.end())
+			return true;
+
+		auto& sourceContainer = targetStatic ? m_Dynamic_Entities : m_Static_Entities;
+		auto sourceIt = findIn(sourceContainer);
+		if (sourceIt == sourceContainer.end())
+			return false;
+
+		nCollisionEntity* ent = sourceIt->get();
+		const bool wasStatic = ent->isStatic;
+
+		if (!wasStatic && ent->BVHNodePtr)
+		{
+			m_DynamicTree->RemoveEntity(ent->BVHNodePtr);
+			ent->BVHNodePtr = nullptr;
+		}
+		else if (wasStatic)
+		{
+			ent->BVHNodePtr = nullptr;
+		}
+
+		std::unique_ptr<nCollisionEntity> moved = std::move(*sourceIt);
+		sourceContainer.erase(sourceIt);
+
+
+		moved->isStatic = targetStatic;
+
+		nCollisionEntity* ptr = moved.get();
+		targetContainer.push_back(std::move(moved));
+
+		if (!targetStatic)
+		{
+			if (insertNow)
+			{
+				m_DynamicTree->InsertEntity(ptr);
+			}
+		}
+		
 		return true;
 	}
 

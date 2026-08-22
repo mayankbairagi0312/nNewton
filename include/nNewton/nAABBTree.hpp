@@ -41,7 +41,7 @@ namespace nNewton
 		virtual void RemoveEntity(nBVHNode<Entity>* leaf_){ (void)leaf_; }
 		virtual void TreeletStepRestructure() {}
 		virtual void Rebuild(std::vector<Entity*>& entities) = 0;
-		virtual void InsertEntity(Entity* Ent_){}
+		virtual void InsertEntity(Entity* Ent_) { (void)Ent_; }
 
 		virtual void Clear() = 0;
 

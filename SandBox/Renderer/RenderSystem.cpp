@@ -76,44 +76,66 @@ void nRenderSystem::Debug_Render()
 
 	for (const auto& n : m_RenderEntities)
 	{
-		//auto s0 = std::chrono::high_resolution_clock::now();
 		if (!m_physics->IsValid(n.idx))continue;
 
-		const nNewton::nTransform* tr = m_physics->GetTransform(n.idx);
-		/*const nNewton::nMatrix4& model = nNewton::Translate(tr->GetPosition()) *
-			nNewton::to_nMatrix4(tr->GetRotation()) *
-			nNewton::Scale(tr->GetScale());*/
+		const auto* bodyTransform = m_physics->GetTransform(n.idx);
+		if (!bodyTransform)
+			continue;
 
-		const auto& model = nNewton::nTransform::ConstrTRS(tr->GetPosition(), tr->GetRotation(), tr->GetScale());
-		//auto s1 = std::chrono::high_resolution_clock::now();
+		const auto* shapeHandle = m_physics->GetColliderShape(n.idx);
+		if (!shapeHandle)
+			continue;
+
 		if (IsShapes)
 		{
-			auto shape = m_physics->GetShape(n.idx);
+			nNewton::nMatrix4 model = nNewton::nTransform::ConstrTRS(
+				bodyTransform->GetPosition(),
+				bodyTransform->GetRotation(),
+				bodyTransform->GetScale()
+			);
+
+			auto* shape = m_physics->GetColliderShape(n.idx);
 			if (!shape) return;
 
 		
-			if(shape->GetType() == nNewton::nCollisionShapeType::Box)
-				 m_Renderer->DrawBox(n.color, model);
+			if (shapeHandle->type == nNewton::nCollisionShapeType::nBox)
+			{
+				auto* boxCollider = m_physics->GetCollisionWorld()
+					->GetColliderPool()
+					.getCollider<nNewton::nBoxShape>(*shapeHandle);
 
-			else if (shape->GetType() == nNewton::nCollisionShapeType::Sphere)
-				 m_Renderer->DrawSphere(model, n.color);
-			
+				if (boxCollider)
+				{
+					nNewton::nVector3 halfExt = boxCollider->m_HalfExtents;
+					nNewton::nMatrix4 localScale = nNewton::Scale(halfExt);
+					model = model * localScale;   
+				}
+
+				m_Renderer->DrawBox(n.color, model);
+			}
+			else if (shapeHandle->type == nNewton::nCollisionShapeType::nSphere)
+			{
+				auto* sphereCollider = m_physics->GetCollisionWorld()
+					->GetColliderPool()
+					.getCollider<nNewton::nSphereShape>(*shapeHandle);
+
+				if (sphereCollider)
+				{
+					nNewton::nVector3 radi = { sphereCollider->radius,sphereCollider->radius,sphereCollider->radius };
+					nNewton::nMatrix4 localScale = nNewton::Scale(radi);
+					model = model * localScale;   
+				}
+				m_Renderer->DrawSphere(model, n.color);
+			}
 		}
-		//auto s2 = std::chrono::high_resolution_clock::now();
 
 		if (IsContacts)
 		{
 
 		}
-		//matTime += std::chrono::duration<double, std::milli>(s1 - s0).count();
-		//DrawTime += std::chrono::duration<double, std::milli>(s2 - s1).count();
 
 	}
 	auto t1 = std::chrono::high_resolution_clock::now();
-	//printf("-----------------------------------------\n");
-	//printf("Matrix build time: %.3f ms\n", matTime);
-	//printf("Draw time: %.3f ms\n", DrawTime);
-	//printf("loop time : %.3f \n", std::chrono::duration<double, std::milli>(t1 - t0).count());
 }
 
 void nRenderSystem::Debug_DrawAxis(const nNewton::nVector3& camPOS)

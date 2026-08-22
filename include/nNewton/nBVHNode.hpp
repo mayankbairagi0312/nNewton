@@ -2,6 +2,7 @@
 
 #include "nCollisionTypes.hpp"
 #include "nCollisionShapes.hpp"
+#include "nAABB.hpp"
 #include <memory>
 
 namespace nNewton {

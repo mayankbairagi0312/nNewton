@@ -3,6 +3,7 @@
 
 #pragma once
 #include "nCollisionTypes.hpp"
+#include "nCollisionShapesPool.hpp"
 #include "nBVHNode.hpp"
 #include <memory>
 #include <vector>
@@ -15,7 +16,7 @@ namespace nNewton
 	{
 		static const size_t GetID(const Entity& entity);
 		static const nAABB& GetAABB(const Entity& entity);
-		static nAABB GetTightAABB(const Entity* e);
+		static nAABB GetTightAABB(const Entity* e, nCollisionShapePool& pool);
 		static nAABB ComputeBounds(const std::vector<Entity*>& entities, int start, int end);
 	};
 
@@ -37,7 +38,7 @@ namespace nNewton
 	};
 
 
-	//-------------------------------------------- nCollisionEntity
+	//----------------------- nCollisionEntity ------------
 
 	template <>
 	inline const size_t  nBVHTraits<nCollisionEntity>::GetID(const nCollisionEntity& entity) {
@@ -50,9 +51,9 @@ namespace nNewton
 	}
 
 	template<>
-	inline nAABB nBVHTraits<nCollisionEntity>::GetTightAABB(const nCollisionEntity* e)
+	inline nAABB nBVHTraits<nCollisionEntity>::GetTightAABB(const nCollisionEntity* e,nCollisionShapePool& pool)
 	{
-		return e->EntityShape->getAABB(e->EntityTransform);
+		return GetWorldAABB(e->EntityShape, e->EntityTransform, pool);
 	}
 
 	template<>

@@ -175,10 +175,6 @@ namespace nNewton
 		constexpr nMatrix3(std::initializer_list<float> values);
 		constexpr nMatrix3(const nMatrix3& otr) = default;
 
-		nMatrix3 operator+(const nMatrix3& otr)const;
-		nMatrix3 operator-(const nMatrix3& otr)const;
-		nMatrix3 operator*(const nMatrix3& otr)const;
-
 		nVector3 operator*(const nVector3& v) const;
 
 		constexpr nMatrix3 operator*(float scalar) const;
@@ -207,7 +203,7 @@ namespace nNewton
 					nMatrix4 operator*(const nMatrix4& otr)const;
 					nVector4 operator*(const nVector4& v) const;
 		
-		constexpr	nMatrix4 Inverse() const;
+		nMatrix4 Inverse() const;
 		constexpr nMatrix4 operator*(float scalar) const;
 		friend constexpr nMatrix4 operator*(float scalar, const nMatrix4& m);
 	};

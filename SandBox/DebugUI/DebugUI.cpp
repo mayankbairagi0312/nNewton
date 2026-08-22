@@ -14,6 +14,7 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	SDL_Window = window;
 	debugRenderer = render;
 	m_World = world;
+	m_EntityManager = std::make_unique<eManager>(*m_World);
 	m_FrameBuff = FrameBuff;
 	std::cout << "debug render this=" << debugRenderer.get() << std::endl;
 	m_RenderSystem = renderSystem;
@@ -488,10 +489,7 @@ void DebugUIEditor::DrawFolderNodeTree()
 	bool hasSelection = m_World && m_World->IsValid(m_SelectedID);
 	if (!hasSelection) ImGui::BeginDisabled();
 	if (ImGui::SmallButton("remove")) {
-		m_World->DestroyEntity(m_SelectedID);
-
-		RemoveEntityNodeTree(m_SelectedID);
-
+		DeleteEntity(m_SelectedID); 
 		m_SelectedID = {};
 	}
 	if (!hasSelection) ImGui::EndDisabled();
@@ -609,11 +607,11 @@ void DebugUIEditor::RemoveEntityNodeTree(nNewton::nEntity_ID id) {
 	{
 		if (it->id == id) { m_RootEntities.erase(it); return; }
 	}
-	std::function<bool(const Editor_FolderNode&)> RemoveEntity = [&](const Editor_FolderNode& node) -> bool {
+	std::function<bool(Editor_FolderNode&)> RemoveEntity = [&](Editor_FolderNode& node) -> bool {
 		auto& children = node.ChildEntities;
 		for (auto it = children.begin(); it != children.end(); ++it)
 		{
-			if (it->id == id) { m_RootEntities.erase(it); 
+			if (it->id == id) { children.erase(it); 
 			return true; }
 			
 		}
@@ -763,9 +761,13 @@ void DebugUIEditor::DrawEntityRow(Editor_Entity& meta ,  int parentFolderID)
 	if (!m_World->IsValid(meta.id)) return;
 	bool selected = (meta.id == m_SelectedID);
 	ImGui::PushID(nNewton::INDEX_FROM_ID(meta.id));
+
+	auto* tag = m_EntityManager->GetComponent<TagComponent>(meta.id);
+
+	const char* name = tag ? tag->name : "?";
 	// Coloured dot based on mass
 	const nNewton::nRigidBody* body = m_World->GetBody(meta.id);
-	bool isStatic = body->IS_STATIC_ || (body->MASS_ == 0.f);
+	bool isStatic = body->IsStatic() || (body->GetInvMass() == 0.f);
 	ImVec4 dot = isStatic
 		? ImVec4(0.45f, 0.75f, 0.45f, 1.f)
 		: ImVec4(0.35f, 0.60f, 0.95f, 1.f);
@@ -780,12 +782,14 @@ void DebugUIEditor::DrawEntityRow(Editor_Entity& meta ,  int parentFolderID)
 	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + pad_top);
 
 	ImGui::PushStyleColor(ImGuiCol_Text, dot);
-	if (ImGui::Selectable(meta.name.c_str(), selected,
+	
+	if (ImGui::Selectable(name, selected,
 		ImGuiSelectableFlags_SpanAllColumns))
 	{
 		m_SelectedID = meta.id;
 		m_ActiveFolderID = meta.folderId;
-		SyncEditCacheFromWorld();
+		if (auto* tf = m_EntityManager->GetComponent<TransformComponent>(m_SelectedID))
+			SyncEditCacheFromComponent(tf);
 	}
 	ImGui::PopStyleColor();
 
@@ -794,14 +798,14 @@ void DebugUIEditor::DrawEntityRow(Editor_Entity& meta ,  int parentFolderID)
 	{
 		int eid = meta.id;
 		ImGui::SetDragDropPayload("ENTITY", &eid, sizeof(int));
-		ImGui::Text("Move %s", meta.name.c_str());
+		ImGui::Text("Move %s", name);
 		ImGui::EndDragDropSource();
 	}
 
 	if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
 	{
-		std::strncpy(m_RenameBuffer, meta.name.c_str(), sizeof(m_RenameBuffer));
-		m_RenamingEntity = &meta;
+		std::strncpy(m_RenameBuffer, name, sizeof(m_RenameBuffer));
+		m_RenamingEntityID = meta.id;
 		m_OpenRenameEntityPopup = true; 
 	}
 	// Context menu 
@@ -809,8 +813,8 @@ void DebugUIEditor::DrawEntityRow(Editor_Entity& meta ,  int parentFolderID)
 	{
 		if (ImGui::MenuItem("Rename"))
 		{
-			std::strncpy(m_RenameBuffer, meta.name.c_str(), sizeof(m_RenameBuffer));
-			m_RenamingEntity = &meta;
+			std::strncpy(m_RenameBuffer, name, sizeof(m_RenameBuffer));
+			m_RenamingEntityID = meta.id;
 			m_OpenRenameEntityPopup = true;   // or direct open
 		}
 		ImGui::EndPopup();
@@ -879,8 +883,10 @@ void DebugUIEditor::RenameEntity()
 		if (ImGui::InputText("##Name", m_RenameBuffer,
 			sizeof(m_RenameBuffer),
 			ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-			if (m_RenamingEntity)
-				m_RenamingEntity->name = m_RenameBuffer;
+			if (m_RenamingEntityID != nNewton::INVALID_ENTITY) {
+				auto* tag = m_EntityManager->GetComponent<TagComponent>(m_RenamingEntityID);
+				if (tag) std::strncpy(tag->name, m_RenameBuffer, sizeof(tag->name));
+			}
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::EndPopup();
@@ -914,77 +920,26 @@ void DebugUIEditor::DrawAddEntityPopup()
 {
 	if (!ImGui::BeginPopup("AddEntityPopup")) return;
 
-	ImGui::TextDisabled("New Entity");
-	//ImGui::Separator();
-
-	ImGui::InputText("Name", m_NewName, sizeof(m_NewName));
-	ImGui::DragFloat("Mass", &m_NewMass, 0.1f, 0.f, 1000.f, "%.2f kg");
-	ImGui::DragFloat3("Position", m_NewPos, 0.1f);
-	ImGui::DragFloat3("Rotation", m_NewRotation, 0.5f, -360.0f, 360.0f, "%.1f deg");
-	ImGui::Checkbox("Static", &m_NewIsStatic);
-
-	const char* shapes[] = { "Box", "Sphere", "Capsule" };
-	ImGui::Combo("Shape", &m_NewShapeType, shapes, IM_ARRAYSIZE(shapes));
-
-	if (m_NewShapeType == 0)
-		ImGui::DragFloat3("Half Extents", m_NewHalfExt, 0.01f, 0.01f, 100.f);
-	else
-		ImGui::DragFloat("Radius", &m_NewRadius, 0.01f, 0.01f, 100.f);
-	
+	ImGui::InputTextWithHint("Name", "Enter Name", m_NewName, IM_ARRAYSIZE(m_NewName));
 	ImGui::Spacing();
 
 	if (ImGui::Button("Create", ImVec2(80, 0)))
 	{
-		nNewton::nTransform baseTransform;
-		baseTransform.SetPosition({ m_NewPos[0], m_NewPos[1], m_NewPos[2] });
 
-		float radX = m_NewRotation[0] * nNewton::PI/ 180.0f;
-		float radY = m_NewRotation[1] * nNewton::PI / 180.0f;
-		float radZ = m_NewRotation[2] * nNewton::PI / 180.0f;
-		nQuaternion Rquat = from_EulerXYZ(radX, radY, radZ);
-		baseTransform.SetRotation(Rquat);
-
-		nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::Box;
-
-		switch (m_NewShapeType) {
-		case 0:
-			baseTransform.SetScale({ m_NewHalfExt[0], m_NewHalfExt[1], m_NewHalfExt[2] });
-			break;
-		case 1:
-			shape = nNewton::nCollisionShapeType::Sphere;
-			baseTransform.SetScale({ m_NewRadius, m_NewRadius, m_NewRadius });
-			break;
-		}
+		nNewton::nCollisionShapeType shape = nNewton::nCollisionShapeType::nBox;
 
 		nNewton::nEntity_ID newID = CreateEntity(
-			m_NewName[0] ? m_NewName : "Entity",
-			m_NewMass,
-			m_NewIsStatic,
-			shape,
-			baseTransform,
-			{ m_NewVelocity[0], m_NewVelocity[1], m_NewVelocity[2] },
-			m_NewColor
+			m_NewName[0] ? m_NewName : "Entity"
 		);
 
-		m_SelectedID = newID;
-		SyncEditCacheFromWorld();
-
-
 		std::snprintf(m_NewName, sizeof(m_NewName), "Entity");
-		m_NewMass = 1.f;
-		m_NewPos[0] = m_NewPos[1] = m_NewPos[2] = 0.f;
-		m_NewRotation[0] = m_NewRotation[1] = m_NewRotation[2] = 0.f;
-		m_NewHalfExt[0] = m_NewHalfExt[1] = m_NewHalfExt[2] = 0.5f;
-		m_NewScale[0] = m_NewScale[1] = m_NewScale[2] = 1.f;
-		m_NewRadius = .5f;
-		m_NewIsStatic = false;
-
 		ImGui::CloseCurrentPopup();
 	}
 
 	ImGui::SameLine();
-	if (ImGui::Button("Cancel", ImVec2(80, 0)))
+	if (ImGui::Button("Cancel", ImVec2(80, 0))) {
 		ImGui::CloseCurrentPopup();
+	}
 
 	
 
@@ -1012,38 +967,178 @@ void DebugUIEditor::DrawInspector()
 		return;
 	}
 	
-	const Editor_Entity* meta = FindMetaEntity(m_SelectedID);
-	const char* displayName = meta ? meta->name.c_str() : "?";
+	auto* tag = m_EntityManager->GetComponent<TagComponent>(m_SelectedID);
+	const char* displayName = tag ? tag->name : "?";
 
 	ImGui::TextDisabled("Inspector:");
 	ImGui::SameLine();
 	ImGui::Text("%s", displayName);
-	ImGui::SameLine();
+	ImGui::SameLine(); 
 	ImGui::TextDisabled("[id %u  gen %u]",
 		nNewton::INDEX_FROM_ID(m_SelectedID),
 		nNewton::GEN_FROM_ID(m_SelectedID));
 	ImGui::Separator();
+	ImGui::Spacing();
+
+	if (ImGui::Button("Add Components", ImVec2(ImGui::CalcTextSize(" Add Componets ").x, 0)))
+		ImGui::OpenPopup("add components");
+
+	bool openPhysicsPopup = false;
+	if (ImGui::BeginPopup("add components")) {
+		ImGui::TextDisabled("Add Componets :");
+		if (!m_EntityManager->HasComponent<TransformComponent>(m_SelectedID))
+			if (ImGui::Selectable("Transform")) {
+				m_EntityManager->AddComponent<TransformComponent>(m_SelectedID, TransformComponent{*m_World->GetTransform(m_SelectedID)});
+			}
+				
+		if (!m_EntityManager->HasComponent<PhysicsComponent>(m_SelectedID)) {
+			if (ImGui::Selectable("Physics")) {
+				ImGui::CloseCurrentPopup();
+				openPhysicsPopup = true;
+			}
+		}
+		ImGui::EndPopup();
+	}
+	
+
+
+	if (openPhysicsPopup) {
+		ImGui::OpenPopup("##PhysicsBodyConfig");
+	}
+
+
+	if (ImGui::BeginPopup("##PhysicsBodyConfig")) {
+
+		ImGui::SetWindowPos(
+			{ ImGui::GetIO().DisplaySize.x * 0.5f - 175.f,
+			  ImGui::GetIO().DisplaySize.y * 0.5f - 150.f },
+			ImGuiCond_Appearing);
+		ImGui::SetWindowSize({ 350.f, 0.f }, ImGuiCond_Appearing);
+
+		static nRigidBodyInfo       RBInfo = {};
+		static bool                 AddCol = false;
+
+		ImGui::SeparatorText("Physics Body");
+
+		static const char* Types[] = { "Static", "Kinematic", "Dynamic" };
+		static const char* TypeDesc[] = {
+			"No simulation. Placed in Static BVH.",
+			"Fully simulated. Forces, impulses, mass.",
+			"Script-driven. Moves colliders, ignores forces."
+		};
+		int eType = (int)RBInfo.TYPE_;
+		if (ImGui::Combo("Body Type", &eType, Types, IM_ARRAYSIZE(Types)))
+			RBInfo.TYPE_ = (nBodyType)eType;
+		ImGui::TextDisabled("  %s", TypeDesc[eType]);
+
+		ImGui::Spacing();
+		const bool isDynamic = (RBInfo.TYPE_ == nBodyType::Dynamic);
+		ImGui::BeginDisabled(!isDynamic);
+
+		ImGui::Checkbox("Override Mass", &RBInfo.OVERRIDE_MASS_);
+		if (RBInfo.OVERRIDE_MASS_)
+			ImGui::DragFloat("Mass", &RBInfo.MASS_, 0.1f, 0.001f, 1e6f, "%.3f kg");
+		else
+			ImGui::DragFloat("Density", &RBInfo.DENSITY_, 0.1f, 0.001f, 1e4f, "%.3f kg/m3");
+
+		ImGui::EndDisabled();
+
+		ImGui::Spacing();
+		ImGui::Separator();
+
+		const float bw = (ImGui::GetContentRegionAvail().x
+			- ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+
+		if (ImGui::Button("Add##pb", { bw, 0.f }))
+		{
+			m_World->AddRigidBody(m_SelectedID, RBInfo);
+
+			PhysicsComponent comp{};
+			comp.Type = RBInfo.TYPE_;
+
+			m_EntityManager->AddComponent<PhysicsComponent>(
+				m_SelectedID, comp);
+
+			RBInfo = nRigidBodyInfo{};
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel##pb", { bw, 0.f }))
+		{
+			RBInfo = nRigidBodyInfo{};
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+
+	}
 
 	ImGui::Spacing();
-	DrawTransformSection();
-	ImGui::Spacing();
-	DrawPhysicsSection();
-	
-	
+	DrawComponentCard<TransformComponent>("Transform Component", [this]() {
+		DrawTransformSection();},210.0f);
+
+	DrawComponentCard<PhysicsComponent>("Physics Component",
+		[this]() { DrawPhysicsSection(); },
+		400.0f,
+		[this]()                                                        // onRemove
+		{
+			auto* rb = m_EntityManager->GetComponent<PhysicsComponent>(m_SelectedID);
+			if (rb && rb->HasCollider)
+			{
+				switch (rb->ShapeType)
+				{
+				case nCollisionShapeType::nBox:
+				{
+					m_World->RemoveCollider<nBoxShape>(m_SelectedID);
+					m_RenderSystem->UnregisterEntity(m_SelectedID);
+					break;
+				}
+				case nCollisionShapeType::nSphere:
+				{
+					m_World->RemoveCollider<nSphereShape>(m_SelectedID);
+					m_RenderSystem->UnregisterEntity(m_SelectedID);
+					break;
+				}
+				case nCollisionShapeType::nCapsule:
+					break;
+				default: break;
+				}
+			}
+			m_World->RemoveRigidBody(m_SelectedID);
+		});
+
+
 }
+
 
 void DebugUIEditor::DrawPhysicsSection()
 {
-	if (!ImGui::CollapsingHeader("Physics"))
-		return;
-
 	const nNewton::nRigidBody* body = m_World->GetBody(m_SelectedID);
 	if (!body) { ImGui::TextDisabled("No body"); return; }
+	
+	auto* tf = m_EntityManager->GetComponent<TransformComponent>(m_SelectedID);
+	auto* rb = m_EntityManager->GetComponent<PhysicsComponent>(m_SelectedID);
+	if (!rb) return;
+	
+	static const char* BodyTypes[] = { "Static", "Kinematic", "Dynamic" };
 
-	float mass = body->MASS_;
+	int eType = (int)rb->Type;
+	ImGui::SetNextItemWidth(120.f);
+	if (ImGui::Combo("Body Type##edit", &eType, BodyTypes, IM_ARRAYSIZE(BodyTypes)))
+	{
+		rb->Type = (nBodyType)eType;
+		auto slot = m_World->GetBody(m_SelectedID);
+		if (slot->TYPE_ == rb->Type) return;
+		slot->TYPE_ = rb->Type;
+		m_World->GetCollisionWorld()->UpdateBodyType(m_SelectedID, rb->Type);
+	}
 
-	ImGui::Text("Mass       : %.3f kg", mass);
-	ImGui::Text("Type       : %s", mass == 0.f ? "Static" : "Dynamic");
+	static const char* ColShapes[] = { "Box", "Sphere", "Capsul" };
+
+	ImGui::Text("Mass: %.3f", rb->mass);
+	ImGui::Text("Type: %s", rb->Type == nBodyType::Static ? 
+		"Static" : rb->Type == nBodyType::Dynamic ? "Dynamic" : "Kinetic");
 
 	if (IsPlaying()) {
 		auto vel = body->VELOCITY_;   
@@ -1061,12 +1156,147 @@ void DebugUIEditor::DrawPhysicsSection()
 	static float editRestitution = 0.f;
 
 	if (ImGui::IsWindowAppearing()) {
-		editMass = mass;
-		// editFriction = body->GetFriction(); // adapt to your API
+		editMass = rb->mass;
+		// editFriction = body->GetFriction(); 
 	}
 
 	if (ImGui::DragFloat("Mass##edit", &editMass, 0.1f, 0.f, 1e6f))
 		/* body->SetMass(editMass); */;   
+
+	ImGui::Spacing();
+	ImGui::SeparatorText("Physics Collider");
+	bool openColliderPopup = false;
+
+	if (!rb->HasCollider)
+	{
+		if (ImGui::Button("Add Collider"))
+			openColliderPopup = true;
+	}
+	else {
+		ImGui::TextColored({ 0.4f, 0.85f, 0.4f, 1.f },
+			"[Active]  %s", ColShapes[(int)rb->ShapeType]);
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, { 0.7f, 0.15f, 0.15f, 1.f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.9f, 0.25f, 0.25f, 1.f });
+		if (ImGui::Button("Remove##col"))
+		{
+			switch (rb->ShapeType)
+			{
+			case nCollisionShapeType::nBox:
+			{
+				m_World->RemoveCollider<nBoxShape>(m_SelectedID);
+				m_NewHalfExt[0] = 1.0f;
+				m_NewHalfExt[1] = 1.0f;
+				m_NewHalfExt[2] = 1.0f;
+				m_RenderSystem->UnregisterEntity(m_SelectedID);
+				break;
+			}
+			case nCollisionShapeType::nSphere:
+			{
+
+				m_World->RemoveCollider<nSphereShape>(m_SelectedID);
+				m_NewRadius = 1.0f;
+				m_RenderSystem->UnregisterEntity(m_SelectedID);
+				break;
+			}
+			case nCollisionShapeType::nCapsule:
+				break;
+			default: break;
+			}
+			rb->HasCollider = false;
+		}
+		ImGui::PopStyleColor(2);
+
+		switch (rb->ShapeType)
+		{
+		case nCollisionShapeType::nBox:
+		{
+			if (ImGui::DragFloat3("Half Extents", m_NewHalfExt,
+				0.01f, 0.001f, 100.f, "%.3f m")) {
+
+				nBoxShape* box = m_World->GetCollisionWorld()->GetColliderPool().getCollider<nBoxShape>(*m_World->GetColliderShape(m_SelectedID));
+				if (box)
+					box->m_HalfExtents = { m_NewHalfExt[0],m_NewHalfExt[1],m_NewHalfExt[2] };
+					FlushComponentToWorld(tf);
+			}
+			break;
+		}	
+		case nCollisionShapeType::nSphere:
+		{
+			if (ImGui::DragFloat("Radius##sph", &m_NewRadius,
+				0.01f, 0.001f, 100.f, "%.3f m")) {
+				nSphereShape* sphere = m_World->GetCollisionWorld()->GetColliderPool().getCollider<nSphereShape>(*m_World->GetColliderShape(m_SelectedID));
+				if (sphere)
+					sphere->radius = m_NewRadius;
+					FlushComponentToWorld(tf);
+			}
+			break;
+		}
+			
+		case nCollisionShapeType::nCapsule:
+			break;
+
+		}
+		ImGui::Spacing();
+	}
+
+	if (openColliderPopup) {
+		ImGui::OpenPopup("##ColliderConfig");
+	}
+
+	if (ImGui::BeginPopup("##ColliderConfig")) {
+		
+		
+		int shapeIdx = (int)rb->ShapeType;
+		if (ImGui::Combo("Shape##col", &shapeIdx, ColShapes, IM_ARRAYSIZE(ColShapes)))
+			rb->ShapeType = (nCollisionShapeType)shapeIdx;
+
+		ImGui::Spacing();
+		ImGui::TextColored({ 0.4f, 0.85f, 0.4f, 1.f },
+			"-> %s BVH", rb->Type== nBodyType::Static ? "Static" : "Dynamic");
+
+		ImGui::Spacing();
+		ImGui::Separator();
+
+		const float bw = (ImGui::GetContentRegionAvail().x
+			- ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+		if (ImGui::Button("Add##col", { bw, 0.f }))
+		{
+			
+			auto* tf = m_EntityManager->GetComponent<TransformComponent>(m_SelectedID);
+			printf("add func tranform comp Scale: %.2f %.2f %.2f\n", tf->local.GetScale().x, tf->local.GetScale().y, tf->local.GetScale().z);
+			const nTransform* localXf = m_World->GetTransform(m_SelectedID);
+			printf("add func body Scale: %.2f %.2f %.2f\n", localXf->GetScale().x, localXf->GetScale().y, localXf->GetScale().z);
+
+			switch (rb->ShapeType)
+			{
+			case nCollisionShapeType::nBox:
+			{
+				m_Collider = *m_World->AddCollider(m_SelectedID,
+					nBoxShape(nVector3(1.0f)),
+					*localXf, true);
+				m_RenderSystem->RegisterEntity(m_SelectedID, { 1.0f,0.3f,0.2f,1.0f });
+				break;
+			}
+			case nCollisionShapeType::nSphere:
+				m_Collider = *m_World->AddCollider(m_SelectedID,
+					nSphereShape(1.0f), *localXf, true);
+				m_RenderSystem->RegisterEntity(m_SelectedID, { 0.3f,1.0f,0.2f,1.0f });
+				break;
+			case nCollisionShapeType::nCapsule:
+				break;
+			}
+			rb->HasCollider = true;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel##col", { bw, 0.f }))
+			ImGui::CloseCurrentPopup();
+
+		ImGui::EndPopup();
+	}
 
 	ImGui::EndDisabled();
 }
@@ -1077,11 +1307,12 @@ void DebugUIEditor::DrawTransformSection()
 		SyncEditCacheFromWorld();*/
 	
 	ImGui::AlignTextToFramePadding();
-	bool open = ImGui::CollapsingHeader("Transform",
-		ImGuiTreeNodeFlags_DefaultOpen);
+	
 
-	if (!open) return;
-
+	auto* tf = m_EntityManager->GetComponent<TransformComponent>(m_SelectedID);
+	if (!tf) return;
+	// Sync edit cache from the component
+	SyncEditCacheFromComponent(tf);  
 	bool changed = false;
 
 	auto Vec3Row = [&](const char* label, float* v, float speed, const char* fmt) -> bool
@@ -1118,7 +1349,6 @@ void DebugUIEditor::DrawTransformSection()
 			return dirty;
 		};
 
-	ImGui::Spacing();
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 4)); 
 	changed |= Vec3Row("Position", m_EditPos, 0.05f, "%.2f");
 	changed |= Vec3Row("Rotation", m_EditRot, 0.5f, "%.1f");
@@ -1130,30 +1360,31 @@ void DebugUIEditor::DrawTransformSection()
 		std::memset(m_EditPos, 0, sizeof(m_EditPos));
 		std::memset(m_EditRot, 0, sizeof(m_EditRot));
 		m_EditScale[0] = m_EditScale[1] = m_EditScale[2] = 1.f;
-		FlushEditCacheToWorld();
+		FlushEditCacheToComponent(tf);
+		FlushComponentToWorld(tf);
 	}
 
 
-	if (changed)
-		FlushEditCacheToWorld();
+	if (changed) {
+		// Write to component
+		FlushEditCacheToComponent(tf);
+		//new transform to the physics body
+		FlushComponentToWorld(tf);
+	}
 }
 
-void DebugUIEditor::SyncEditCacheFromWorld()
+void DebugUIEditor::SyncEditCacheFromComponent(const TransformComponent* tf) 
 {
-	if (!m_World || !m_World->IsValid(m_SelectedID)) return;
+	
+	m_EditPos[0] = tf->local.GetPosition().x;
+	m_EditPos[1] = tf->local.GetPosition().y;
+	m_EditPos[2] = tf->local.GetPosition().z;
 
-	const nNewton::nTransform* tf = m_World->GetTransform(m_SelectedID);
-	if (!tf) return;
+	m_EditScale[0] = tf->local.GetScale().x;
+	m_EditScale[1] = tf->local.GetScale().y;
+	m_EditScale[2] = tf->local.GetScale().z;
 
-	m_EditPos[0] = tf->GetPosition().x;
-	m_EditPos[1] = tf->GetPosition().y;
-	m_EditPos[2] = tf->GetPosition().z;
-
-	m_EditScale[0] = tf->GetScale().x;
-	m_EditScale[1] = tf->GetScale().y;
-	m_EditScale[2] = tf->GetScale().z;
-
-	nQuaternion rot = tf->GetRotation();   
+	nQuaternion rot = tf->local.GetRotation();
 	nVector3 eulerRad = QuaternionToEuler(rot);
 
 	m_EditRot[0] = eulerRad.x * (180.0f / nNewton::PI);
@@ -1162,28 +1393,31 @@ void DebugUIEditor::SyncEditCacheFromWorld()
 
 }
 
-void DebugUIEditor::FlushEditCacheToWorld()
+void DebugUIEditor::FlushEditCacheToComponent(TransformComponent* tf) 
 {
-	if (!m_World || !m_World->IsValid(m_SelectedID)) return;
-
-	nNewton::nRigidBody* body = m_World->GetBody(m_SelectedID);
-	if (!body) return;
-
 	
-	body->TRANSFORM_.SetPosition({ m_EditPos[0], m_EditPos[1], m_EditPos[2] });
-	body->TRANSFORM_.SetScale({ m_EditScale[0], m_EditScale[1], m_EditScale[2] });
+	tf->local.SetPosition({ m_EditPos[0], m_EditPos[1], m_EditPos[2] });
+	tf->local.SetScale({ m_EditScale[0], m_EditScale[1], m_EditScale[2] });
 	float radX = m_EditRot[0] * (PI / 180.0f);
 	float radY = m_EditRot[1] * (PI / 180.0f);
 	float radZ = m_EditRot[2] * (PI/ 180.0f);
 	nQuaternion rotQuat = from_EulerXYZ(radX, radY, radZ); 
-	body->TRANSFORM_.SetRotation(rotQuat);
+	tf->local.SetRotation(rotQuat);
 
-	if (body->ColEnt)
-		body->ColEnt->EntityTransform = body->TRANSFORM_;
+}
 
-	/*if (body->ColEnt->BVHNodePtr && m_World->) {
-		m_World->m_DynamicTree->RemoveEntity(body->BVHNodePtr);
-		m_World->m_DynamicTree->InsertEntity(body);*/
+void DebugUIEditor::FlushComponentToWorld(const TransformComponent* tf) {
+	auto* body = m_World->GetBody(m_SelectedID);
+	if (body) {
+		body->TRANSFORM_ = tf->local; 
+		if (body->ColEnt) {
+			body->ColEnt->EntityTransform = body->TRANSFORM_;
+			if (body->ColEnt->BVHNodePtr && m_World->GetCollisionWorld()->GetDynamicTree()) {
+				m_World->GetCollisionWorld()->GetDynamicTree()->RemoveEntity(body->ColEnt->BVHNodePtr);
+				m_World->GetCollisionWorld()->GetDynamicTree()->InsertEntity(body->ColEnt);
+			}
+		}
+	}
 }
 
 Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id)
@@ -1301,75 +1535,29 @@ void DebugUIEditor::DrawBVHStatsInline()
 	uiMaxDepth = std::clamp(uiMaxDepth, 0, maxAllowed);
 
 	if (ImGui::SliderInt("Depth", &uiMaxDepth, 0, maxAllowed))
-		debugRenderer->SetBVHMaxDepth(uiMaxDepth); //printf("Set max depth to %d, getter returns %d\n", uiMaxDepth, debugRenderer->GetBVHMaxDepth());
-	
+		debugRenderer->SetBVHMaxDepth(uiMaxDepth); 
+
 	debugRenderer->SetBVHMaxDepth(uiMaxDepth);
 }
 
-
-nEntity_ID DebugUIEditor::CreateEntityRand(bool isStatic)
+nNewton::nEntity_ID DebugUIEditor::CreateEntity(
+	const std::string& name,
+	const nNewton::nTransform& transform
+)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> pos(-50.0f, 50.0f);
-	std::uniform_real_distribution<float> Scale(0.5f, 5.0f);
-	std::uniform_int_distribution<int> collision(1, 2); 
-	std::uniform_real_distribution<float> color(0.0f, 1.0f);
-	 
-	nNewton::nVector3 tscale(Scale(gen),Scale(gen),Scale(gen));
+	nNewton::nEntity_ID id = m_EntityManager->Spawn(transform);
 
-	int shapeRoll = collision(gen);
-	nNewton::nCollisionShapeType shapeType = (shapeRoll == 1)
-		? nNewton::nCollisionShapeType::Box
-		: nNewton::nCollisionShapeType::Sphere;
 
-	if (shapeType == nNewton::nCollisionShapeType::Sphere)
-	{
-		tscale = nNewton::nVector3(1);
-	}
-	auto Transf = nNewton::nTransform({ pos(gen),pos(gen),pos(gen) },
-		nNewton::nQuaternion(),
-		tscale);
+	auto& tag = m_EntityManager->AddComponent<TagComponent>(id, TagComponent{});
+	auto& fold = m_EntityManager->AddComponent<FolderComponent>(id, { m_ActiveFolderID });
 
-	std::string name;
-	name = "Entity" + std::to_string(m_EntitiesCount);
-	
-	nNewton::nVector4 Col(color(gen), color(gen), color(gen), 1.0f);
-	auto id = CreateEntity(name, 1.0f ,isStatic, shapeType, Transf,nNewton::nVector3(), Col);
-	
-	return id;
-}
+	std::strncpy(tag.name, name.c_str(), sizeof(tag.name));
+	tag.name[sizeof(tag.name) - 1] = '\0';
 
-nEntity_ID DebugUIEditor::CreateEntity(const std::string& name, float mass, bool isStatic,nNewton::nCollisionShapeType shape,
-	const nNewton::nTransform& Transform,const nNewton::nVector3& init_velocity, const nNewton::nVector4& color )
-{
-	if (!m_RenderSystem) {
-		AddLog("Rander Fails System: {}", name);
-		return INVALID_ENTITY;
-	}
-
-	nNewton::nRigidBodyInfo ShapeInfo;
-	ShapeInfo.MASS_ = mass;
-	ShapeInfo.INIT_VELOCITY_ = init_velocity;
-	ShapeInfo.INIT_TRANSFORM_ = Transform;
-	ShapeInfo.IS_STATIC_ = isStatic;
-
-	if (shape == nCollisionShapeType::Box){
-		ShapeInfo.SetBoxShape({ 1,1,1 });
-	}
-	else{
-		ShapeInfo.SetSphereShape(1.0f);
-	}
-	
-	nNewton::nEntity_ID shapeID = m_World->Create_Entity(ShapeInfo, true);
-
-	Editor_Entity meta;
-	meta.id = shapeID;
-	meta.name = name.empty() ? "Entity" : name;
+	Editor_Entity meta{ id, m_ActiveFolderID };
 	if (m_ActiveFolderID < 0)
 		m_RootEntities.push_back(meta);
-	else
-	{
+	else {
 		bool found = false;
 		std::function<bool(Editor_FolderNode&)> findActiveFolder = [&](Editor_FolderNode& node)-> bool
 			{
@@ -1392,92 +1580,46 @@ nEntity_ID DebugUIEditor::CreateEntity(const std::string& name, float mass, bool
 			m_RootEntities.push_back(meta);
 	}
 
-	m_RenderSystem->RegisterEntity(shapeID, color);
-	
 	m_EntitiesCount++;
-
-	return shapeID;
+	return id;
 }
 
-
-bool DebugUIEditor::DeleteEntity(nEntity_ID id)
+bool DebugUIEditor::DeleteEntity(nNewton::nEntity_ID id)
 {
-	RemoveEntityNodeTree(id);
-	m_World->DestroyEntity(id);
+	if (!m_World->IsValid(id)) return false;
 
+	RemoveEntityNodeTree(id);
+
+	auto* shapeComp = m_EntityManager->GetComponent<PhysicsComponent>(id);
+	if (shapeComp) {
+		switch (shapeComp->ShapeType) {
+		case nNewton::nCollisionShapeType::nBox:
+			m_EntityManager->Despawn<nNewton::nBoxShape>(id);  
+			break;
+		case nNewton::nCollisionShapeType::nSphere:
+			m_EntityManager->Despawn<nNewton::nSphereShape>(id);
+			break;
+		default:
+			assert(false && "Unknown shape type");
+		}
+	}
+	else {
+		m_EntityManager->Despawn<nNewton::nBoxShape>(id);
+	}
+
+	
+	m_RenderSystem->UnregisterEntity(id);
+
+	m_EntitiesCount--;
 	return true;
 }
 
-void DebugUIEditor::DestroyAllEntities()
-{
-	m_RootEntities.clear();
 
-	std::function<void(Editor_FolderNode&)> ClearAll = [&](Editor_FolderNode& n)->void {
-		n.ChildEntities.clear();
-
-		for (auto& m : n.ChildFolders)
-		{
-			ClearAll(m);
-		}
-	};
-	for (auto& folder : m_RootFolders)
-	{
-		ClearAll(folder);
-	}
-	m_World->DestroyAllEntity();
-}
 
 bool DebugUIEditor::RebuildBVHTree(bool isStatic)
 {
 	
 	return m_World->GetCollisionWorld()->RebuildBVH(isStatic);
-}
-
-void DebugUIEditor::defaultScene()
-{
-	// Box1
-	CreateEntity(
-		"box1",
-		1.0f,
-		false,
-		nNewton::nCollisionShapeType::Box,
-		nNewton::nTransform(nNewton::nVector3(0, 1.0f, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1)),
-		nNewton::nVector3(0, 0, 0),
-		nNewton::nVector4(0.8f, 0.8f, 0.0f, 1.0f)
-	);
-
-	// Box2
-	CreateEntity(
-		"box2",
-		1.0f,
-		false,
-		nNewton::nCollisionShapeType::Box,
-		nNewton::nTransform(nNewton::nVector3(2, 5.0f, 3), nNewton::nQuaternion(), nNewton::nVector3(2, 1, 1)),
-		nNewton::nVector3(0, 0, 0),
-		nNewton::nVector4(0.6f, 0.8f, 0.3f, 1.0f)
-	);
-
-	// Sphere
-	CreateEntity(
-		"Sphere",
-		1.0f,
-		false,
-		nNewton::nCollisionShapeType::Sphere,
-		nNewton::nTransform(nNewton::nVector3(-2, 3, 0), nNewton::nQuaternion(), nNewton::nVector3(1, 1, 1)),
-		nNewton::nVector3(0, 0, 0),
-		nNewton::nVector4(0.9f, 0.2f, 0.3f, 1.0f)
-	);
-
-	// Ground plane
-	CreateEntity(
-		"ground_plane",
-		0.0f,
-		true,
-		nNewton::nCollisionShapeType::Box,
-		nNewton::nTransform(nNewton::nVector3(0, 0, 0), nNewton::nQuaternion(), nNewton::nVector3(5, 0.05f, 5)),
-		nNewton::nVector3(0, 0, 0),
-		nNewton::nVector4(0.2f, 0.2f, 0.7f, 1.0f)
-	);
 }
 
 //======== Console panel
@@ -1493,7 +1635,6 @@ EditorConsole::EditorConsole()
 	Commands.push_back("clear");
 	Commands.push_back("create");
 	Commands.push_back("delete");
-	Commands.push_back("ncreate");
 	Commands.push_back("rebuild-bvh");
 	AutoScroll = true;
 	ScrollToBottom = false;
@@ -1896,10 +2037,10 @@ void EditorConsole::RegisterCommands()
 
 		nNewton::nCollisionShapeType shapeType;
 		if (CaseInsensitiveMatch(command_line[2], "BOX")) {
-			shapeType = nCollisionShapeType::Box;
+			shapeType = nCollisionShapeType::nBox;
 		}
 		else if (CaseInsensitiveMatch(command_line[2], "SPHERE")) {
-			shapeType = nCollisionShapeType::Sphere;
+			shapeType = nCollisionShapeType::nSphere;
 		}
 		else {
 			DebugUIEditor::AddLog("[Error] Unknown shape '{}'. Supported: BOX, SPHERE.", command_line[2]);
@@ -1907,63 +2048,9 @@ void EditorConsole::RegisterCommands()
 		}
 
 		float mass = isStatic ? 0.0f : 1.0f;
-		m_Owner->CreateEntity(command_line[3], mass, isStatic, shapeType);
+		//m_Owner->CreateEntity(command_line[3], mass, isStatic, shapeType, nTransform{}, nVector4{ 0.8f,0.8f,0.8f ,1});
 
 		DebugUIEditor::AddLog("[Success] Created {} {} named {}", command_line[1], command_line[2], command_line[3]);
-	};
-
-	//nCREATE CMD
-	m_CommandMap["NCREATE"] = [this](const std::vector<std::string> command_line) {
-		if (command_line.size() < 3)
-		{
-			DebugUIEditor::AddLog("[Error] Usage: CREATE <DYANMIC/STATIC> <COUNT>");
-			return;
-		}
-
-		bool isStatic = CaseInsensitiveMatch(command_line[1], "STATIC");
-		bool isDynamic = CaseInsensitiveMatch(command_line[1], "DYNAMIC");
-
-		if (!isStatic && !isDynamic) {
-			DebugUIEditor::AddLog("[Error] Invalid type '{}'. Use STATIC or DYNAMIC.", command_line[1]);
-			return;
-		}
-
-		auto& input = command_line[2];
-
-		if (input[1] == '-')
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-
-		uint16_t count;
-		auto [ptr, err] = std::from_chars(input.data(), input.data() + input.size(), count);
-
-		if (err == std::errc::invalid_argument)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else if (err == std::errc::result_out_of_range)
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else if (ptr != input.data() + input.size())
-		{
-			DebugUIEditor::AddLog("[Error] Invalid count");
-			return;
-		}
-		else
-		{
-			DebugUIEditor::AddLog("[Log] Started Creating {} Random Entity ", count);
-			for (size_t i = 0; i < count; i++)
-			{
-				auto id = m_Owner->CreateEntityRand(isStatic);
-				DebugUIEditor::AddLog("[Success] Created Entity ID : {}", id);
-			}
-			DebugUIEditor::AddLog("[Info] Created {} Random Entity ", count);
-		}
 	};
 
 	m_CommandMap["DELETE"] = [this](const std::vector<std::string> command_line) {
@@ -1976,7 +2063,7 @@ void EditorConsole::RegisterCommands()
 		std::string input = command_line[1];
 		if (CaseInsensitiveMatch(input, "ALL"))
 		{
-			m_Owner->DestroyAllEntities();
+			//m_Owner->DestroyAllEntities();
 			DebugUIEditor::AddLog("[Success] Entities deleted ");
 			return;
 		}

@@ -6,13 +6,14 @@
 #include "nTypes.hpp"
 #include <memory>
 
+
 namespace nNewton
 {
 	constexpr float FAT_MARGIN = 0.01f;
 	struct nCollisionEntity
 	{
 		nBVHNode<nCollisionEntity>* BVHNodePtr;
-		std::shared_ptr<nCollisionShape> EntityShape;
+		nCollisionShape EntityShape;
 		nTransform EntityTransform;
 		nAABB marginAABB;
 		nAABB currentAABB;

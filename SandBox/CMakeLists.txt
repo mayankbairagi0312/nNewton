@@ -18,7 +18,7 @@ add_executable(nNewtonTest
  "Renderer/GL_Debug_Renderer.hpp"
  "Renderer/GL_Debug_Renderer.cpp"
 "Renderer/RenderSystem.cpp"
- "common.hpp")
+ "common.hpp" "Core/Entity.h" "Core/ComponentPool.h"  "Core/EntityManager.h")
 
 #target_compile_features(nNewtonTest PRIVATE cxx_std_20)
 
