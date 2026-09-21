@@ -1,68 +1,29 @@
 #include "Application.h"
 #include<chrono>
+
+
+
 Application::Application()
-	: m_testWindow(nullptr), m_running(false), m_CurrTime(0), m_PrevTime(SDL_GetPerformanceCounter()), m_DeltaTime(0.0f) {
-}
-
-bool Application::Initialize() {
-
-	std::cout << ">>>===================================================================<<<\n >>       nNEWTON TEST BUILD       <<\n>>>===================================================================<<<\n>>        VERSION 0.1.0       <<\n"
-		<< ">>>===================================================================<<<\n" << std::endl;
-	
-
-	m_testWindow = std::make_unique<Window>();
-
-	m_Debug_Renderer = std::make_shared<DebugRenderer>();
-	
-	// Initialize window 
-	if (!m_testWindow->Init()) {
-		std::cerr << "Failed to initialize window system!" << std::endl;
-		return false;
-	}
-
-	//  window init
-	if (!m_testWindow->CreateWindow()) {
-		std::cerr << "Failed to create window!" << std::endl;
-		return false;
-	}
-
-	glViewport(0, 0, m_testWindow->getWidth(), m_testWindow->getHeight());
-
-	// init UI
-	if (!m_DebugUI->Init_DebugUIEditor(m_testWindow.get(), m_Debug_Renderer, m_nWorld.get(), &m_Render_System,m_FrameBuffer.get())){
-		std::cerr << "===> UI : Failed to init UI  <===\n" << std::endl;
-	}
-
+	: m_testWindow(std::make_unique<Window>()), m_input(m_testWindow.get()),
+	m_physicsSystem(std::make_unique<PhysicsSystem>()),
+	m_Render_System(std::make_unique<nRenderSystem>(&m_camera, m_physicsSystem->GetPhysicsWorld())),
+	m_DebugUI(std::make_unique<DebugUIEditor>(m_testWindow.get(), m_physicsSystem->GetPhysicsWorld(), m_Render_System.get())),
+	m_running(false), m_CurrTime(0), m_PrevTime(SDL_GetPerformanceCounter()), m_DeltaTime(0.0f) 
+{
 	m_input.SetCamera(m_camera);
-
-
-	//init physics sys
-	if (!m_physicsSystem->INIT_PHYSICS_SYS(m_nWorld.get())){
-		std::cerr << "===> Physics : Failed to init <===" << std::endl;
-	};
-
-	//init debug render
-	if (!m_Render_System.INIT_DEBUG_RENDER(&m_camera, m_Debug_Renderer, m_nWorld->GetCollisionWorld(), m_nWorld.get())){
-		std::cerr << "CAM! CAM! CAM! FAILED INIT " << std::endl;
-	}
-
-	//build Tree 
-	m_nWorld->GetCollisionWorld()->BuildTrees();
-	//m_Render_System.Debug_DrawAxis(nNewton::nVector3(m_camera.GetPosition().x, m_camera.GetPosition().y, m_camera.GetPosition().z));
-
 	m_running = true;
 	std::cout << "=== > Application initialized successfully < ===.\n";
 	DebugUIEditor::AddLog("===> Application initialized Successfully <===");
 	DebugUIEditor::AddLog("===>        Welcome to nNewton            <===");
-	return true;
 
 }
 
-void Application::Run() {
+
+int Application::Run() {
 
 	if (!m_testWindow || !m_testWindow->IsValid()) {
 		std::cerr << "Cannot run: Window is not valid!" << std::endl;
-		return;
+		return EXIT_FAILURE;
 	}
 
 	m_PrevTime = SDL_GetPerformanceCounter();
@@ -115,6 +76,8 @@ void Application::Run() {
 		SDL_GL_SwapWindow(m_testWindow->GetNativeHandle());
 		m_input.EndFrame();
 	}
+	std::cout << "[INFO] Application main loop exited cleanly.\n";
+	return EXIT_SUCCESS;
 }
 
 
@@ -122,18 +85,19 @@ void Application::Run() {
 void Application::TRender()
 {
 	auto t0 = std::chrono::high_resolution_clock::now();
-	m_FrameBuffer->Bind();
+	m_DebugUI->GetFrameBuff()->Bind();
 	auto t1 = std::chrono::high_resolution_clock::now();
-	m_Render_System.Start_Debug_Draw();
+	m_Render_System->Start_Debug_Draw();
 	auto t2 = std::chrono::high_resolution_clock::now();
 
-	m_Debug_Renderer->SetFlagEnabled(flags::Shapes);
-	m_Render_System.Debug_DrawAxis(m_camera.GetPosition());
-	m_Render_System.Debug_Render();
+	m_Render_System->GetRenderer()->SetFlagEnabled(flags::Shapes);
+	m_Render_System->Debug_DrawAxis(m_camera.GetPosition());
+	
+	m_Render_System->Debug_Render();
 	auto t3 = std::chrono::high_resolution_clock::now();
-	m_Render_System.End_Debug_Draw();
+	m_Render_System->End_Debug_Draw();
 	auto t4 = std::chrono::high_resolution_clock::now();
-	m_FrameBuffer->Unbind();
+	m_DebugUI->GetFrameBuff()->Unbind();
 	auto t5 = std::chrono::high_resolution_clock::now();
 
 	/*printf(
@@ -148,19 +112,19 @@ void Application::TRender()
 
 void Application::Shutdown() {
 	std::cout << "Application shutting down\n";
-	m_Render_System.ShutDown_DebugRender();
+	m_Render_System->ShutDown_DebugRender();
 	if (m_testWindow) {
 
 		m_testWindow->Shutdown();
 		m_DebugUI->ShutDownUI();
 	}
-	m_FrameBuffer->Destory();
+	
 	m_testWindow.reset();
 	m_running = false;
 
 }
 
 Application::~Application() {
-	//Shutdown();  
+	Shutdown();  
 
 }

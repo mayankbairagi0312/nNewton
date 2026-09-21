@@ -11,10 +11,6 @@ namespace nNewton
 		m_DynamicTree = std::make_unique<nDynamicAABBTree<nCollisionEntity>>();
 	}
 	
-	bool nCollisionWorld::INIT_COLLISION_WORLD()
-	{
-		return true;
-	}
 	void nCollisionWorld::BuildTrees()
 	{
 		auto rawPtrVec = ToRawPtrs(m_Static_Entities);

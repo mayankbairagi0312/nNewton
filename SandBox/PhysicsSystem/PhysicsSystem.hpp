@@ -13,11 +13,9 @@ enum class SimState { Stopped, Playing, Paused };
 class PhysicsSystem
 {
 public:
-	bool INIT_PHYSICS_SYS(nDynamicsWorld* DWorld)
+	PhysicsSystem() : m_PhysicsWorld(std::make_unique<nDynamicsWorld>())
 	{
-		m_PhysicsWorld = DWorld;
-		return m_PhysicsWorld->GetCollisionWorld()->INIT_COLLISION_WORLD();
-
+		m_PhysicsWorld->GetCollisionWorld()->BuildTrees();
 	}
 
 	void UpdatePhysicsSystem(float DETLA_TIME)
@@ -26,7 +24,11 @@ public:
 		//m_PhysicsWorld->GetCollisionWorld()->StepCollision();
 	}
 
-
+	nDynamicsWorld* GetPhysicsWorld() {
+		return m_PhysicsWorld.get();
+	}
+	
 private:
-	nDynamicsWorld * m_PhysicsWorld;
+	std::unique_ptr<nDynamicsWorld> m_PhysicsWorld;
+
 };

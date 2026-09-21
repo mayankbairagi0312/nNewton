@@ -1,6 +1,12 @@
 #include "RenderSystem.hpp"
 #include <chrono>
 
+nRenderSystem::nRenderSystem(Camera* cam,nNewton::nDynamicsWorld* dynamicW) : m_Renderer(std::make_shared<DebugRenderer>()), m_DebugDrawer(std::make_unique<OpneGLDebugRenderer>()),m_physics(dynamicW)
+{
+	m_Renderer->SetDrawer(m_DebugDrawer.get());
+	if (!INIT_DEBUG_RENDER(cam))throw std::runtime_error("RenderSystem Init Fail !!");
+}
+
 void nRenderSystem::DrawBVHTree(nNewton::nAABBTree<nNewton::nCollisionEntity> * tree, int maxDepth )
 {
 	tree->DebugDrawTree([&](const nNewton::nAABB aabb, int depth, bool isLeaf, bool isRefit) {
@@ -25,17 +31,8 @@ void nRenderSystem::DrawBVHTree(nNewton::nAABBTree<nNewton::nCollisionEntity> * 
 		});
 }
 
-bool nRenderSystem::INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW, nNewton::nDynamicsWorld* dynamicW)
+bool nRenderSystem::INIT_DEBUG_RENDER(Camera* camera)
 {
-	m_Renderer = Drend;
-	m_collisionWorld = collisionW;
-	m_physics = dynamicW;
-	m_DebugDrawer = std::make_unique<OpneGLDebugRenderer>();
-	m_Renderer->SetDrawer(m_DebugDrawer.get());
-
-	//m_DebugUI = UI;
-
-
 	if (!m_DebugDrawer->init_renderer(camera))
 		return false;
 
@@ -141,6 +138,7 @@ void nRenderSystem::Debug_Render()
 void nRenderSystem::Debug_DrawAxis(const nNewton::nVector3& camPOS)
 {
 	m_Renderer->DrawAxis(camPOS, 128);
+	m_Renderer->DrawGrid(32);
 }
 void nRenderSystem::Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color)
 {

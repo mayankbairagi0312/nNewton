@@ -18,7 +18,6 @@ namespace nNewton
 	public:
 		nCollisionWorld();
 
-		bool INIT_COLLISION_WORLD();
 
 		template <class ShapeType>
 		nCollisionEntity* CreateCollisionEntity(nEntity_ID& ID, nBodyType type, const nTransform& EntityTransform, const nVector3& vel,

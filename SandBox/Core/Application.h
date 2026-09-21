@@ -5,7 +5,6 @@
 #include <iostream>
 #include "Input.h"
 #include "Renderer/DebugRenderer.hpp"
-//#include"Renderer/GL_Debug_Renderer.cpp"
 #include "Renderer/RenderSystem.hpp"
 #include "DebugUI/DebugUI.hpp"
 #include <nNewton/nMath.hpp>
@@ -16,21 +15,19 @@
 class Application {
 private :
 	
-	std::unique_ptr<Window> m_testWindow;
-	Input m_input;
-	bool m_running;
-
-	nRenderSystem m_Render_System;
-	std::shared_ptr<DebugRenderer> m_Debug_Renderer;
-	//OpneGLDebugRenderer* m_debugDrawer;
-	//std::unique_ptr<OpneGLDebugRenderer> m_debugDrawer;
-	std::unique_ptr<DebugUIEditor> m_DebugUI = std::make_unique<DebugUIEditor>();
-	std::unique_ptr<nNewton::nDynamicsWorld> m_nWorld = std::make_unique<nNewton::nDynamicsWorld>();
-	std::unique_ptr<PhysicsSystem> m_physicsSystem = std::make_unique<PhysicsSystem>();
-	std::unique_ptr<SandboxFramebuffer> m_FrameBuffer = std::make_unique<SandboxFramebuffer>();
+	
 
 	Camera m_camera;
+	std::unique_ptr<Window> m_testWindow;
+	Input m_input;
+	std::unique_ptr<PhysicsSystem> m_physicsSystem;
+	std::unique_ptr <nRenderSystem> m_Render_System;
+	std::unique_ptr<DebugUIEditor> m_DebugUI;
 
+	
+
+
+	bool m_running;
 	Uint64 m_CurrTime;
 	Uint64 m_PrevTime;
 	float m_DeltaTime;
@@ -39,8 +36,7 @@ public :
 
 	Application();
 	~Application();
-	bool Initialize();
-	void Run();
+	int Run();
 	
 	void Shutdown();
 

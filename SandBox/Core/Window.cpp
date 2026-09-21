@@ -1,7 +1,11 @@
 #include "Window.h"
 
-Window::Window() : m_window(nullptr), m_glContext(nullptr),m_windowWidth(1600), m_windowHeight(1200), m_isFullscreen(false), m_isInitialized(false),m_isCreated(false){
-
+Window::Window() : m_window(nullptr), m_glContext(nullptr),m_windowWidth(1600), m_windowHeight(1200), m_isFullscreen(false), m_isInitialized(false),m_isCreated(false)
+{
+    std::cout << "[ctor] Window enter\n" << std::flush;
+    if (!Init()) throw std::runtime_error("Failed to init window system");
+    if (!CreateWindow()) throw std::runtime_error("Failed to create window");
+    std::cout << "[ctor] Window exit\n" << std::flush;
 }
 
 bool Window::Init()

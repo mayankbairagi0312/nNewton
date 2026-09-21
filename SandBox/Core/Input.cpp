@@ -204,7 +204,7 @@ void Input::HandleWindowEvent(const SDL_WindowEvent& windowEvent) {
 
 		Width = windowEvent.data1;
 		Height = windowEvent.data2;
-		testwindow.setWindow(Width, Height);
+		testwindow->setWindow(Width, Height);
 
 		break;
 	case SDL_EVENT_WINDOW_MINIMIZED:

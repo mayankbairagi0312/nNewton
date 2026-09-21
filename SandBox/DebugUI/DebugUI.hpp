@@ -89,12 +89,13 @@ class DebugUIEditor {
 private:
 
 //---------------------------------------------------------------
+	std::unique_ptr<SandboxFramebuffer> m_FrameBuff;
 	Window* SDL_Window;
-	std::shared_ptr<DebugRenderer>  debugRenderer;
+	DebugRenderer*  debugRenderer;
 	nNewton::nDynamicsWorld* m_World = nullptr;
 	std::unique_ptr<eManager> m_EntityManager;
 	nRenderSystem* m_RenderSystem = nullptr;
-	SandboxFramebuffer* m_FrameBuff;
+	
 
 
 
@@ -158,6 +159,8 @@ private:
 	};
 	std::vector<TransformSnapshot> m_PlaySnapshot;
 
+
+
 //------------draw func-----------------
 	void DrawFolderNode(Editor_FolderNode& node);
 	void DrawEntityRow(Editor_Entity& meta, int parentFolderID);
@@ -196,8 +199,8 @@ private:
 		float height, OnRemoveFunc&& onRemove);
 public:
 	
-	bool Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* ,
-		nRenderSystem* renderSystem,SandboxFramebuffer* FrameBuff);
+	DebugUIEditor(Window* window, nNewton::nDynamicsWorld* world,
+		nRenderSystem* renderSystem);
 	void BeginUIFrame();
 	void EndUIFrame();
 	void ShutDownUI();
@@ -232,6 +235,9 @@ public:
 	{
 		static EditorConsole console;
 		return console;
+	}
+	SandboxFramebuffer* GetFrameBuff() {
+		return m_FrameBuff.get();
 	}
 	static void DrawConsole(bool* p_open);
 

@@ -24,14 +24,14 @@ class nRenderSystem
 private:
 	std::vector<render_entity> m_RenderEntities;
 	nNewton::nDynamicsWorld* m_physics;
-	nNewton::nCollisionWorld* m_collisionWorld;
+	nNewton::nCollisionWorld* m_collisionWorld = m_physics->GetCollisionWorld();
 	std::shared_ptr<DebugRenderer> m_Renderer;
 	std::unique_ptr<OpneGLDebugRenderer> m_DebugDrawer;
 	
 public:
+	nRenderSystem(Camera* cam,nNewton::nDynamicsWorld* dynamicW);
 	void DrawBVHTree(nNewton::nAABBTree<nNewton::nCollisionEntity>* tree, int maxDepth = 10);
-	bool INIT_DEBUG_RENDER(Camera* camera, std::shared_ptr<DebugRenderer> Drend, nNewton::nCollisionWorld* collisionW,
-		nNewton::nDynamicsWorld* dynamicW);
+	bool INIT_DEBUG_RENDER(Camera* camera);
 	void Debug_Render();
 	void Debug_DrawAxis(const nNewton::nVector3& camPOS);
 	void Debug_DrawAABB(const nNewton::nVector3& min_, const nNewton::nVector3& max_, const nNewton::nVector4& color);
@@ -46,6 +46,9 @@ public:
 
 	void UnregisterEntity(nNewton::nEntity_ID id);
 
+	DebugRenderer* GetRenderer() {
+		return m_Renderer.get();
+	}
 };
 
 

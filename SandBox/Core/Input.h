@@ -10,6 +10,7 @@
 class Input
 {
 public:
+	Input(Window* win) : testwindow(win) {};
 	bool IsKeyDown(SDL_Scancode scancode) const;
 	bool IsKeyPressed(SDL_Scancode scancode) const;
 	bool IsKeyReleased(SDL_Scancode scancode)const;
@@ -29,7 +30,7 @@ public:
 	void EndFrame();
 	void SetCamera(Camera& camera);
 private:
-	Window testwindow;
+	Window* testwindow;
 	std::unordered_map<SDL_Scancode, bool> m_keyboardState;
 	std::unordered_map<SDL_Scancode, bool> m_previousKeyboardState;
 	std::unordered_map<SDL_Scancode, bool> m_keyPressedThisFrame;

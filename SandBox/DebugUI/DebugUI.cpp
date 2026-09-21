@@ -8,17 +8,11 @@
 #define Stricmp strcasecmp
 #endif
 
-bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRenderer> render, nNewton::nDynamicsWorld* world,
-	nRenderSystem* renderSystem , SandboxFramebuffer* FrameBuff)
+DebugUIEditor::DebugUIEditor(Window* window, nNewton::nDynamicsWorld* world,
+	nRenderSystem* renderSystem) : SDL_Window(window),m_World(world), m_RenderSystem(renderSystem),m_FrameBuff(std::make_unique<SandboxFramebuffer>()),
+	m_EntityManager(std::make_unique<eManager>(*m_World))
 {
-	SDL_Window = window;
-	debugRenderer = render;
-	m_World = world;
-	m_EntityManager = std::make_unique<eManager>(*m_World);
-	m_FrameBuff = FrameBuff;
-	std::cout << "debug render this=" << debugRenderer.get() << std::endl;
-	m_RenderSystem = renderSystem;
-
+	debugRenderer = renderSystem->GetRenderer();
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsClassic();
@@ -26,24 +20,21 @@ bool DebugUIEditor::Init_DebugUIEditor(Window* window, std::shared_ptr<DebugRend
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.Fonts->AddFontFromFileTTF("assets/Fonts/JetBrainsMonoNL-Regular.ttf", 13.0f);
-	
+
 	io.FontGlobalScale = 2.0f;
 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-	
+
 	ImGui_ImplSDL3_InitForOpenGL(SDL_Window->GetNativeHandle(), SDL_Window->GetSDLglContext());
 	ImGui_ImplOpenGL3_Init("#version 460");
-	
-	m_FrameBuff->Initialize(m_ViewportSize.x,m_ViewportSize.y);
 
+	m_FrameBuff->Initialize(m_ViewportSize.x, m_ViewportSize.y);
 	GetConsole().SetEditorForConsole(this);
-	//defaultScene();
-	return true;
-
 }
+
 
 void DebugUIEditor::ApplyCustomStyle()
 {
@@ -175,6 +166,7 @@ void DebugUIEditor::ShutDownUI()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
+	m_FrameBuff->Destory();
 }
 
 void DebugUIEditor::RenderUI(bool* IsPanels )
