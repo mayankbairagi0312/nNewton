@@ -1,34 +1,39 @@
 #pragma once
 
-#include<nNewton/nDynamicsWorld.hpp>
-#include<nNewton/nRigidBody.hpp>
+#include <nNewton/nDynamicsWorld.hpp>
+#include <nNewton/nRigidBody.hpp>
 #include <nNewton/nTransform.hpp>
-#include<nNewton/nMath.hpp>
-
-
-using namespace nNewton;
+#include <nNewton/nMath.hpp>
+#include <memory>
 
 enum class SimState { Stopped, Playing, Paused };
 
 class PhysicsSystem
 {
 public:
-	PhysicsSystem() : m_PhysicsWorld(std::make_unique<nDynamicsWorld>())
+	// -- Constructors --
+	PhysicsSystem()
+		: m_PhysicsWorld(std::make_unique<nNewton::nDynamicsWorld>())
 	{
 		m_PhysicsWorld->GetCollisionWorld()->BuildTrees();
 	}
+	PhysicsSystem(const PhysicsSystem&) = delete;
+	PhysicsSystem& operator=(const PhysicsSystem&) = delete;
+	PhysicsSystem(PhysicsSystem&&) noexcept = default;
+	PhysicsSystem& operator=(PhysicsSystem&&) & noexcept = default;
+	~PhysicsSystem() = default;
 
-	void UpdatePhysicsSystem(float DETLA_TIME)
+	// -- Simulation --
+	void UpdatePhysicsSystem(float deltaTime)
 	{
-		m_PhysicsWorld->Step(DETLA_TIME);
-		//m_PhysicsWorld->GetCollisionWorld()->StepCollision();
+		m_PhysicsWorld->Step(deltaTime);
 	}
 
-	nDynamicsWorld* GetPhysicsWorld() {
+	nNewton::nDynamicsWorld* GetPhysicsWorld() noexcept
+	{
 		return m_PhysicsWorld.get();
 	}
-	
-private:
-	std::unique_ptr<nDynamicsWorld> m_PhysicsWorld;
 
+private:
+	std::unique_ptr<nNewton::nDynamicsWorld> m_PhysicsWorld;
 };

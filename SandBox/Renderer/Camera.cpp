@@ -1,17 +1,28 @@
-
 #include "Camera.hpp"
+#include <cmath>
 
-Camera::Camera(const nNewton::nVector3& position , const nNewton::nVector3& up , float yaw , float pitch )
-	: m_Position(position) , m_Front(0.0f,0.0f,-1.0f),
-	 m_Right(1.0f,0.0f,0.0f) ,m_WorldUP(up),m_Pitch(pitch),m_Yaw(yaw)
-	 ,m_ProjectionType(ProjectionType::Perspective),m_fov(45.5f), 
-	m_aspectRatio(16.0f/9.0f),m_farPlane(150.0f),m_nearPlane(0.1f)
-	, m_viewDirty(true), m_projectionDirty(true),m_ProjectionMatrix(nNewton::nMatrix4(0)),m_ViewMatrix(nNewton::nMatrix4(0)) {
+Camera::Camera(const nNewton::nVector3& position, const nNewton::nVector3& up, float yaw, float pitch)
+	: m_Position(position)
+	, m_Front(0.0f, 0.0f, -1.0f)
+	, m_Right(1.0f, 0.0f, 0.0f)
+	, m_Up(0.0f, 0.0f, 0.0f)
+	, m_WorldUp(up)
+	, m_Pitch(pitch)
+	, m_Yaw(yaw)
+	, m_ProjectionType(ProjectionType::Perspective)
+	, m_fov(45.5f)
+	, m_aspectRatio(16.0f / 9.0f)
+	, m_farPlane(150.0f)
+	, m_nearPlane(0.1f)
+	, m_viewDirty(true)
+	, m_projectionDirty(true)
+	, m_ViewMatrix(nNewton::nMatrix4(0.0f))
+	, m_ProjectionMatrix(nNewton::nMatrix4(0.0f))
+{
 	UpdateCameraVectors();
-
 }
 
-nNewton::nMatrix4 Camera:: GetViewMatrix() const
+nNewton::nMatrix4 Camera::GetViewMatrix() const
 {
 	if (m_viewDirty)
 	{
@@ -21,19 +32,18 @@ nNewton::nMatrix4 Camera:: GetViewMatrix() const
 	return m_ViewMatrix;
 }
 
-nNewton::nMatrix4 Camera::GetProjectionMatrix()const
+nNewton::nMatrix4 Camera::GetProjectionMatrix() const
 {
 	if (m_projectionDirty)
 	{
 		if (m_ProjectionType == ProjectionType::Perspective)
 		{
 			m_ProjectionMatrix = nNewton::Perspective(nNewton::Radians(m_fov), m_aspectRatio, m_nearPlane, m_farPlane);
-			
 		}
 		else
 		{
-			float halfHeight = 5.0f; // Adjust if needed
-			float halfWidth = halfHeight * m_aspectRatio;
+			constexpr float halfHeight = 5.0f;
+			const float halfWidth = halfHeight * m_aspectRatio;
 			m_ProjectionMatrix = nNewton::Ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, m_nearPlane, m_farPlane);
 		}
 		m_projectionDirty = false;
@@ -43,15 +53,16 @@ nNewton::nMatrix4 Camera::GetProjectionMatrix()const
 
 void Camera::ProcessKeyboard(const nNewton::nVector3& direction, float deltaTime)
 {
-	float cam_velocity = 5.0f * deltaTime;
-	m_Position += direction * cam_velocity;
+	const float camVelocity = 5.0f * deltaTime;
+	m_Position += direction * camVelocity;
 	MarkViewDirty();
 }
 
-void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch ) {
+void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch)
+{
 	xOffset *= 0.1f;
 	yOffset *= 0.1f;
-	
+
 	m_Pitch -= yOffset;
 	m_Yaw -= xOffset;
 
@@ -59,38 +70,43 @@ void Camera::ProcessMouseMove(float xOffset, float yOffset, bool constrainPitch 
 		if (m_Pitch > 89.0f) m_Pitch = 89.0f;
 		if (m_Pitch < -89.0f) m_Pitch = -89.0f;
 	}
+
 	UpdateCameraVectors();
 	MarkViewDirty();
-
 }
+
 void Camera::ProcessMousePan(float xOffset, float yOffset)
 {
-	float panSpeed = 0.0045f;
+	constexpr float panSpeed = 0.0045f;
 	xOffset *= panSpeed;
 	yOffset *= panSpeed;
 
-	auto right = nNewton::Normalized(nNewton::CrossProduct(m_Front, m_Up));
-	auto up = m_Up;  
-	
-	m_Position -= right * xOffset;   
-	m_Position += up * yOffset;      
+	const nNewton::nVector3 right = nNewton::Normalized(nNewton::CrossProduct(m_Front, m_Up));
+	const nNewton::nVector3 up = m_Up;
+
+	m_Position -= right * xOffset;
+	m_Position += up * yOffset;
 	MarkViewDirty();
 }
 
-void Camera::ProcessMouseScroll(float yOffset , float xOffset) {
+void Camera::ProcessMouseScroll(float yOffset, float xOffset)
+{
 	m_fov -= xOffset - 0.8f;
 	m_fov += yOffset - 0.8f;
-	
+
 	if (m_fov < 1.0f) m_fov = 1.0f;
 	if (m_fov > 90.0f) m_fov = 90.0f;
 	MarkProjectionDirty();
 }
-void Camera::setPosition(const nNewton::nVector3& position) {
+
+void Camera::SetPosition(const nNewton::nVector3& position)
+{
 	m_Position = position;
 	MarkViewDirty();
 }
 
-void Camera::setProjection(ProjectionType type, float fov, float aspectRatio, float nearPlane, float farPlane) {
+void Camera::SetProjection(ProjectionType type, float fov, float aspectRatio, float nearPlane, float farPlane)
+{
 	m_ProjectionType = type;
 	m_fov = fov;
 	m_aspectRatio = aspectRatio;
@@ -98,7 +114,8 @@ void Camera::setProjection(ProjectionType type, float fov, float aspectRatio, fl
 	m_farPlane = farPlane;
 	MarkProjectionDirty();
 }
-void Camera::setAspectRatio(float aspectRatio)
+
+void Camera::SetAspectRatio(float aspectRatio)
 {
 	m_aspectRatio = aspectRatio;
 	MarkProjectionDirty();
@@ -106,21 +123,12 @@ void Camera::setAspectRatio(float aspectRatio)
 
 void Camera::UpdateCameraVectors()
 {
-	auto front = nNewton::nVector3(0);
-	front.x = cos(nNewton::Radians(m_Yaw)) * cos(nNewton::Radians(m_Pitch));
-	front.y = sin(nNewton::Radians(m_Pitch));
-	front.z = cos(nNewton::Radians(m_Pitch)) * sin(nNewton::Radians(m_Yaw));
+	nNewton::nVector3 front(0.0f);
+	front.x = cosf(nNewton::Radians(m_Yaw)) * cosf(nNewton::Radians(m_Pitch));
+	front.y = sinf(nNewton::Radians(m_Pitch));
+	front.z = cosf(nNewton::Radians(m_Pitch)) * sinf(nNewton::Radians(m_Yaw));
 	m_Front = nNewton::Normalized(front);
 
-	//recalc right and up
-	m_Right = nNewton::Normalized(nNewton::CrossProduct(m_Front,m_WorldUP));
+	m_Right = nNewton::Normalized(nNewton::CrossProduct(m_Front, m_WorldUp));
 	m_Up = nNewton::Normalized(nNewton::CrossProduct(m_Right, m_Front));
-
-}
-void Camera::MarkViewDirty()
-{
-	m_viewDirty = true;
-}
-void Camera::MarkProjectionDirty() {
-	m_projectionDirty = true;
 }

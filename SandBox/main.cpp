@@ -1,16 +1,10 @@
 #include <iostream>
+#include <memory>
+#include <stdexcept>
 #include "Core/Application.h"
+
 int main()
 {
-	//Application DemoTest;
-	//if (DemoTest.Initialize()) {
-	//	DemoTest.Run();
-	//}
-	//DemoTest.Shutdown();
-	//return 0;
-
-
-
     std::unique_ptr<Application> app;
 
     try {

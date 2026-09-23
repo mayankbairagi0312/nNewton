@@ -1,9 +1,8 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#pragma once
 
 #include <SDL3/SDL.h>
-#include<glad/gl.h>
-#include <iostream>
+#include <glad/gl.h>
+#include <stdexcept>
 
 class Window
 {
@@ -20,21 +19,29 @@ private:
 	bool m_isCreated;
 
 public:
+	// -- Constructors --
 	Window();
+	Window(const Window&) = delete;
+	Window& operator=(const Window&) = delete;
+	Window(Window&&) noexcept = delete;
+	Window& operator=(Window&&) noexcept = delete;
 	~Window();
+
+	// -- Lifecycle --
 	bool Init();
 	bool CreateWindow();
 	void DestroyWindow();
 	void Shutdown();
+
+	// -- Queries --
 	SDL_Window* GetNativeHandle() const { return m_window; }
-	SDL_GLContext GetSDLglContext() const { return m_glContext; }
-	bool IsValid() const; 
-	bool IsInitialized() const;
-	bool IsCreated() const;
-	void setWindow(const Sint32& width, const Sint32& height);
-	//void HandleWindowEvent(const SDL_WindowEvent& windowEvent);
-	int getHeight()const { return m_windowHeight; }
-	int getWidth()const { return m_windowWidth; }
-	
+	SDL_GLContext GetGLContext() const { return m_glContext; }
+	bool IsValid() const noexcept { return m_window != nullptr; }
+	bool IsInitialized() const { return m_isInitialized; }
+	bool IsCreated() const { return m_isCreated; }
+	int GetHeight() const noexcept { return m_windowHeight; }
+	int GetWidth() const noexcept { return m_windowWidth; }
+
+	// -- Resize --
+	void SetWindow(int width, int height);
 };
-#endif 

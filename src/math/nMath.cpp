@@ -2,40 +2,40 @@
 #include <cassert>
 #include <cmath>
 #include <algorithm>
+
 namespace nNewton
 {
-//VECTOR 2
+//====================== VECTOR 2 =======================//
 
-	float nVector2::Length()const
+	float nVector2::Length() const noexcept
 	{
-		return sqrt(x * x + y * y);
+		return sqrtf(x * x + y * y);
 	}
 
-	nVector2 Normalized(const nVector2& a) {
-		float len = a.Length();
+	nVector2 Normalized(const nVector2& a) noexcept
+	{
+		const float len = a.Length();
 		if (len == 0.0f)
 			return nVector2(0.0f);
 		return a / len;
 	}
 
+//====================== VECTOR 3 =======================//
 
-	//==========  VECTOR 3 
-
-	
-
-	float nVector3::Length()const
+	float nVector3::Length() const noexcept
 	{
-		return sqrt(x * x + y * y + z*z);
+		return sqrtf(x * x + y * y + z * z);
 	}
 
-	nVector3 Normalized(const nVector3& a) {
-		float len = a.Length();
+	nVector3 Normalized(const nVector3& a) noexcept
+	{
+		const float len = a.Length();
 		if (len == 0.0f)
 			return nVector3(0.0f);
 		return a / len;
 	}
 
-	nVector3 Min(const nVector3& a, const nVector3& b)
+	nVector3 Min(const nVector3& a, const nVector3& b) noexcept
 	{
 		return nVector3(
 			std::min(a.x, b.x),
@@ -44,7 +44,7 @@ namespace nNewton
 		);
 	}
 
-	nVector3 Max(const nVector3& a, const nVector3& b)
+	nVector3 Max(const nVector3& a, const nVector3& b) noexcept
 	{
 		return nVector3(
 			std::max(a.x, b.x),
@@ -52,99 +52,104 @@ namespace nNewton
 			std::max(a.z, b.z)
 		);
 	}
-	//======================VECTOR 4=======================//
 
-	float nVector4::Length()const
+//====================== VECTOR 4 =======================//
+
+	float nVector4::Length() const noexcept
 	{
-		return sqrt(x * x + y * y + z * z + w * w);
+		return sqrtf(x * x + y * y + z * z + w * w);
 	}
 
-	nVector4 Normalized(const nVector4& a) {
-		float len = a.Length();
+	nVector4 Normalized(const nVector4& a) noexcept
+	{
+		const float len = a.Length();
 		if (len == 0.0f)
 			return nVector4(0.0f);
 		return a / len;
 	}
 
-	//=====    MATRIX 4 
+//====================== MATRIX 4 =======================//
 
+	nMatrix4 nMatrix4::operator+(const nMatrix4& otr) const
+	{
+		nMatrix4 result;
+		for (int i = 0; i < 16; ++i)
+			result.A[i] = A[i] + otr.A[i];
+		return result;
+	}
 
-	nMatrix4 nMatrix4::operator+(const nMatrix4& otr)const {
-		nMatrix4 res;
+	nMatrix4 nMatrix4::operator-(const nMatrix4& otr) const
+	{
+		nMatrix4 result;
 		for (int i = 0; i < 16; ++i)
-		{
-			res.A[i] = this->A[i] + otr.A[i];
-		}
-		return res;
+			result.A[i] = A[i] - otr.A[i];
+		return result;
 	}
-	nMatrix4 nMatrix4::operator-(const nMatrix4& otr)const {
-		nMatrix4 res;
-		for (int i = 0; i < 16; ++i)
+
+	// Column-major matrix product: A[col * 4 + row]
+	nMatrix4 nMatrix4::operator*(const nMatrix4& otr) const
+	{
+		nMatrix4 result;
+		for (int row = 0; row < 4; ++row)
 		{
-			res.A[i] = this->A[i] - otr.A[i];
-		}
-		return res;
-	}
-	nMatrix4 nMatrix4::operator*(const nMatrix4& otr)const {
-		nMatrix4 res;
-		for (int row = 0; row < 4; row++) {
-			for (int col = 0; col < 4; col++) {
-				res.A[col * 4 + row] =
+			for (int col = 0; col < 4; ++col)
+			{
+				result.A[col * 4 + row] =
 					A[0 * 4 + row] * otr.A[col * 4 + 0] +
 					A[1 * 4 + row] * otr.A[col * 4 + 1] +
 					A[2 * 4 + row] * otr.A[col * 4 + 2] +
 					A[3 * 4 + row] * otr.A[col * 4 + 3];
 			}
 		}
-		return res;
+		return result;
 	}
 
-	nVector4 nMatrix4::operator*(const nVector4& v_) const {
+	nVector4 nMatrix4::operator*(const nVector4& v) const
+	{
 		return nVector4(
-			A[0] * v_.x + A[4] * v_.y + A[8] * v_.z + A[12] * v_.w,
-			A[1] * v_.x + A[5] * v_.y + A[9] * v_.z + A[13] * v_.w,
-			A[2] * v_.x + A[6] * v_.y + A[10] * v_.z + A[14] * v_.w,
-			A[3] * v_.x + A[7] * v_.y + A[11] * v_.z + A[15] * v_.w
+			A[0] * v.x + A[4] * v.y + A[8] * v.z + A[12] * v.w,
+			A[1] * v.x + A[5] * v.y + A[9] * v.z + A[13] * v.w,
+			A[2] * v.x + A[6] * v.y + A[10] * v.z + A[14] * v.w,
+			A[3] * v.x + A[7] * v.y + A[11] * v.z + A[15] * v.w
 		);
 	}
 
-	
-	float	 Determinant(const nMatrix4& otr)
+	float Determinant(const nMatrix4& m) noexcept
 	{
-		const float* m = otr.A;
+		const float* a = m.A;
 
-		return m[0] * (m[5] * (m[10] * m[15] - m[11] * m[14]) -
-			   m[9] * (m[6] * m[15] - m[7] * m[14]) +
-			   m[13] * (m[6] * m[11] - m[7] * m[10]))
+		return a[0] * (a[5] * (a[10] * a[15] - a[11] * a[14]) -
+			       a[9] * (a[6] * a[15] - a[7] * a[14]) +
+			       a[13] * (a[6] * a[11] - a[7] * a[10]))
 
-			-  m[1] * (m[4] * (m[10] * m[15] - m[11] * m[14]) -
-			   m[8] * (m[6] * m[15] - m[7] * m[14]) +
-			   m[12] * (m[6] * m[11] - m[7] * m[10]))
+			 - a[1] * (a[4] * (a[10] * a[15] - a[11] * a[14]) -
+			       a[8] * (a[6] * a[15] - a[7] * a[14]) +
+			       a[12] * (a[6] * a[11] - a[7] * a[10]))
 
-			+  m[2] * (m[4] * (m[9] * m[15] - m[11] * m[13]) -
-			   m[8] * (m[5] * m[15] - m[7] * m[13]) +
-			   m[12] * (m[5] * m[11] - m[7] * m[9]))
+			 + a[2] * (a[4] * (a[9] * a[15] - a[11] * a[13]) -
+			       a[8] * (a[5] * a[15] - a[7] * a[13]) +
+			       a[12] * (a[5] * a[11] - a[7] * a[9]))
 
-			-  m[3] * (m[4] * (m[9] * m[14] - m[10] * m[13]) -
-			   m[8] * (m[5] * m[14] - m[6] * m[13]) +
-			   m[12] * (m[5] * m[10] - m[6] * m[9]));
+			 - a[3] * (a[4] * (a[9] * a[14] - a[10] * a[13]) -
+			       a[8] * (a[5] * a[14] - a[6] * a[13]) +
+			       a[12] * (a[5] * a[10] - a[6] * a[9]));
 	}
 
 	nMatrix4 nMatrix4::Inverse() const
 	{
-		float det = Determinant(*this);
+		const float det = Determinant(*this);
 		if (det == 0.0f)
 			return Identity4();
 
-		float invDet = 1.0f / det;
+		const float invDet = 1.0f / det;
 
-
-		auto det3 = [](float a, float b, float c,
-			float d, float e, float f,
-			float g, float h, float i) -> float
-			{
-				return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-			};
+		// Determinant of a 3x3 submatrix
+		constexpr auto det3 = [](float a, float b, float c,
+					 float d, float e, float f,
+					 float g, float h, float i) -> float
+		{
+			return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+		};
 
 		nMatrix4 result;
 
@@ -152,7 +157,7 @@ namespace nNewton
 		{
 			for (int c = 0; c < 4; ++c)
 			{
-				float m[9];
+				float sub[9];
 				int idx = 0;
 				for (int i = 0; i < 4; ++i)
 				{
@@ -160,13 +165,13 @@ namespace nNewton
 					for (int j = 0; j < 4; ++j)
 					{
 						if (j == r) continue;
-						m[idx++] = A[i + j * 4];
+						sub[idx++] = A[i + j * 4];
 					}
 				}
 
-				float cofactor = det3(m[0], m[1], m[2],
-					m[3], m[4], m[5],
-					m[6], m[7], m[8]);
+				float cofactor = det3(sub[0], sub[1], sub[2],
+						      sub[3], sub[4], sub[5],
+						      sub[6], sub[7], sub[8]);
 
 				// Apply the sign: (-1)^(c+r)
 				if ((c + r) & 1)
@@ -181,19 +186,19 @@ namespace nNewton
 
 	nMatrix4 RotateX(float rad)
 	{
-		nVector3 x(1, 0, 0);
-		return Rotate(rad, x);
+		return Rotate(rad, nVector3(1.0f, 0.0f, 0.0f));
 	}
+
 	nMatrix4 RotateY(float rad)
 	{
-		nVector3 y(0, 1, 0);
-		return Rotate(rad, y);
+		return Rotate(rad, nVector3(0.0f, 1.0f, 0.0f));
 	}
+
 	nMatrix4 RotateZ(float rad)
 	{
-		nVector3 z(0, 0, 1);
-		return Rotate(rad, z);
+		return Rotate(rad, nVector3(0.0f, 0.0f, 1.0f));
 	}
+
 	nMatrix4 Translate(const nVector3& t)
 	{
 		nMatrix4 m = Identity4();
@@ -202,310 +207,299 @@ namespace nNewton
 		m.A[14] = t.z;
 		return m;
 	}
+
 	nMatrix4 Scale(const nVector3& s)
 	{
 		return nMatrix4{
-			s.x, 0, 0, 0,
-			0, s.y, 0, 0,
-			0, 0, s.z, 0,
-			0, 0, 0, 1
+			s.x, 0.0f, 0.0f, 0.0f,
+			0.0f, s.y, 0.0f, 0.0f,
+			0.0f, 0.0f, s.z, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
 		};
 	}
 
-	nMatrix4 Transpose(const nMatrix4& otr)
-	{	
-		nMatrix4 otrT = { 0 };
+	nMatrix4 Transpose(const nMatrix4& m) noexcept
+	{
+		nMatrix4 result;
 
 		for (int c = 0; c < 4; ++c)
 		{
 			for (int r = 0; r < 4; ++r)
 			{
-				otrT.A[c * 4 + r] = otr.A[r * 4 + c];
+				result.A[c * 4 + r] = m.A[r * 4 + c];
 			}
 		}
 
-		return otrT;
+		return result;
 	}
 
-	nMatrix4 Rotate(float rad, const nVector3& axis) {
-		
-		float c = cos(rad);
-		float s = sin(rad);
-		
-		float len = axis.Length();
-		float X = axis.x / len;
-		float Y = axis.y / len;
-		float Z = axis.z / len;
+	nMatrix4 Rotate(float rad, const nVector3& axis)
+	{
+		const float c = cosf(rad);
+		const float s = sinf(rad);
 
+		const float len = axis.Length();
+		const float x = axis.x / len;
+		const float y = axis.y / len;
+		const float z = axis.z / len;
 
 		return nMatrix4{
-			c + X * X * (1 - c),
-			Y* X* (1 - c) + Z * s,
-			Z* X* (1 - c) - Y * s,
-			0,
+			c + x * x * (1.0f - c),
+			y * x * (1.0f - c) + z * s,
+			z * x * (1.0f - c) - y * s,
+			0.0f,
 
-			X* Y* (1 - c) - Z * s,
-			c + Y * Y * (1 - c),
-			Z* Y* (1 - c) + X * s,
-			0,
+			x * y * (1.0f - c) - z * s,
+			c + y * y * (1.0f - c),
+			z * y * (1.0f - c) + x * s,
+			0.0f,
 
-			X* Z* (1 - c) + Y * s,
-			Y* Z* (1 - c) - X * s,
-			c + Z * Z * (1 - c),
-			0,
+			x * z * (1.0f - c) + y * s,
+			y * z * (1.0f - c) - x * s,
+			c + z * z * (1.0f - c),
+			0.0f,
 
-			0, 0, 0, 1
+			0.0f, 0.0f, 0.0f, 1.0f
 		};
-
 	}
 
-	nMatrix4 Look_At(const nVector3& eye_, const nVector3& center_, const nVector3& up_)
+	nMatrix4 Look_At(const nVector3& eye, const nVector3& center, const nVector3& up)
 	{
-		
-		auto fwd_	= Normalized(center_ - eye_ );
-		auto side_ = Normalized(CrossProduct(fwd_, up_));
-		auto Up_ = Normalized(CrossProduct(side_, fwd_));
+		const nVector3 forward = Normalized(center - eye);
+		const nVector3 side = Normalized(CrossProduct(forward, up));
+		const nVector3 upVec = Normalized(CrossProduct(side, forward));
 
 		return nMatrix4{
-			side_.x,Up_.x,-fwd_.x,0,
-			side_.y,Up_.y,-fwd_.y,0,
-			side_.z,Up_.z,-fwd_.z,0,
-			-DotProduct(side_,eye_),-DotProduct(Up_,eye_),DotProduct(fwd_,eye_),1
-
+			side.x,    upVec.x,    -forward.x,    0.0f,
+			side.y,    upVec.y,    -forward.y,    0.0f,
+			side.z,    upVec.z,    -forward.z,    0.0f,
+			-DotProduct(side, eye), -DotProduct(upVec, eye), DotProduct(forward, eye), 1.0f
 		};
 	}
 
-
-	nMatrix4 Perspective(float FOV_, float aspect_, float nearZ_, float farZ_)
+	nMatrix4 Perspective(float FOV, float aspect, float nearZ, float farZ)
 	{
-		float f = 1.0f / tan(FOV_ / 2.0f);
+		const float f = 1.0f / tanf(FOV / 2.0f);
 
-		return {
-		f / aspect_, 0, 0, 0,
-		0, f, 0, 0,
-		0, 0, -(farZ_ + nearZ_) / (farZ_ - nearZ_), -1,
-		0, 0, -(2.0f * farZ_ * nearZ_) / (farZ_ - nearZ_), 0
+		return nMatrix4{
+			f / aspect, 0.0f, 0.0f, 0.0f,
+			0.0f, f, 0.0f, 0.0f,
+			0.0f, 0.0f, -(farZ + nearZ) / (farZ - nearZ), -1.0f,
+			0.0f, 0.0f, -(2.0f * farZ * nearZ) / (farZ - nearZ), 0.0f
 		};
 	}
 
-	nMatrix4 Ortho(float Left_, float Right_, float Bottom_, float Top_, float nearZ_, float farZ_)
+	nMatrix4 Ortho(float left, float right, float bottom, float top, float nearZ, float farZ)
 	{
-		return {
-		2/(Right_- Left_),0,0,0,
+		return nMatrix4{
+			2.0f / (right - left), 0.0f, 0.0f, 0.0f,
 
-		0,2/(Top_-Bottom_),0,0,
+			0.0f, 2.0f / (top - bottom), 0.0f, 0.0f,
 
-		0,0,-2/(farZ_-nearZ_),0,
+			0.0f, 0.0f, -2.0f / (farZ - nearZ), 0.0f,
 
-		-(Right_+Left_)/ (Right_ - Left_),-(Top_ + Bottom_)/ (Top_ - Bottom_),-(farZ_ + nearZ_)/ (farZ_ - nearZ_),1
+			-(right + left) / (right - left),
+			-(top + bottom) / (top - bottom),
+			-(farZ + nearZ) / (farZ - nearZ),
+			1.0f
 		};
 	}
 
-// Quaternions ===========>>>>>>>>>>>
+//====================== QUATERNION =======================//
 
-	nQuaternion operator* (float scalar_, const nQuaternion& Quat_)
+	nQuaternion operator*(float scalar, const nQuaternion& quat) noexcept
 	{
-		return { scalar_ * Quat_.w, scalar_ * Quat_.x, scalar_ * Quat_.y, scalar_ * Quat_.z };
-
+		return nQuaternion(scalar * quat.w, scalar * quat.x, scalar * quat.y, scalar * quat.z);
 	}
 
-	float nQuaternion::Length()const
+	float nQuaternion::Length() const noexcept
 	{
-		return sqrt(w * w + x * x + y * y + z * z);
+		return sqrtf(w * w + x * x + y * y + z * z);
 	}
 
-
-
-	nQuaternion QNormalize(const nQuaternion& Quat_)
+	nQuaternion QNormalize(const nQuaternion& quat) noexcept
 	{
-		float len = Quat_.Length();
+		const float len = quat.Length();
 		if (len == 0.0f)
-			return nQuaternion(1, 0, 0, 0);
-		float mag = Quat_.Length();
-		return { Quat_.w / mag ,Quat_.x / mag, Quat_.y / mag, Quat_.z / mag };
+			return nQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
+		return nQuaternion(quat.w / len, quat.x / len, quat.y / len, quat.z / len);
 	}
-	nQuaternion Conjugate(const nQuaternion& Quat_)
+
+	nQuaternion Conjugate(const nQuaternion& quat) noexcept
 	{
-		return { Quat_.w,-Quat_.x,-Quat_.y ,-Quat_.z };
+		return nQuaternion(quat.w, -quat.x, -quat.y, -quat.z);
 	}
-	nQuaternion QInverse(const nQuaternion& Quat_)
+
+	nQuaternion QInverse(const nQuaternion& quat) noexcept
 	{
-		
-		float lensq = Quat_.w * Quat_.w + Quat_.x * Quat_.x + Quat_.y * Quat_.y + Quat_.z * Quat_.z;
+		const float lenSq = quat.w * quat.w + quat.x * quat.x + quat.y * quat.y + quat.z * quat.z;
+		if (lenSq == 0.0f)
+			return nQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 
-		if (lensq == 0.0f)
-			return nQuaternion(1, 0, 0, 0);
+		const nQuaternion conj = Conjugate(quat);
 
-		nQuaternion conj_ = Conjugate(Quat_);
-		
-		if (fabsf(lensq - 1.0f) < 1e-6f)
-			return conj_;
-		
-		return { conj_.w / lensq, conj_.x / lensq, conj_.y / lensq, conj_.z / lensq };
+		// Unit quaternion: inverse is the conjugate
+		if (fabsf(lenSq - 1.0f) < 1e-6f)
+			return conj;
+
+		return nQuaternion(conj.w / lenSq, conj.x / lenSq, conj.y / lenSq, conj.z / lenSq);
 	}
 
-	float QDotProduct(const nQuaternion& Quat1_, const nQuaternion& Quat2_)
+	float QDotProduct(const nQuaternion& a, const nQuaternion& b) noexcept
 	{
-		return Quat1_.w * Quat2_.w +
-			Quat1_.x * Quat2_.x +
-			Quat1_.y * Quat2_.y +
-			Quat1_.z * Quat2_.z;
+		return a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z;
 	}
 
-	nQuaternion from_AxisAngle(const nVector3& Axis_, float AngleRad_)
-	{	
-		nVector3 axis = Axis_;
-
-		float lensq = Axis_.x * Axis_.x + Axis_.y * Axis_.y + Axis_.z * Axis_.z;
-		if (lensq == 0.0f)
-			return nQuaternion(1, 0, 0, 0);
-
-		if (fabsf(lensq - 1.0f) > 1e-6f)
-			axis = Normalized(Axis_);
-
-
-		auto half_angle = AngleRad_ / 2;
-		auto s = sin(half_angle);
-
-		return { cos(half_angle), axis.x * s,
-			axis.y * s, axis.z * s };
-
-	}
-
-	nQuaternion from_AngularVelocity(const nVector3& omega_, float dt_)
+	nQuaternion from_AxisAngle(const nVector3& axisIn, float angleRad)
 	{
-		float lensq = omega_.x * omega_.x + omega_.y * omega_.y + omega_.z * omega_.z;
-		if (lensq == 0.0f)
-			return nQuaternion(1, 0, 0, 0);
+		const float lenSq = axisIn.x * axisIn.x + axisIn.y * axisIn.y + axisIn.z * axisIn.z;
+		if (lenSq == 0.0f)
+			return nQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 
-		auto len = omega_.Length();
-		
+		// Normalize only if not already unit length
+		nVector3 axis = axisIn;
+		if (fabsf(lenSq - 1.0f) > 1e-6f)
+			axis = Normalized(axisIn);
 
-		auto omega = omega_ /len;
-		auto angle = len * dt_;
-		auto half_angle_ = angle / 2;
-		auto s = sin(half_angle_);
+		const float halfAngle = angleRad / 2.0f;
+		const float s = sinf(halfAngle);
 
-		return { cos(half_angle_), omega.x * s,
-			omega.y * s, omega.z * s };
+		return nQuaternion(cosf(halfAngle), axis.x * s, axis.y * s, axis.z * s);
 	}
 
-	nMatrix4 to_nMatrix4(const nQuaternion& Quat_)
+	nQuaternion from_AngularVelocity(const nVector3& omega, float dt)
 	{
-		float w = Quat_.w;
-		float x = Quat_.x;
-		float y = Quat_.y;
-		float z = Quat_.z;
+		const float lenSq = omega.x * omega.x + omega.y * omega.y + omega.z * omega.z;
+		if (lenSq == 0.0f)
+			return nQuaternion(1.0f, 0.0f, 0.0f, 0.0f);
 
-		float xx = x * x;
-		float yy = y * y;
-		float zz = z * z;
-		float xy = x * y;
-		float xz = x * z;
-		float yz = y * z;
-		float wx = w * x;
-		float wy = w * y;
-		float wz = w * z;
+		const float len = omega.Length();
+		const nVector3 axis = omega / len;
+		const float angle = len * dt;
+		const float halfAngle = angle / 2.0f;
+		const float s = sinf(halfAngle);
+
+		return nQuaternion(cosf(halfAngle), axis.x * s, axis.y * s, axis.z * s);
+	}
+
+	nMatrix4 to_nMatrix4(const nQuaternion& quat) noexcept
+	{
+		const float w = quat.w;
+		const float x = quat.x;
+		const float y = quat.y;
+		const float z = quat.z;
+
+		const float xx = x * x;
+		const float yy = y * y;
+		const float zz = z * z;
+		const float xy = x * y;
+		const float xz = x * z;
+		const float yz = y * z;
+		const float wx = w * x;
+		const float wy = w * y;
+		const float wz = w * z;
 
 		return nMatrix4{
-			1-2*(yy + zz), 2 *(xy + wz), 2 * (xz - wy), 0,
-			2*(xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
-			2*(xz + wy), 2 * (yz - wx),1 - 2 * (xx + yy), 0,
-			0, 0, 0,1
+			1.0f - 2.0f * (yy + zz), 2.0f * (xy + wz), 2.0f * (xz - wy), 0.0f,
+			2.0f * (xy - wz), 1.0f - 2.0f * (xx + zz), 2.0f * (yz + wx), 0.0f,
+			2.0f * (xz + wy), 2.0f * (yz - wx), 1.0f - 2.0f * (xx + yy), 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
 		};
 	}
 
-	nVector3 Vec_Rotate(const nQuaternion& Quat_, const nVector3& Vec3_)
-	{	
-		auto inv_ = QInverse(Quat_);
-		nVector3 v(Quat_.x, Quat_.y, Quat_.z);
-
-		nQuaternion ro(0, Vec3_.x, Vec3_.y, Vec3_.z);
-		nQuaternion q( Quat_ * ro * inv_ );
-
-		return nVector3(q.x, q.y, q.z);
-	}
-
-	nQuaternion QIntegrate(nQuaternion orientation_, const nVector3& angularV_, float dt_)
-	{	
-		float Lensq = DotProduct(angularV_, angularV_);
-		if (Lensq < 1e-8f)
-			return orientation_;
-
-		//float Len = sqrt(Lensq);
-		///auto axis = angularV_/ Len;
-		//auto dq = from_AxisAngle( axis,Len*dt_);
-
-		auto dq = 0.5f * orientation_ * nQuaternion(0, angularV_.x, angularV_.y, angularV_.z)*dt_;
-
-		orientation_ = orientation_ +  dq;
-
-		return QNormalize(orientation_);
-	}
-
-	nQuaternion QSlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_)
+	nVector3 Vec_Rotate(const nQuaternion& quat, const nVector3& vec)
 	{
-		auto Q1 = QNormalize(Quat1_);
-		auto Q2 = QNormalize(Quat2_);
+		// v' = q * (0, v) * q^-1
+		const nQuaternion inv = QInverse(quat);
+		const nQuaternion pure(0.0f, vec.x, vec.y, vec.z);
+		const nQuaternion result = quat * pure * inv;
 
-		auto dot = QDotProduct(Quat1_, Quat2_);
+		return nVector3(result.x, result.y, result.z);
+	}
 
+	nQuaternion QIntegrate(nQuaternion orientation, const nVector3& angularV, float dt)
+	{
+		const float lenSq = DotProduct(angularV, angularV);
+		if (lenSq < 1e-8f)
+			return orientation;
+
+		// dq = 0.5 * orientation * (0, omega) * dt
+		const nQuaternion dq = 0.5f * orientation * nQuaternion(0.0f, angularV.x, angularV.y, angularV.z) * dt;
+
+		orientation = orientation + dq;
+
+		return QNormalize(orientation);
+	}
+
+	nQuaternion QSlerp(const nQuaternion& a, const nQuaternion& b, float t)
+	{
+		const nQuaternion q1 = QNormalize(a);
+		nQuaternion q2 = QNormalize(b);
+
+		float dot = QDotProduct(a, b);
+
+		// Take the short path
 		if (dot < 0.0f)
 		{
-			Q2 = { -Q2.w , -Q2.x , -Q2.y , -Q2.z} ;
-
+			q2 = nQuaternion(-q2.w, -q2.x, -q2.y, -q2.z);
 			dot = -dot;
 		}
 
-		auto angle = acos(Clamp(dot, -1.0f, 1.0f));
+		const float angle = acosf(Clamp(dot, -1.0f, 1.0f));
 
-		if (dot > 1.0f - EPSILON) {
-			return QNormalize((1.0f - t_) * Q1 + t_ * Q2);
-		}
-
-		float s = sin(angle);
-
-		return (sin((1-t_)*angle)/s)*Quat1_  + (sin((t_) * angle) / s) * Quat2_;
-	}
-
-	nQuaternion QNlerp(const nQuaternion& Quat1_, const nQuaternion& Quat2_, float t_)
-	{
-		auto Q1 = QNormalize(Quat1_);
-		auto Q2 = QNormalize(Quat2_);
-
-		if (QDotProduct(Quat1_, Quat2_) < 0.0f)
+		// Angles very close: fall back to nlerp
+		if (dot > 1.0f - EPSILON)
 		{
-			Q2 = { -Q2.w , -Q2.x , -Q2.y , -Q2.z };
-
+			return QNormalize((1.0f - t) * q1 + t * q2);
 		}
 
-		return QNormalize((1.0f - t_) * Q1 + t_ * Q2);
+		const float s = sinf(angle);
+
+		return (sinf((1.0f - t) * angle) / s) * a + (sinf(t * angle) / s) * b;
 	}
 
-	nQuaternion from_EulerXYZ(float xRad, float yRad, float zRad) {
-		nQuaternion qX = from_AxisAngle(nVector3(1.0f, 0.0f, 0.0f), xRad);
-		nQuaternion qY = from_AxisAngle(nVector3(0.0f, 1.0f, 0.0f), yRad);
-		nQuaternion qZ = from_AxisAngle(nVector3(0.0f, 0.0f, 1.0f), zRad);
+	nQuaternion QNlerp(const nQuaternion& a, const nQuaternion& b, float t)
+	{
+		const nQuaternion q1 = QNormalize(a);
+		nQuaternion q2 = QNormalize(b);
 
-		return qZ * qY * qX;
+		// Take the short path
+		if (QDotProduct(a, b) < 0.0f)
+		{
+			q2 = nQuaternion(-q2.w, -q2.x, -q2.y, -q2.z);
+		}
+
+		return QNormalize((1.0f - t) * q1 + t * q2);
 	}
 
-	
-	nVector3 QuaternionToEuler(const nQuaternion& q) {
-		float sinPitch = 2.0f * (q.w * q.x + q.y * q.z);
-		float cosPitch = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
-		float pitch = atan2f(sinPitch, cosPitch);
+	nQuaternion from_EulerXYZ(float xRad, float yRad, float zRad)
+	{
+		const nQuaternion qx = from_AxisAngle(nVector3(1.0f, 0.0f, 0.0f), xRad);
+		const nQuaternion qy = from_AxisAngle(nVector3(0.0f, 1.0f, 0.0f), yRad);
+		const nQuaternion qz = from_AxisAngle(nVector3(0.0f, 0.0f, 1.0f), zRad);
 
-		float sinYaw = 2.0f * (q.w * q.y - q.z * q.x);
-		float yaw;
+		return qz * qy * qx;
+	}
+
+	nVector3 QuaternionToEuler(const nQuaternion& q)
+	{
+		// Pitch (X)
+		const float sinPitch = 2.0f * (q.w * q.x + q.y * q.z);
+		const float cosPitch = 1.0f - 2.0f * (q.x * q.x + q.y * q.y);
+		const float pitch = atan2f(sinPitch, cosPitch);
+
+		// Yaw (Y)
+		const float sinYaw = 2.0f * (q.w * q.y - q.z * q.x);
+		float yaw = 0.0f;
 		if (fabsf(sinYaw) >= 1.0f)
 			yaw = copysignf(3.14159265f / 2.0f, sinYaw);
 		else
 			yaw = asinf(sinYaw);
 
-		float sinRoll = 2.0f * (q.w * q.z + q.x * q.y);
-		float cosRoll = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
-		float roll = atan2f(sinRoll, cosRoll);
+		// Roll (Z)
+		const float sinRoll = 2.0f * (q.w * q.z + q.x * q.y);
+		const float cosRoll = 1.0f - 2.0f * (q.y * q.y + q.z * q.z);
+		const float roll = atan2f(sinRoll, cosRoll);
 
 		return nVector3(pitch, yaw, roll);
 	}

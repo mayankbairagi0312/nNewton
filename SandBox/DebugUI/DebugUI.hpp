@@ -142,7 +142,7 @@ private:
 	    
 	float                          m_NewHalfExt[3] = { 1.0f, 1.0f, 1.0f };
 	float                          m_NewRadius = 1.0f;
-	nCollisionEntity m_Collider;
+	nNewton::nCollisionEntity m_Collider;
 
 
 	float m_EditPos[3] = {};
@@ -229,7 +229,7 @@ public:
 
 	const eManager* GetEntityManager()  const { return m_EntityManager.get(); }
 	nNewton::nEntity_ID CreateEntity(const std::string& name,
-		const nNewton::nTransform& transform = nTransform());
+		const nNewton::nTransform& transform = nNewton::nTransform());
 
 	static EditorConsole& GetConsole()
 	{
@@ -244,7 +244,7 @@ public:
 	template<typename... Args>
 	static void AddLog(std::format_string<Args...> fmt, Args&&... args);
 
-	bool DeleteEntity(nEntity_ID id);
+	bool DeleteEntity(nNewton::nEntity_ID id);
 	//void DestroyAllEntities();
 	bool RebuildBVHTree(bool isStatic);
 	

@@ -32,9 +32,8 @@ set(IMGUI_SOURCES
 )
 
 #optional
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND IMGUI_SOURCES ${imgui_src_SOURCE_DIR}/imgui_demo.cpp)
-endif()
+# imgui_demo.cpp is always needed: the app calls ImGui::ShowDemoWindow unconditionally.
+list(APPEND IMGUI_SOURCES ${imgui_src_SOURCE_DIR}/imgui_demo.cpp)
 
 # Backend selection
 set(IMGUI_BACKEND_SOURCES

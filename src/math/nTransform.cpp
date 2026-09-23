@@ -1,113 +1,115 @@
-#include<nNewton/nTransform.hpp>
+#include <nNewton/nTransform.hpp>
 
 namespace nNewton {
 
-
-	nTransform::nTransform(): m_POS(0),m_ROT(1,0,0,0),m_SCALE(1)
-	{}
-
-	nTransform::nTransform(nVector3 pos,nQuaternion rot, nVector3 Scale): m_POS(pos),m_ROT(rot),m_SCALE(Scale)
-	{}
-
-	void nTransform::Rotate(const nVector3& axis_, float Rad_)
+	nTransform::nTransform()
+		: m_Position(0.0f, 0.0f, 0.0f)
+		, m_Rotation(1.0f, 0.0f, 0.0f, 0.0f)
+		, m_Scale(1.0f, 1.0f, 1.0f)
 	{
-		auto Quat = from_AxisAngle(axis_, Rad_);
-		m_ROT = m_ROT * Quat;
 	}
 
-	void nTransform::Rotate(const nQuaternion& Quat_)
+	nTransform::nTransform(nVector3 position, nQuaternion rotation, nVector3 scale)
+		: m_Position(position)
+		, m_Rotation(rotation)
+		, m_Scale(scale)
 	{
-		m_ROT = QNormalize(Quat_ * m_ROT);
 	}
 
-
-	nVector3 nTransform::TransformPt(const nVector3& LPoint_)const
+	void nTransform::Rotate(const nVector3& axis, float radians)
 	{
-		return m_POS + Vec_Rotate(m_ROT, LPoint_);
+		const nQuaternion rotation = from_AxisAngle(axis, radians);
+		m_Rotation = m_Rotation * rotation;
 	}
 
-	nVector3 nTransform::TransformVec(const nVector3& LVector_)const
+	void nTransform::Rotate(const nQuaternion& rotation)
 	{
-		return Vec_Rotate(m_ROT, LVector_);
+		m_Rotation = QNormalize(rotation * m_Rotation);
 	}
 
-	nVector3 nTransform::InvTransfromPt(const nVector3& WPoint_)const
+	nVector3 nTransform::TransformPt(const nVector3& localPoint) const
 	{
-		return Vec_Rotate(QInverse(m_ROT), WPoint_-m_POS);
+		return m_Position + Vec_Rotate(m_Rotation, localPoint);
 	}
 
-	nVector3 nTransform::InvTransfromVec(const nVector3& WVector_)const
+	nVector3 nTransform::TransformVec(const nVector3& localVector) const
 	{
-		return Vec_Rotate(QInverse(m_ROT), WVector_);
+		return Vec_Rotate(m_Rotation, localVector);
 	}
 
-	nMatrix4  nTransform::ConstrTRS(const nVector3& T , const nQuaternion& R , const nVector3& S){
-		
-		nMatrix4 model;
-		model = to_nMatrix4(R);
+	nVector3 nTransform::InvTransformPt(const nVector3& worldPoint) const
+	{
+		return Vec_Rotate(QInverse(m_Rotation), worldPoint - m_Position);
+	}
 
-		model.A[0] *= S.x;
-		model.A[1] *= S.x;
-		model.A[2] *= S.x;
+	nVector3 nTransform::InvTransformVec(const nVector3& worldVector) const
+	{
+		return Vec_Rotate(QInverse(m_Rotation), worldVector);
+	}
 
-		model.A[4] *= S.y;
-		model.A[5] *= S.y;
-		model.A[6] *= S.y;
+	nMatrix4 nTransform::ConstrTRS(const nVector3& translation, const nQuaternion& rotation, const nVector3& scale)
+	{
+		nMatrix4 model = to_nMatrix4(rotation);
 
-		model.A[8] *= S.z;
-		model.A[9] *= S.z;
-		model.A[10] *= S.z;
+		// Scale the basis columns (column-major: A[col * 4 + row])
+		model.A[0] *= scale.x;
+		model.A[1] *= scale.x;
+		model.A[2] *= scale.x;
 
-		model.A[12] = T.x;
-		model.A[13] = T.y;
-		model.A[14] = T.z;
-		
+		model.A[4] *= scale.y;
+		model.A[5] *= scale.y;
+		model.A[6] *= scale.y;
+
+		model.A[8] *= scale.z;
+		model.A[9] *= scale.z;
+		model.A[10] *= scale.z;
+
+		model.A[12] = translation.x;
+		model.A[13] = translation.y;
+		model.A[14] = translation.z;
+
 		return model;
 	}
 
-	nMatrix4 nTransform::ToMatrix()const
+	nMatrix4 nTransform::ToMatrix() const
 	{
-		return ConstrTRS(m_POS, m_ROT, m_SCALE);
+		return ConstrTRS(m_Position, m_Rotation, m_Scale);
 	}
-
 
 	nTransform nTransform::Inverse() const
 	{
-		nTransform inve;
-		inve.m_ROT = QInverse(m_ROT);
-		inve.m_POS = Vec_Rotate(inve.m_ROT, -m_POS);
-		inve.m_SCALE = { 1.0f / m_SCALE.x, 1.0f / m_SCALE.y, 1.0f / m_SCALE.z };
-
-		return inve;
+		nTransform inverse;
+		inverse.m_Rotation = QInverse(m_Rotation);
+		inverse.m_Position = Vec_Rotate(inverse.m_Rotation, -m_Position);
+		inverse.m_Scale = nVector3(1.0f / m_Scale.x, 1.0f / m_Scale.y, 1.0f / m_Scale.z);
+		return inverse;
 	}
-	
+
 	void nTransform::Invert()
 	{
 		*this = Inverse();
 	}
 
-	nTransform nTransform::operator*(const nTransform& rhs)const
+	nTransform nTransform::operator*(const nTransform& rhs) const
 	{
 		return ComposeTransform(*this, rhs);
 	}
 
 	nTransform nTransform::ComposeTransform(const nTransform& parent, const nTransform& child)
 	{
-		nTransform compose;
-		compose.m_POS = parent.TransformPt(child.m_POS);
-		compose.m_ROT = QNormalize(parent.m_ROT * child.m_ROT);
-		compose.m_SCALE = parent.m_SCALE * child.m_SCALE;
-		return compose;
+		nTransform composed;
+		composed.m_Position = parent.TransformPt(child.m_Position);
+		composed.m_Rotation = QNormalize(parent.m_Rotation * child.m_Rotation);
+		composed.m_Scale = parent.m_Scale * child.m_Scale;
+		return composed;
 	}
-
-
 
 	nTransform nTransform::Lerp(const nTransform& a, const nTransform& b, float t)
 	{
-		nTransform lerp;
-		lerp.m_POS = a.m_POS + (b.m_POS - a.m_POS) * t;
-		lerp.m_SCALE = a.m_SCALE + (b.m_SCALE - a.m_SCALE) * t;
-		lerp.m_ROT = QSlerp(a.m_ROT, b.m_ROT, t);
-		return lerp;
+		nTransform result;
+		result.m_Position = a.m_Position + (b.m_Position - a.m_Position) * t;
+		result.m_Scale = a.m_Scale + (b.m_Scale - a.m_Scale) * t;
+		result.m_Rotation = QSlerp(a.m_Rotation, b.m_Rotation, t);
+		return result;
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <nNewton/nTransform.hpp>
+#include <nNewton/nRigidBody.hpp>
 #include <nNewton/nCollisionShapes.hpp>
 #include <cstdint>
 
@@ -9,18 +10,19 @@ enum class ComponentType : uint8_t {
     Color,
     Tag,
     Folder,
-    cCount
+    Count
 };
 
-// ---------- component structs ----------
+// ---------- Component structs ----------
+
 struct TransformComponent {
     nNewton::nTransform local;
 };
 
 struct PhysicsComponent {
     float mass = 0.0f;
-    nBodyType       Type = nBodyType::Static;
-    bool            HasCollider = false;
+    nNewton::nBodyType Type = nNewton::nBodyType::Static;
+    bool HasCollider = false;
     nNewton::nCollisionShapeType ShapeType = nNewton::nCollisionShapeType::nBox;
 };
 
@@ -36,9 +38,8 @@ struct FolderComponent {
     int folderId = -1;
 };
 
+// ---------- Type traits ----------
 
-
-// ---------- traits ----------
 template<typename T> struct ComponentTraits;
 
 #define REGISTER_COMPONENT(T, idx) \

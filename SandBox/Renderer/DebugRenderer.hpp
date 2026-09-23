@@ -1,124 +1,117 @@
 #pragma once
 
-#include<unordered_map>
-#include<nNewton/nDynamicsWorld.hpp>
-#include<nNewton/nTransform.hpp>
-#include<nNewton/nMath.hpp>
+#include <cstdint>
 #include <memory>
+#include <nNewton/nDynamicsWorld.hpp>
+#include <nNewton/nTransform.hpp>
+#include <nNewton/nMath.hpp>
 
 class IDebugRenderer
 {
 public:
-	
 	virtual ~IDebugRenderer() = default;
 
-	virtual void DrawLine(const  nNewton::nVector3& from,const nNewton::nVector3& to,const nNewton::nVector4& color) = 0;
-	void DrawPoint(const nNewton::nVector3& position, const nNewton::nVector4& color,const  float Size = 0.1f) {
-		nNewton::nVector3 offset = nNewton::nVector3(Size,0.0f,0.0f);
-		DrawLine(position+offset, position-offset,color);
-		offset =  nNewton::nVector3(0.0f,Size, 0.0f);
+	virtual void DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const nNewton::nVector4& color) = 0;
+	virtual void DrawBox(const nNewton::nVector4& color, const nNewton::nMatrix4& modelMat) {}
+	virtual void DrawCircle(const nNewton::nVector4& color, const nNewton::nMatrix4& modelMat) {}
+	virtual void BeginFrameRenderer() {}
+	virtual void EndFrameRenderer() {}
+	virtual void ClearRenderer() {}
+
+	void DrawPoint(const nNewton::nVector3& position, const nNewton::nVector4& color, float size = 0.1f)
+	{
+		nNewton::nVector3 offset = nNewton::nVector3(size, 0.0f, 0.0f);
 		DrawLine(position + offset, position - offset, color);
-		offset = nNewton::nVector3(0.0f, 0.0f,Size);
+		offset = nNewton::nVector3(0.0f, size, 0.0f);
+		DrawLine(position + offset, position - offset, color);
+		offset = nNewton::nVector3(0.0f, 0.0f, size);
 		DrawLine(position + offset, position - offset, color);
 	}
-	virtual void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat) {};
-
-	virtual void Drawbox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat) {};
-
-	virtual void BeginFrameRenderer() {};
-	virtual void EndFrameRenderer() {};
-	virtual void clearRenderer() {};
-
-
 };
 
 enum class flags : uint32_t
 {
 	None			= 0,
-	Shapes			= 1 << 0,  
-	AABB			= 1 << 1,  
-	Contacts		= 1 << 2,  
-	Joints			= 1 << 3,  
-	Normals			= 1 << 4,  
-	Velocity		= 1 << 5,  
-	CenterOfMass	= 1 << 6, 
+	Shapes			= 1 << 0,
+	AABB			= 1 << 1,
+	Contacts		= 1 << 2,
+	Joints			= 1 << 3,
+	Normals			= 1 << 4,
+	Velocity		= 1 << 5,
+	CenterOfMass	= 1 << 6,
 
-	BVH_Static = 1 << 7,
-	BVH_Dynamic = 1 << 8,
-	BVH_FatAABB = 1 << 9,
+	BVH_Static		= 1 << 7,
+	BVH_Dynamic		= 1 << 8,
+	BVH_FatAABB		= 1 << 9,
 
 	All				= 0xFFFFFFF
-
 };
-inline flags operator&(const flags a ,const flags b)
+
+constexpr flags operator&(flags a, flags b) noexcept
 {
 	return static_cast<flags>(static_cast<uint32_t>(a) & static_cast<uint32_t>(b));
 }
-inline flags operator|(const flags a, const flags b)
+
+constexpr flags operator|(flags a, flags b) noexcept
 {
 	return static_cast<flags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
 
-inline bool operator!(flags flag)
+constexpr bool operator!(flags flag) noexcept
 {
-	return static_cast<uint32_t>(flag)== 0;
+	return static_cast<uint32_t>(flag) == 0;
 }
 
-class  DebugRenderer
+class DebugRenderer
 {
 public:
-	DebugRenderer();
+	// -- Constructors --
+	DebugRenderer() noexcept;
+	DebugRenderer(const DebugRenderer&) = delete;
+	DebugRenderer& operator=(const DebugRenderer&) = delete;
+	DebugRenderer(DebugRenderer&&) noexcept = delete;
+	DebugRenderer& operator=(DebugRenderer&&) noexcept = delete;
 	~DebugRenderer();
-	
-	int GetLineCount() const { return m_LineCount; }
 
-	
-	void DrawLine(const nNewton::nVector3& from , const nNewton::nVector3& to ,const nNewton::nVector4& Color );
-	void DrawPoint(const nNewton::nVector3 Position, const nNewton::nVector4 Color, const float size = 0.1);
-	void DrawBox(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
-	void DrawSphere(const nNewton::nMatrix4& model_mat, const nNewton::nVector4& Color);
-	void DrawCapsule(const nNewton::nVector3& Center,const float, const nNewton::nVector4& Color, const float Radius = 1, const uint8_t Segments = 16);
-	void drawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to,float headsize , const nNewton::nVector4& Color);
-	void DrawPlane(const nNewton::nVector3& Center, const nNewton::nVector3& Normal, const nNewton::nVector4& Color, float size = 1.0f);
-	void DrawCircle(const nNewton::nVector4& Color, const nNewton::nMatrix4& model_mat);
-	void DrawGrid(const uint16_t GridLength);
-	void DrawAxis(const nNewton::nVector3& camPOS, float);
+	// -- Primitive drawing --
+	void DrawLine(const nNewton::nVector3& from, const nNewton::nVector3& to, const nNewton::nVector4& color);
+	void DrawPoint(const nNewton::nVector3& position, const nNewton::nVector4& color, float size = 0.1f);
+	void DrawBox(const nNewton::nVector4& color, const nNewton::nMatrix4& modelMat);
+	void DrawSphere(const nNewton::nMatrix4& modelMat, const nNewton::nVector4& color);
+	void DrawCapsule(const nNewton::nVector3& center, float height, const nNewton::nVector4& color, float radius = 1.0f, uint8_t segments = 16);
+	void DrawArrow(const nNewton::nVector3& from, const nNewton::nVector3& to, float headSize, const nNewton::nVector4& color);
+	void DrawPlane(const nNewton::nVector3& center, const nNewton::nVector3& normal, const nNewton::nVector4& color, float size = 1.0f);
+	void DrawCircle(const nNewton::nVector4& color, const nNewton::nMatrix4& modelMat);
+	void DrawGrid(uint16_t gridLength);
+	void DrawAxis(const nNewton::nVector3& camPos, float maxLength);
+
+	// -- Frame lifecycle --
 	void BeginFrame();
-	void Endframe();
+	void EndFrame();
 
-	void SetDrawer(IDebugRenderer* Drawer) {
-		m_Drawer = Drawer;
-	}
-	
+	void SetDrawer(IDebugRenderer* drawer) noexcept { m_Drawer = drawer; }
+	void Clear() { m_Drawer->ClearRenderer(); }
+
+	// -- Draw flags --
 	void SetFlag(flags flag);
 	void SetFlagEnabled(flags flag);
 	void SetDisableFlag(flags flag);
-	
-	bool IsFlagEnabled(flags flag)const;
+	bool IsFlagEnabled(flags flag) const noexcept;
 
-	const IDebugRenderer* GetDrawer()const { return m_Drawer; }
-	const flags GetFlag()const {
-		return m_flag;
-	}
+	// -- Getters --
+	int GetLineCount() const noexcept { return m_LineCount; }
+	const IDebugRenderer* GetDrawer() const noexcept { return m_Drawer; }
+	flags GetFlag() const noexcept { return m_flag; }
+	bool IsEnabled() const noexcept { return m_enabled; }
 
-	bool IsEnabled() const{
-		return m_enabled;
-	}
-	void clear()
-	{
-		m_Drawer->clearRenderer();
-	}
-
-
-	void SetBVHMaxDepth(int d) { m_BVHMaxDepth = d; }
-	int  GetBVHMaxDepth() const { return m_BVHMaxDepth; }
+	void SetBVHMaxDepth(int depth) noexcept { m_BVHMaxDepth = depth; }
+	int GetBVHMaxDepth() const noexcept { return m_BVHMaxDepth; }
 
 private:
-	long m_LineCount;
-	IDebugRenderer* m_Drawer;
-	flags m_flag;
-	bool m_enabled;
-	bool m_Inframe;
-	
-	int m_BVHMaxDepth ;
+	int m_LineCount = 0;
+	IDebugRenderer* m_Drawer = nullptr;
+	flags m_flag = flags::All;
+	bool m_enabled = false;
+	bool m_InFrame = false;
+	int m_BVHMaxDepth = 0;
 };

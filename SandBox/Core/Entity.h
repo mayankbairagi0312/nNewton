@@ -5,14 +5,11 @@
 #include "ComponentPool.h"
 #include <array>
 
-using namespace nNewton;
-
 struct eEntity
 {
-    nNewton::nEntity_ID eID;
+    nNewton::nEntity_ID eID = nNewton::INVALID_ENTITY;
 
-    std::array<ComponentSlot,
-        (size_t)ComponentType::cCount> Slots;
+    std::array<ComponentSlot, static_cast<size_t>(ComponentType::Count)> Slots;
 
     uint64_t Mask = 0;
 };

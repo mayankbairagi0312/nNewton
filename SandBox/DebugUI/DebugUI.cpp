@@ -8,6 +8,8 @@
 #define Stricmp strcasecmp
 #endif
 
+using namespace nNewton;
+
 DebugUIEditor::DebugUIEditor(Window* window, nNewton::nDynamicsWorld* world,
 	nRenderSystem* renderSystem) : SDL_Window(window),m_World(world), m_RenderSystem(renderSystem),m_FrameBuff(std::make_unique<SandboxFramebuffer>()),
 	m_EntityManager(std::make_unique<eManager>(*m_World))
@@ -28,7 +30,7 @@ DebugUIEditor::DebugUIEditor(Window* window, nNewton::nDynamicsWorld* world,
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	ImGui_ImplSDL3_InitForOpenGL(SDL_Window->GetNativeHandle(), SDL_Window->GetSDLglContext());
+	ImGui_ImplSDL3_InitForOpenGL(SDL_Window->GetNativeHandle(), SDL_Window->GetGLContext());
 	ImGui_ImplOpenGL3_Init("#version 460");
 
 	m_FrameBuff->Initialize(m_ViewportSize.x, m_ViewportSize.y);
@@ -166,7 +168,7 @@ void DebugUIEditor::ShutDownUI()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
-	m_FrameBuff->Destory();
+	m_FrameBuff->Destroy();
 }
 
 void DebugUIEditor::RenderUI(bool* IsPanels )
@@ -239,8 +241,8 @@ void DebugUIEditor::ViewportBegin(Camera* camera)
 
 	// Resize framebuf
 	if (m_ViewportSize.x > 1 && m_ViewportSize.y > 1) {
-		if ((int)m_ViewportSize.x != m_FrameBuff->Width() ||
-			(int)m_ViewportSize.y != m_FrameBuff->Height()) {
+		if ((int)m_ViewportSize.x != m_FrameBuff->GetWidth() ||
+			(int)m_ViewportSize.y != m_FrameBuff->GetHeight()) {
 			m_FrameBuff->Resize((int)m_ViewportSize.x, (int)m_ViewportSize.y);
 			m_FrameBuff->Bind();
 			glViewport(0, 0, (int)m_ViewportSize.x, (int)m_ViewportSize.y);
@@ -249,7 +251,7 @@ void DebugUIEditor::ViewportBegin(Camera* camera)
 			m_FrameBuff->Unbind();
 
 			auto ar = static_cast<float>(m_ViewportSize.x) / static_cast<float>(m_ViewportSize.y);
-			camera->setAspectRatio(ar);
+			camera->SetAspectRatio(ar);
 		}
 	}	
 }
@@ -260,7 +262,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 	m_ViewportHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 
 	ImGui::Image(
-		(ImTextureID)(uintptr_t)m_FrameBuff->getFrameTexture(),
+		(ImTextureID)(uintptr_t)m_FrameBuff->GetFrameTexture(),
 		m_ViewportSize,
 		ImVec2(0, 1),   // top-left UV
 		ImVec2(1, 0)    // bottom-right UV
@@ -295,7 +297,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 
 	char buffer[128];
 
-	sprintf(buffer, "FPS: %.1f", io.Framerate);
+	snprintf(buffer, sizeof(buffer), "FPS: %.1f", io.Framerate);
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 10),
@@ -303,7 +305,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 		buffer
 	);
 
-	sprintf(buffer, "Frame Time: %.2f ms", 1000.0f / io.Framerate);
+	snprintf(buffer, sizeof(buffer), "Frame Time: %.2f ms", 1000.0f / io.Framerate);
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 32),
@@ -312,9 +314,9 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 	);
 	
 	if(ImGui::IsMousePosValid())
-		sprintf(buffer, "Mouse Position :(%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
+		snprintf(buffer, sizeof(buffer), "Mouse Position :(%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
 	else
-		sprintf(buffer, "Mouse Position : <invalid>");
+		snprintf(buffer, sizeof(buffer), "Mouse Position : <invalid>");
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 54),
@@ -322,7 +324,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 		buffer
 	);
 
-	sprintf(buffer, "Entity Count: %d",(int)m_EntitiesCount);
+	snprintf(buffer, sizeof(buffer), "Entity Count: %d",(int)m_EntitiesCount);
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 76),
@@ -330,7 +332,7 @@ void DebugUIEditor::ViewportEnd(bool* IsOverlay) {
 		buffer
 	);
 
-	sprintf(buffer, "Vertex : %d", debugRenderer->GetLineCount()*2);
+	snprintf(buffer, sizeof(buffer), "Vertex : %d", debugRenderer->GetLineCount()*2);
 
 	drawList->AddText(
 		ImVec2(overlayPos.x + 10, overlayPos.y + 98),
@@ -379,7 +381,7 @@ void DebugUIEditor::DrawDiagnosticsPanel(bool* open)
 		average /= (float)IM_ARRAYSIZE(values);
 
 		char overlay[32];
-		sprintf(overlay, "Avg FPS: %.1f FPS", average);
+		snprintf(overlay, sizeof(overlay), "Avg FPS: %.1f FPS", average);
 
 		ImGui::PlotLines("Framerate", values, IM_ARRAYSIZE(values), values_offset,
 			overlay, 0.0f, 2000.0f, ImVec2(0, 80.0f)
@@ -409,7 +411,7 @@ void DebugUIEditor::DrawDiagnosticsPanel(bool* open)
 		average /= (float)IM_ARRAYSIZE(values);
 
 		char overlay[32];
-		sprintf(overlay, "Avg Frametime: %.1f FPS", average);
+		snprintf(overlay, sizeof(overlay), "Avg Frametime: %.1f FPS", average);
 
 		ImGui::PlotLines("Frametime", values, IM_ARRAYSIZE(values), values_offset,
 			overlay, 0.0f, 10.0f, ImVec2(0, 80.0f)
@@ -1018,20 +1020,20 @@ void DebugUIEditor::DrawInspector()
 			"Fully simulated. Forces, impulses, mass.",
 			"Script-driven. Moves colliders, ignores forces."
 		};
-		int eType = (int)RBInfo.TYPE_;
+		int eType = static_cast<int>(RBInfo.TYPE);
 		if (ImGui::Combo("Body Type", &eType, Types, IM_ARRAYSIZE(Types)))
-			RBInfo.TYPE_ = (nBodyType)eType;
+			RBInfo.TYPE = (nBodyType)eType;
 		ImGui::TextDisabled("  %s", TypeDesc[eType]);
 
 		ImGui::Spacing();
-		const bool isDynamic = (RBInfo.TYPE_ == nBodyType::Dynamic);
+		const bool isDynamic = (RBInfo.TYPE == nBodyType::Dynamic);
 		ImGui::BeginDisabled(!isDynamic);
 
-		ImGui::Checkbox("Override Mass", &RBInfo.OVERRIDE_MASS_);
-		if (RBInfo.OVERRIDE_MASS_)
-			ImGui::DragFloat("Mass", &RBInfo.MASS_, 0.1f, 0.001f, 1e6f, "%.3f kg");
+		ImGui::Checkbox("Override Mass", &RBInfo.OVERRIDE_MASS);
+		if (RBInfo.OVERRIDE_MASS)
+			ImGui::DragFloat("Mass", &RBInfo.MASS, 0.1f, 0.001f, 1e6f, "%.3f kg");
 		else
-			ImGui::DragFloat("Density", &RBInfo.DENSITY_, 0.1f, 0.001f, 1e4f, "%.3f kg/m3");
+			ImGui::DragFloat("Density", &RBInfo.DENSITY, 0.1f, 0.001f, 1e4f, "%.3f kg/m3");
 
 		ImGui::EndDisabled();
 
@@ -1046,7 +1048,7 @@ void DebugUIEditor::DrawInspector()
 			m_World->AddRigidBody(m_SelectedID, RBInfo);
 
 			PhysicsComponent comp{};
-			comp.Type = RBInfo.TYPE_;
+			comp.Type = RBInfo.TYPE;
 
 			m_EntityManager->AddComponent<PhysicsComponent>(
 				m_SelectedID, comp);
@@ -1121,8 +1123,8 @@ void DebugUIEditor::DrawPhysicsSection()
 	{
 		rb->Type = (nBodyType)eType;
 		auto slot = m_World->GetBody(m_SelectedID);
-		if (slot->TYPE_ == rb->Type) return;
-		slot->TYPE_ = rb->Type;
+		if (slot->TYPE == rb->Type) return;
+		slot->TYPE = rb->Type;
 		m_World->GetCollisionWorld()->UpdateBodyType(m_SelectedID, rb->Type);
 	}
 
@@ -1133,7 +1135,7 @@ void DebugUIEditor::DrawPhysicsSection()
 		"Static" : rb->Type == nBodyType::Dynamic ? "Dynamic" : "Kinetic");
 
 	if (IsPlaying()) {
-		auto vel = body->VELOCITY_;   
+		auto vel = body->VELOCITY;   
 		ImGui::Text("Lin. vel   : %.2f  %.2f  %.2f", vel.x, vel.y, vel.z);
 		/*auto ang = body->;
 		ImGui::Text("Ang. vel   : %.2f  %.2f  %.2f", ang.x, ang.y, ang.z);*/
@@ -1265,14 +1267,14 @@ void DebugUIEditor::DrawPhysicsSection()
 			{
 			case nCollisionShapeType::nBox:
 			{
-				m_Collider = *m_World->AddCollider(m_SelectedID,
+				m_World->AddCollider(m_SelectedID,
 					nBoxShape(nVector3(1.0f)),
 					*localXf, true);
 				m_RenderSystem->RegisterEntity(m_SelectedID, { 1.0f,0.3f,0.2f,1.0f });
 				break;
 			}
 			case nCollisionShapeType::nSphere:
-				m_Collider = *m_World->AddCollider(m_SelectedID,
+				m_World->AddCollider(m_SelectedID,
 					nSphereShape(1.0f), *localXf, true);
 				m_RenderSystem->RegisterEntity(m_SelectedID, { 0.3f,1.0f,0.2f,1.0f });
 				break;
@@ -1401,9 +1403,9 @@ void DebugUIEditor::FlushEditCacheToComponent(TransformComponent* tf)
 void DebugUIEditor::FlushComponentToWorld(const TransformComponent* tf) {
 	auto* body = m_World->GetBody(m_SelectedID);
 	if (body) {
-		body->TRANSFORM_ = tf->local; 
+		body->TRANSFORM = tf->local; 
 		if (body->ColEnt) {
-			body->ColEnt->EntityTransform = body->TRANSFORM_;
+			body->ColEnt->EntityTransform = body->TRANSFORM;
 			if (body->ColEnt->BVHNodePtr && m_World->GetCollisionWorld()->GetDynamicTree()) {
 				m_World->GetCollisionWorld()->GetDynamicTree()->RemoveEntity(body->ColEnt->BVHNodePtr);
 				m_World->GetCollisionWorld()->GetDynamicTree()->InsertEntity(body->ColEnt);
@@ -1430,11 +1432,13 @@ Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id)
 
 		}
 		for (auto& child : node.ChildFolders)
-			return RemoveEntity(child);
+			if (Editor_Entity* found = RemoveEntity(child))
+				return found;
 		return nullptr;
 		};
 	for (auto& root : m_RootFolders)
-		return RemoveEntity(root);
+		if (Editor_Entity* found = RemoveEntity(root))
+			return found;
 
 	return nullptr;
 }
@@ -1444,7 +1448,7 @@ const Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id) const
 	for (auto it = m_RootEntities.begin(); it != m_RootEntities.end(); ++it)
 	{
 		if (it->id == id) {
-			Editor_Entity m = *it; return &m;
+			return &(*it);
 		}
 	}
 	std::function<const Editor_Entity* (const Editor_FolderNode&)> RemoveEntity = [&](const Editor_FolderNode& node) -> const Editor_Entity* {
@@ -1452,16 +1456,17 @@ const Editor_Entity* DebugUIEditor::FindMetaEntity(nNewton::nEntity_ID id) const
 		for (auto it = children.begin(); it != children.end(); ++it)
 		{
 			if (it->id == id) {
-				Editor_Entity m = *it; return &m;
+				return &(*it);
 			}
 
 		}
 		for (auto& child : node.ChildFolders)
-			return RemoveEntity(child);
+			if (RemoveEntity(child)) return RemoveEntity(child);
 		return nullptr;
 		};
 	for (auto& root : m_RootFolders)
-		return RemoveEntity(root);
+		if (const Editor_Entity* found = RemoveEntity(root))
+			return found;
 
 	return nullptr;
 }
@@ -1619,7 +1624,7 @@ bool DebugUIEditor::RebuildBVHTree(bool isStatic)
 EditorConsole::EditorConsole()
 {
 	ClearLog();
-	memset(InputBuf, 0, sizeof(InputBuf));
+	std::memset(InputBuf, 0, sizeof(InputBuf));
 	HistoryPos = -1;
 	RegisterCommands();
 	Commands.push_back("help");

@@ -1,110 +1,109 @@
 #include <nNewton/nDynamicsWorld.hpp>
+#include <cstdio>
 
 namespace nNewton
 {
-	nDynamicsWorld::nDynamicsWorld() {
-		m_CollisionWorld = std::make_unique<nCollisionWorld>();
+	nDynamicsWorld::nDynamicsWorld()
+		: m_CollisionWorld(std::make_unique<nCollisionWorld>())
+	{
+		// Index 0 is reserved as the invalid entity handle.
 		m_Entity.emplace_back();
 	}
-	
-	nEntity_ID nDynamicsWorld::Create_Entity(const nTransform& InitTransform)
-	{
-		nEntity_ID index_;
 
-		if (!m_FreeList.empty()){
-			index_ = m_FreeList.back();
+	nEntity_ID nDynamicsWorld::Create_Entity(const nTransform& initTransform)
+	{
+		nEntity_ID index = 0;
+
+		if (!m_FreeList.empty())
+		{
+			index = m_FreeList.back();
 			m_FreeList.pop_back();
-		}else{
-			index_ = (uint32_t)m_Entity.size();
+		}
+		else
+		{
+			index = static_cast<nEntity_ID>(m_Entity.size());
 			m_Entity.emplace_back();
 		}
-		
-		auto& entity = m_Entity[index_];
+
+		nEntity& entity = m_Entity[index];
 		entity.alive = true;
 		entity.Entity = nRigidBody{};
-		entity.Entity.TRANSFORM_ = InitTransform;
+		entity.Entity.TRANSFORM = initTransform;
 
-		return MAKE_ID(index_, entity.Gen);
+		return MAKE_ID(index, entity.Gen);
 	}
-	
-	nRigidBody& nDynamicsWorld::AddRigidBody(nEntity_ID id, const nRigidBodyInfo& info) {
-		auto& slot = m_Entity[INDEX_FROM_ID(id)];
+
+	nRigidBody& nDynamicsWorld::AddRigidBody(nEntity_ID id, const nRigidBodyInfo& info)
+	{
+		nEntity& slot = m_Entity[INDEX_FROM_ID(id)];
 		assert(slot.alive && slot.Gen == GEN_FROM_ID(id));
 
-		slot.Entity.TYPE_ = info.TYPE_;
-		slot.Entity.VELOCITY_ = info.INIT_VELOCITY_;
-		slot.Entity.DENSITY_ = info.DENSITY_;
-		slot.Entity.MASS_OVERRIDE_ = info.OVERRIDE_MASS_ ? info.MASS_ : 0.0f;
+		slot.Entity.TYPE = info.TYPE;
+		slot.Entity.VELOCITY = info.INIT_VELOCITY;
+		slot.Entity.DENSITY = info.DENSITY;
+		slot.Entity.MASS_OVERRIDE = info.OVERRIDE_MASS ? info.MASS : 0.0f;
 
-		if (info.TYPE_ == nBodyType::Dynamic)
+		if (info.TYPE == nBodyType::Dynamic)
 		{
 			RecomputeMassProperties(INDEX_FROM_ID(id));
 		}
 
 		return slot.Entity;
 	}
+
 	void nDynamicsWorld::RemoveRigidBody(nEntity_ID id)
 	{
-		auto& slot = m_Entity[INDEX_FROM_ID(id)];
+		nEntity& slot = m_Entity[INDEX_FROM_ID(id)];
 
-		if (!slot.Entity.ColEnt) { 
-			nTransform tf = std::move(slot.Entity.TRANSFORM_);
+		// Keep the transform alive across the reset so the entity can be re-added.
+		if (!slot.Entity.ColEnt)
+		{
+			nTransform tf = slot.Entity.TRANSFORM;
 			slot.Entity = nRigidBody();
-			slot.Entity.TRANSFORM_ = tf;
-			printf("Remove func Scale: %.2f %.2f %.2f\n", slot.Entity.TRANSFORM_.GetScale().x, slot.Entity.TRANSFORM_.GetScale().y, slot.Entity.TRANSFORM_.GetScale().z);
-
+			slot.Entity.TRANSFORM = tf;
 			return;
 		}
-		auto* collider = slot.Entity.ColEnt;
-		slot.Entity = nRigidBody();
-		slot.Entity.TRANSFORM_ = collider->EntityTransform;
-		printf("Remove func Scale: %.2f %.2f %.2f\n", slot.Entity.TRANSFORM_.GetScale().x, slot.Entity.TRANSFORM_.GetScale().y, slot.Entity.TRANSFORM_.GetScale().z);
 
+		nCollisionEntity* collider = slot.Entity.ColEnt;
+		slot.Entity = nRigidBody();
+		slot.Entity.TRANSFORM = collider->EntityTransform;
 		slot.Entity.ColEnt = collider;
 	}
 
-
-
-	void nDynamicsWorld::RecomputeMassProperties(uint32_t idx) {
-
-		auto& slot = m_Entity[idx];
-		if (slot.Entity.TYPE_ != nBodyType::Dynamic || !slot.Entity.ColEnt || slot.Entity.ColEnt->EntityShape.ColliderID == INVALID_ENTITY)
+	void nDynamicsWorld::RecomputeMassProperties(uint32_t idx)
+	{
+		nEntity& slot = m_Entity[idx];
+		if (slot.Entity.TYPE != nBodyType::Dynamic || !slot.Entity.ColEnt || slot.Entity.ColEnt->EntityShape.ColliderID == INVALID_ENTITY)
 		{
-			slot.Entity.INV_MASS_ = 0.0f;
+			slot.Entity.INV_MASS = 0.0f;
 			return;
 		}
 
-		bool isOverrideActive = (slot.Entity.MASS_OVERRIDE_ != 0.0f);
+		const bool isOverrideActive = (slot.Entity.MASS_OVERRIDE != 0.0f);
 		float mass = 0.0f;
 
-		if (isOverrideActive) {
-			mass = slot.Entity.MASS_OVERRIDE_;          
+		if (isOverrideActive)
+		{
+			mass = slot.Entity.MASS_OVERRIDE;
 		}
-		else {
-			
-			if (!slot.Entity.ColEnt ||
-				slot.Entity.ColEnt->EntityShape.ColliderID == INVALID_ENTITY) {
-				slot.Entity.INV_MASS_ = 0.0f;        
-				return;
-			}
-			nMassProperties mp = ComputeMassProperties(slot.Entity.ColEnt, slot.Entity.DENSITY_);
+		else
+		{
+			nMassProperties mp = ComputeMassProperties(slot.Entity.ColEnt, slot.Entity.DENSITY);
 			mass = mp.Mass;
 		}
 
+		slot.Entity.INV_MASS = mass > 0.0f ? 1.0f / mass : 0.0f;
 
-		slot.Entity.INV_MASS_ = mass > 0.0f ? 1.0f / mass : 0.0f;
-
-		if (slot.Entity.ColEnt &&
-			slot.Entity.ColEnt->EntityShape.ColliderID != INVALID_ENTITY) {
-			slot.Entity.INERTIA_TENSOR_INV_LOCAL_ =
+		if (slot.Entity.ColEnt && slot.Entity.ColEnt->EntityShape.ColliderID != INVALID_ENTITY)
+		{
+			slot.Entity.INERTIA_TENSOR_INV_LOCAL =
 				(GetUnitInertia(slot.Entity.ColEnt->EntityShape, m_CollisionWorld->GetColliderPool()) * mass).Inverse();
 		}
-		else {
-			slot.Entity.INERTIA_TENSOR_INV_LOCAL_ = nMatrix3();
+		else
+		{
+			slot.Entity.INERTIA_TENSOR_INV_LOCAL = nMatrix3();
 		}
 	}
-
-
 
 	void nDynamicsWorld::DestroyAllEntity()
 	{
@@ -115,85 +114,81 @@ namespace nNewton
 
 	nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id)
 	{
-		auto index = INDEX_FROM_ID(id);
-		auto gen = GEN_FROM_ID(id);
+		const uint32_t index = INDEX_FROM_ID(id);
+		const uint32_t gen = GEN_FROM_ID(id);
 
 		if (index >= m_Entity.size())
 			return nullptr;
 
-		auto& e = m_Entity[index];
-
+		nEntity& e = m_Entity[index];
 		if (!e.alive || e.Gen != gen)
 			return nullptr;
-		
+
 		return &e.Entity;
 	}
 
 	const nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id) const
 	{
-		auto index = INDEX_FROM_ID(id);
-		auto gen = GEN_FROM_ID(id);
+		const uint32_t index = INDEX_FROM_ID(id);
+		const uint32_t gen = GEN_FROM_ID(id);
 
 		if (index >= m_Entity.size())
 			return nullptr;
 
-		auto& e = m_Entity[index];
-
+		const nEntity& e = m_Entity[index];
 		if (!e.alive || e.Gen != gen)
 			return nullptr;
+
 		return &e.Entity;
 	}
 
 	const nTransform* nDynamicsWorld::GetTransform(nEntity_ID id) const
 	{
-		auto index = INDEX_FROM_ID(id);
-		auto gen = GEN_FROM_ID(id);
+		const uint32_t index = INDEX_FROM_ID(id);
+		const uint32_t gen = GEN_FROM_ID(id);
 
 		if (index >= m_Entity.size())
 			return nullptr;
 
-		auto& e = m_Entity[index];
-
+		const nEntity& e = m_Entity[index];
 		if (!e.alive || e.Gen != gen)
 			return nullptr;
 
-
-		return &e.Entity.TRANSFORM_;
+		return &e.Entity.TRANSFORM;
 	}
 
-	bool nDynamicsWorld::IsValid(nEntity_ID id_) const {
-		auto index = INDEX_FROM_ID(id_);
-		auto gen = GEN_FROM_ID(id_);
-
-		if (index >= m_Entity.size())
-			return false;
-
-		const auto& e = m_Entity[index];
-
-		if (!e.alive || e.Gen != gen)
-			return false;
-
-		return true;
-	}
-
-	void nDynamicsWorld::Step(float deltaT_)
+	bool nDynamicsWorld::IsValid(nEntity_ID id) const
 	{
-		for (auto& entity : m_Entity)
+		const uint32_t index = INDEX_FROM_ID(id);
+		const uint32_t gen = GEN_FROM_ID(id);
+
+		if (index >= m_Entity.size())
+			return false;
+
+		const nEntity& e = m_Entity[index];
+		return e.alive && e.Gen == gen;
+	}
+
+	void nDynamicsWorld::Step(float deltaT)
+	{
+		for (nEntity& entity : m_Entity)
 		{
-			if (!entity.alive)         continue;
+			if (!entity.alive) continue;
 			if (entity.Entity.IsStatic()) continue;
 
 			nRigidBody& body = entity.Entity;
-			body.ApplyForce(GetGravity() * body.MASS_OVERRIDE_);
 
-			body.Integrate(deltaT_);
-			
+			// Gravity is proportional to the overridden mass (0 when not overridden).
+			body.ApplyForce(GetGravity() * body.MASS_OVERRIDE);
+
+			body.Integrate(deltaT);
 			body.ClearForces();
 
-			if (entity.Entity.ColEnt) {
-				entity.Entity.ColEnt->EntityTransform = body.TRANSFORM_;
+			// Sync the collision proxy transform with the simulated body.
+			if (entity.Entity.ColEnt)
+			{
+				entity.Entity.ColEnt->EntityTransform = body.TRANSFORM;
 			}
-		
 		}
 
 		m_CollisionWorld->StepCollision();

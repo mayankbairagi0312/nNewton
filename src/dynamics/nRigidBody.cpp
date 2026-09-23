@@ -2,18 +2,31 @@
 
 namespace nNewton
 {
-	
-	void nRigidBody::Integrate(float dt_)
+	nRigidBody::nRigidBody(const nRigidBodyInfo& info) noexcept
+		: INV_MASS(0.0f)
+		, MASS_OVERRIDE(info.OVERRIDE_MASS ? info.MASS : 0.0f)
+		, DENSITY(info.DENSITY)
+		, TYPE(info.TYPE)
+		, VELOCITY(info.INIT_VELOCITY)
+		, FORCE_ACC()
+		, TORQUE_ACC()
+		, TRANSFORM(info.INIT_TRANSFORM)
+		, ANGULAR_VELOCITY()
+		, ColEnt(nullptr)
 	{
-		nVector3 linearAccel = GetForce()*GetInvMass();
-		SetVelocity(GetVelocity() + linearAccel*dt_);
-
-		TRANSFORM_.SetPosition(TRANSFORM_.GetPosition() + GetVelocity() * dt_);
 	}
 
-	void nRigidBody::SetVelocity(nVector3 velo)
+	void nRigidBody::Integrate(float dt)
 	{
-		VELOCITY_ = velo;
+		// Semi-implicit Euler: v += a * dt, then x += v * dt
+		const nVector3 linearAccel = GetForce() * GetInvMass();
+		SetVelocity(GetVelocity() + linearAccel * dt);
+
+		TRANSFORM.SetPosition(TRANSFORM.GetPosition() + GetVelocity() * dt);
 	}
 
+	void nRigidBody::SetVelocity(nVector3 velocity) noexcept
+	{
+		VELOCITY = velocity;
+	}
 }

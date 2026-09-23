@@ -5,49 +5,56 @@ namespace nNewton {
 	class nTransform
 	{
 	private:
-		nVector3 m_POS;
-		nQuaternion m_ROT;
-		nVector3 m_SCALE;
+		nVector3 m_Position;
+		nQuaternion m_Rotation;
+		nVector3 m_Scale;
 
 	public:
-
-		//CTOR
-
+		// -- Constructors --
 		nTransform();
-		nTransform(nVector3 pos, nQuaternion rot, nVector3 Scale);
-		//seters
-		void SetPosition(const nVector3& pos_){m_POS = pos_;}
-		void SetRotation(const nQuaternion& rot_) { m_ROT = rot_; }
-		void SetScale(const nVector3& scale_) { m_SCALE = scale_; }
+		nTransform(nVector3 position, nQuaternion rotation, nVector3 scale);
+		nTransform(const nTransform&) = default;
+		nTransform(nTransform&&) noexcept = default;
+		nTransform& operator=(const nTransform&) = default;
+		nTransform& operator=(nTransform&&) noexcept = default;
+		~nTransform() = default;
 
-		//geters
-		nVector3 GetPosition()const { return m_POS; }
-		nQuaternion GetRotation()const { return m_ROT; }
-		nVector3 GetScale()const { return m_SCALE; }
+		// -- Setters --
+		void SetPosition(const nVector3& position) { m_Position = position; }
+		void SetRotation(const nQuaternion& rotation) { m_Rotation = rotation; }
+		void SetScale(const nVector3& scale) { m_Scale = scale; }
 
+		// -- Getters --
+		nVector3 GetPosition() const noexcept { return m_Position; }
+		nQuaternion GetRotation() const noexcept { return m_Rotation; }
+		nVector3 GetScale() const noexcept { return m_Scale; }
 
-		nVector3 Right()const { return Vec_Rotate(m_ROT, { 1.0f, 0.0f, 0.0f }); }
-		nVector3 Up()const { return Vec_Rotate(m_ROT, { 0.0f, 1.0f, 0.0f }); }
-		nVector3 Forward()const { return Vec_Rotate(m_ROT, { 0.0f, 0.0f, 1.0f }); }
+		// -- Basis vectors --
+		nVector3 Right() const { return Vec_Rotate(m_Rotation, nVector3(1.0f, 0.0f, 0.0f)); }
+		nVector3 Up() const { return Vec_Rotate(m_Rotation, nVector3(0.0f, 1.0f, 0.0f)); }
+		nVector3 Forward() const { return Vec_Rotate(m_Rotation, nVector3(0.0f, 0.0f, 1.0f)); }
 
-		void Rotate(const nVector3& axis_,float Rad_);
-		void Rotate(const nQuaternion& Quat_);
+		// -- Rotation --
+		void Rotate(const nVector3& axis, float radians);
+		void Rotate(const nQuaternion& rotation);
 
-		
-		nVector3 TransformPt(const nVector3& LPoint_)const;
-		nVector3 TransformVec(const nVector3& LVector_)const;
-		nVector3 InvTransfromPt(const nVector3& WPoint_)const;
-		nVector3 InvTransfromVec(const nVector3& WVector_)const;
+		// -- Point / vector transforms --
+		nVector3 TransformPt(const nVector3& localPoint) const;
+		nVector3 TransformVec(const nVector3& localVector) const;
+		nVector3 InvTransformPt(const nVector3& worldPoint) const;
+		nVector3 InvTransformVec(const nVector3& worldVector) const;
 
-		static nMatrix4  ConstrTRS(const nVector3& T, const nQuaternion& R, const nVector3& S);
-		nMatrix4 ToMatrix()const;
+		// -- Matrix conversion --
+		static nMatrix4 ConstrTRS(const nVector3& translation, const nQuaternion& rotation, const nVector3& scale);
+		nMatrix4 ToMatrix() const;
 
-		nTransform operator*(const nTransform& rhs)const;
+		// -- Composition / inversion --
+		nTransform operator*(const nTransform& rhs) const;
 		static nTransform ComposeTransform(const nTransform& parent, const nTransform& child);
 		nTransform Inverse() const;
 		void Invert();
 
+		// -- Interpolation --
 		static nTransform Lerp(const nTransform& a, const nTransform& b, float t);
-
 	};
 }

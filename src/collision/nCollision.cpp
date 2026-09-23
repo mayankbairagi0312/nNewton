@@ -1,7 +1,4 @@
-
 #include <nNewton/nCollision.hpp>
-#include <list>
-#include <iostream>
 
 namespace nNewton
 {
@@ -10,41 +7,36 @@ namespace nNewton
 		m_StaticTree = std::make_unique<nStaticAABBTree<nCollisionEntity>>();
 		m_DynamicTree = std::make_unique<nDynamicAABBTree<nCollisionEntity>>();
 	}
-	
+
 	void nCollisionWorld::BuildTrees()
 	{
-		auto rawPtrVec = ToRawPtrs(m_Static_Entities);
-		if(!rawPtrVec.empty())m_StaticTree->BuildAABBTree(rawPtrVec);
-		rawPtrVec.clear();
-		rawPtrVec = ToRawPtrs(m_Dynamic_Entities);
-		if (!rawPtrVec.empty())m_DynamicTree->BuildAABBTree(rawPtrVec);
+		// Static tree: full rebuild over all static proxies.
+		std::vector<nCollisionEntity*> rawPtrVec = ToRawPtrs(m_StaticEntities);
+		if (!rawPtrVec.empty()) m_StaticTree->BuildAABBTree(rawPtrVec);
 
+		rawPtrVec = ToRawPtrs(m_DynamicEntities);
+		if (!rawPtrVec.empty()) m_DynamicTree->BuildAABBTree(rawPtrVec);
 	}
 
 	void nCollisionWorld::StepCollision()
 	{
-		//m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
-		
-			// write phase
-		auto dentity = ToRawPtrs(m_Dynamic_Entities);
-		for (auto& ent : dentity) {
-			
-			
-			ent->currentAABB = GetWorldAABB(ent->EntityShape,ent->EntityTransform,GetColliderPool());
-			ent->marginAABB = Expand(ent->currentAABB, FAT_MARGIN);
-			m_DynamicTree->UpdateEntity(ent->BVHNodePtr);
+		// Write phase: refresh AABBs and update the BVH.
+		std::vector<nCollisionEntity*> dynamicEntities = ToRawPtrs(m_DynamicEntities);
+		for (nCollisionEntity* entity : dynamicEntities) {
+			entity->currentAABB = GetWorldAABB(entity->EntityShape, entity->EntityTransform, GetColliderPool());
+			entity->marginAABB = Expand(entity->currentAABB, FAT_MARGIN);
+			m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
 		}
 
+		// Restructure phase: process the refit queue.
 		m_DynamicTree->TreeletStepRestructure();
 
-			//read phase
+		// Read phase.
 	}
 
-	
-	void  nCollisionWorld::RemoveAll()
+	void nCollisionWorld::RemoveAll()
 	{
-		
-		for (auto& entity : m_Dynamic_Entities)
+		for (auto& entity : m_DynamicEntities)
 		{
 			if (entity->BVHNodePtr)
 			{
@@ -52,127 +44,122 @@ namespace nNewton
 				entity->BVHNodePtr = nullptr;
 			}
 		}
-		for (auto& entity : m_Static_Entities){
+		for (auto& entity : m_StaticEntities) {
 			entity->BVHNodePtr = nullptr;
 		}
-		m_Dynamic_Entities.clear();
-		m_Static_Entities.clear();
+		m_DynamicEntities.clear();
+		m_StaticEntities.clear();
 		m_DynamicTree->Clear();
 		m_StaticTree->Clear();
 	}
+
 	bool nCollisionWorld::RebuildBVH(bool isStatic)
 	{
 		if (isStatic)
 		{
-			if (m_Static_Entities.empty() || !m_StaticTree)
+			if (m_StaticEntities.empty() || !m_StaticTree)
 				return false;
 
-			auto entities = ToRawPtrs(m_Static_Entities);
+			std::vector<nCollisionEntity*> entities = ToRawPtrs(m_StaticEntities);
 			m_StaticTree->Rebuild(entities);
 		}
 		else
 		{
-			if (m_Dynamic_Entities.empty() || !m_DynamicTree)
+			if (m_DynamicEntities.empty() || !m_DynamicTree)
 				return false;
 
-			auto entities = ToRawPtrs(m_Dynamic_Entities);
+			std::vector<nCollisionEntity*> entities = ToRawPtrs(m_DynamicEntities);
 			m_DynamicTree->Rebuild(entities);
 		}
 		return true;
 	}
 
-	bool nCollisionWorld::UpdateBodyType(
-		nEntity_ID id,
-		nBodyType newType,
-		bool insertNow)
+	bool nCollisionWorld::UpdateBodyType(nEntity_ID id, nBodyType newType, bool insertNow)
 	{
 		const bool targetStatic = (newType == nBodyType::Static);
 
-		auto findIn = [&](std::vector<std::unique_ptr<nCollisionEntity>>& container)
+		auto findIn = [id](std::vector<std::unique_ptr<nCollisionEntity>>& container)
 			-> std::vector<std::unique_ptr<nCollisionEntity>>::iterator
-			{
-				return std::find_if(
-					container.begin(),
-					container.end(),
-					[&](const std::unique_ptr<nCollisionEntity>& ent)
-					{
-						return ent->EntityID == id;
-					});
-			};
+		{
+			return std::find_if(
+				container.begin(),
+				container.end(),
+				[id](const std::unique_ptr<nCollisionEntity>& entity)
+				{
+					return entity->EntityID == id;
+				});
+		};
 
-	
-		auto& targetContainer = targetStatic ? m_Static_Entities : m_Dynamic_Entities;
+		// Already in the target container: nothing to do.
+		std::vector<std::unique_ptr<nCollisionEntity>>& targetContainer = targetStatic ? m_StaticEntities : m_DynamicEntities;
 		auto targetIt = findIn(targetContainer);
 		if (targetIt != targetContainer.end())
 			return true;
 
-		auto& sourceContainer = targetStatic ? m_Dynamic_Entities : m_Static_Entities;
+		std::vector<std::unique_ptr<nCollisionEntity>>& sourceContainer = targetStatic ? m_DynamicEntities : m_StaticEntities;
 		auto sourceIt = findIn(sourceContainer);
 		if (sourceIt == sourceContainer.end())
 			return false;
 
-		nCollisionEntity* ent = sourceIt->get();
-		const bool wasStatic = ent->isStatic;
+		nCollisionEntity* entity = sourceIt->get();
+		const bool wasStatic = entity->isStatic;
 
-		if (!wasStatic && ent->BVHNodePtr)
+		// Detach from the source tree first.
+		if (!wasStatic && entity->BVHNodePtr)
 		{
-			m_DynamicTree->RemoveEntity(ent->BVHNodePtr);
-			ent->BVHNodePtr = nullptr;
+			m_DynamicTree->RemoveEntity(entity->BVHNodePtr);
+			entity->BVHNodePtr = nullptr;
 		}
 		else if (wasStatic)
 		{
-			ent->BVHNodePtr = nullptr;
+			entity->BVHNodePtr = nullptr;
 		}
 
 		std::unique_ptr<nCollisionEntity> moved = std::move(*sourceIt);
 		sourceContainer.erase(sourceIt);
-
 
 		moved->isStatic = targetStatic;
 
 		nCollisionEntity* ptr = moved.get();
 		targetContainer.push_back(std::move(moved));
 
-		if (!targetStatic)
+		if (!targetStatic && insertNow)
 		{
-			if (insertNow)
-			{
-				m_DynamicTree->InsertEntity(ptr);
-			}
+			m_DynamicTree->InsertEntity(ptr);
 		}
-		
+
 		return true;
 	}
 
-	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities)
+	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& overlapEntities)
 	{
+		// Within the static tree, within the dynamic tree, then cross-tree pairs.
 		if (m_StaticTree->GetRoot())
-			nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseOverlaps(overlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
 		if (m_DynamicTree->GetRoot())
-			nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, m_DynamicTree->GetRoot(), m_DynamicTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseOverlaps(overlapEntities, m_DynamicTree->GetRoot(), m_DynamicTree->GetRoot());
 		if (m_DynamicTree->GetRoot() && m_StaticTree->GetRoot())
-			nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities,m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
+			nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(overlapEntities, m_DynamicTree->GetRoot(), m_StaticTree->GetRoot());
 	}
 
-	void nCollisionWorld::QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& OverlapEntities, const nCollisionEntity* Entity)
+	void nCollisionWorld::QueryOverlap(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& overlapEntities, const nCollisionEntity* entity)
 	{
-		if (!Entity->BVHNodePtr)return;
+		if (!entity->BVHNodePtr) return;
 
-		if (Entity->isStatic)
+		if (entity->isStatic)
 		{
 			if (m_StaticTree->GetRoot())
-				nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseOverlaps(overlapEntities, entity->BVHNodePtr, m_StaticTree->GetRoot());
 			if (m_DynamicTree->GetRoot())
-				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(overlapEntities, entity->BVHNodePtr, m_DynamicTree->GetRoot());
 		}
 		else
 		{
 			if (m_StaticTree->GetRoot())
-				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(OverlapEntities, Entity->BVHNodePtr, m_StaticTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseCrossOverlaps(overlapEntities, entity->BVHNodePtr, m_StaticTree->GetRoot());
 			if (m_DynamicTree->GetRoot())
-				nAABBTree<nCollisionEntity>::TraverseOverlaps(OverlapEntities, Entity->BVHNodePtr, m_DynamicTree->GetRoot());
+				nAABBTree<nCollisionEntity>::TraverseOverlaps(overlapEntities, entity->BVHNodePtr, m_DynamicTree->GetRoot());
 		}
 	}
-
 
 } //namespace nNewton
