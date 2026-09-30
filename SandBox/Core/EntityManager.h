@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Entity.h"
 #include "Component.h"
 #include "ComponentPool.h"
@@ -42,10 +43,8 @@ public:
         {
             if (!(entity.Mask & (1ull << t))) continue;
             IComponentPool* pool = s_poolRegistry[t];
-            const uint32_t slot = entity.Slots[t].index;
-            const nNewton::nEntity_ID moved = pool->Remove(slot);
-            if (moved != nNewton::INVALID_ENTITY)
-                entities[nNewton::INDEX_FROM_ID(moved)].Slots[t].index = slot;
+            const uint32_t handle = entity.Slots[t].handle;
+            pool->Remove(handle);
         }
         entity.Mask = 0;
         m_world.DestroyEntity<ShapeType>(id);
@@ -60,11 +59,11 @@ public:
         assert(IsAlive(id) && "stale nEntity_ID");
         eEntity& entity = entities[nNewton::INDEX_FROM_ID(id)];
         ComponentPool<T>& pool = GetPool<T>();
-        const uint32_t slot = pool.Add(id, component);
+        const uint32_t handle = pool.Add(id, component);
         constexpr auto type = ComponentTraits<T>::Value;
-        entity.Slots[static_cast<size_t>(type)].index = slot;
+        entity.Slots[static_cast<size_t>(type)].handle = handle;
         entity.Mask |= (1ull << static_cast<size_t>(type));
-        return pool.Get(slot);
+        return pool.Get(handle);
     }
 
     template<typename T>
@@ -75,12 +74,10 @@ public:
         assert(entity.Mask & (1ull << static_cast<size_t>(type)));
 
         ComponentPool<T>& pool = GetPool<T>();
-        const uint32_t slot = entity.Slots[static_cast<size_t>(type)].index;
-        const nNewton::nEntity_ID moved = pool.Remove(slot);
-        if (moved != nNewton::INVALID_ENTITY)
-            entities[nNewton::INDEX_FROM_ID(moved)].Slots[static_cast<size_t>(type)].index = slot;
+        const uint32_t handle = entity.Slots[static_cast<size_t>(type)].handle;
+        pool.Remove(handle);
 
-        entity.Slots[static_cast<size_t>(type)].index = UINT32_MAX;
+        entity.Slots[static_cast<size_t>(type)].handle = nNewton::INVALID_SLOT_HANDLE;
         entity.Mask &= ~(1ull << static_cast<size_t>(type));
     }
 
@@ -90,7 +87,7 @@ public:
         eEntity& entity = entities[nNewton::INDEX_FROM_ID(id)];
         constexpr auto type = ComponentTraits<T>::Value;
         if (!(entity.Mask & (1ull << static_cast<size_t>(type)))) return nullptr;
-        return &GetPool<T>().Get(entity.Slots[static_cast<size_t>(type)].index);
+        return &GetPool<T>().Get(entity.Slots[static_cast<size_t>(type)].handle);
     }
 
     template<typename T>
@@ -111,8 +108,7 @@ public:
     template<typename T, typename Fn>
     void ForEach(Fn&& fn)
     {
-        for (auto& entry : GetPool<T>())
-            fn(entry.owner, entry.component);
+        GetPool<T>().ForEach(std::forward<Fn>(fn));
     }
 
     std::vector<eEntity> entities;

@@ -1,168 +1,159 @@
 #pragma once
 
 #include <vector>
-
 #include "nBoxShape.hpp"
 #include "nSphereShape.hpp"
+#include "nSlotAllocator.hpp"
 
 namespace nNewton {
 
-	class nCollisionShapePool {
-	public:
-		// -- Constructors --
-		nCollisionShapePool() = default;
-		nCollisionShapePool(const nCollisionShapePool&) = delete;
-		nCollisionShapePool& operator=(const nCollisionShapePool&) = delete;
-		nCollisionShapePool(nCollisionShapePool&&) noexcept = default;
-		nCollisionShapePool& operator=(nCollisionShapePool&&) & noexcept = default;
-		~nCollisionShapePool() = default;
+class nCollisionShapePool {
+public:
+    // -- Constructors --
+    nCollisionShapePool() = default;
+    nCollisionShapePool(const nCollisionShapePool&) = delete;
+    nCollisionShapePool& operator=(const nCollisionShapePool&) = delete;
+    nCollisionShapePool(nCollisionShapePool&&) noexcept = default;
+    nCollisionShapePool& operator=(nCollisionShapePool&&) & noexcept = default;
+    ~nCollisionShapePool() = default;
 
-		// -- Shape management --
-		template<class ShapeType>
-		nCollisionShape createCollider(ShapeType collider)
-		{
-			std::vector<nCollider<ShapeType>>& vec = Shapes<ShapeType>();
-			std::vector<uint32_t>& freeList = FreeList<ShapeType>();
+    // -- Shape management --
+    template<class ShapeType>
+    nCollisionShape createCollider(ShapeType collider)
+    {
+        nSlotAllocator<nCollider<ShapeType>>& alloc = Alloc<ShapeType>();
+        
+        uint32_t handle = alloc.emplace();
+        nCollider<ShapeType>& slot = *alloc.getUnsafe(handle);
+        
+        slot.Collider = std::move(collider);
+        slot.refCount = 1;
 
-			uint32_t idx;
-			if (!freeList.empty())
-			{
-				idx = freeList.back();
-				freeList.pop_back();
-			}
-			else
-			{
-				idx = static_cast<uint32_t>(vec.size());
-				vec.push_back({});
-			}
+        return { ShapeType::nTYPE, handle };
+    }
 
-			nCollider<ShapeType>& slot = vec[idx];
-			slot.Collider = std::move(collider);
-			slot.refCount = 1;
-			slot.alive = true;
+    template<class ShapeType>
+    ShapeType* getCollider(nCollisionShape handle)
+    {
+        nSlotAllocator<nCollider<ShapeType>>& alloc = Alloc<ShapeType>();
+        
+        if (!nNewton::SLOT_VALID(handle.ColliderID)) return nullptr;
+        
+        nCollider<ShapeType>* slot = alloc.get(handle.ColliderID);
+        if (!slot) return nullptr;
+        return &slot->Collider;
+    }
 
-			return { ShapeType::nTYPE, MAKE_ID(idx, slot.gen) };
-		}
+    template<class ShapeType>
+    void addRef(nCollisionShape handle)
+    {
+        nSlotAllocator<nCollider<ShapeType>>& alloc = Alloc<ShapeType>();
+        
+        if (!nNewton::SLOT_VALID(handle.ColliderID)) return;
+        
+        nCollider<ShapeType>* slot = alloc.get(handle.ColliderID);
+        if (slot) ++slot->refCount;
+    }
 
-		template<class ShapeType>
-		ShapeType* getCollider(nCollisionShape handle)
-		{
-			nCollider<ShapeType>& slot = Shapes<ShapeType>()[INDEX_FROM_ID(handle.ColliderID)];
-			if (!slot.alive || slot.gen != GEN_FROM_ID(handle.ColliderID))
-				return nullptr;
-			return &slot.Collider;
-		}
+    template<class ShapeType>
+    void removeCollider(nCollisionShape handle)
+    {
+        nSlotAllocator<nCollider<ShapeType>>& alloc = Alloc<ShapeType>();
+        
+        if (!nNewton::SLOT_VALID(handle.ColliderID)) return;
+        
+        nCollider<ShapeType>* slot = alloc.get(handle.ColliderID);
+        if (!slot) return;
+        
+        if (--slot->refCount == 0)
+        {
+            alloc.release(handle.ColliderID);
+        }
+    }
 
-		template<class ShapeType>
-		void addRef(nCollisionShape handle)
-		{
-			nCollider<ShapeType>& slot = Shapes<ShapeType>()[INDEX_FROM_ID(handle.ColliderID)];
-			if (!slot.alive || slot.gen != GEN_FROM_ID(handle.ColliderID))
-				return;
-			++slot.refCount;
-		}
+private:
+    template<class ShapeType> nSlotAllocator<nCollider<ShapeType>>& Alloc();
 
-		template<class ShapeType>
-		void removeCollider(nCollisionShape handle)
-		{
-			nCollider<ShapeType>& slot = Shapes<ShapeType>()[INDEX_FROM_ID(handle.ColliderID)];
-			if (slot.gen != GEN_FROM_ID(handle.ColliderID)) return;
+    nSlotAllocator<nCollider<nBoxShape>>   m_boxAlloc;
+    nSlotAllocator<nCollider<nSphereShape>> m_sphereAlloc;
+};
 
-			if (--slot.refCount == 0)
-			{
-				slot.alive = false;
-				++slot.gen;
-				FreeList<ShapeType>().push_back(INDEX_FROM_ID(handle.ColliderID));
-			}
-		}
-
-	private:
-		template<class ShapeType> std::vector<nCollider<ShapeType>>& Shapes();
-		template<class ShapeType> std::vector<uint32_t>& FreeList();
-
-		std::vector<nCollider<nBoxShape>> m_Box;
-		std::vector<nCollider<nSphereShape>> m_Sphere;
-		std::vector<uint32_t> m_BoxFree;
-		std::vector<uint32_t> m_SphereFree;
-	};
-
-	template<> inline std::vector<nCollider<nBoxShape>>& nCollisionShapePool::Shapes<nBoxShape>() { return m_Box; }
-	template<> inline std::vector<nCollider<nSphereShape>>& nCollisionShapePool::Shapes<nSphereShape>() { return m_Sphere; }
-	template<> inline std::vector<uint32_t>& nCollisionShapePool::FreeList<nBoxShape>() { return m_BoxFree; }
-	template<> inline std::vector<uint32_t>& nCollisionShapePool::FreeList<nSphereShape>() { return m_SphereFree; }
+template<> inline nSlotAllocator<nCollider<nBoxShape>>&   nCollisionShapePool::Alloc<nBoxShape>()   { return m_boxAlloc; }
+template<> inline nSlotAllocator<nCollider<nSphereShape>>& nCollisionShapePool::Alloc<nSphereShape>() { return m_sphereAlloc; }
 
 //====================== Shape dispatch helpers =======================//
 
-	inline nAABB GetWorldAABB(const nCollisionShape& handle, const nTransform& transform,
-		nCollisionShapePool& pool)
-	{
-		switch (handle.type) {
-		case nCollisionShapeType::nBox: {
-			if (auto* box = pool.getCollider<nBoxShape>(handle))
-				return box->getAABB(transform);
-			break;
-		}
-		case nCollisionShapeType::nSphere: {
-			if (auto* sphere = pool.getCollider<nSphereShape>(handle))
-				return sphere->getAABB(transform);
-			break;
-		}
-		default: break;
-		}
-		return nAABB();
-	}
-
-	inline float GetVolume(const nCollisionShape& handle, nCollisionShapePool& pool)
-	{
-		switch (handle.type) {
-		case nCollisionShapeType::nBox: {
-			if (auto* box = pool.getCollider<nBoxShape>(handle))
-				return box->getVolume();
-			break;
-		}
-		case nCollisionShapeType::nSphere: {
-			if (auto* sphere = pool.getCollider<nSphereShape>(handle))
-				return sphere->getVolume();
-			break;
-		}
-		default: break;
-		}
-		return 0.0f;
-	}
-
-	inline nVector3 GetCentroid(const nCollisionShape& handle, nCollisionShapePool& pool)
-	{
-		switch (handle.type) {
-		case nCollisionShapeType::nBox: {
-			if (auto* box = pool.getCollider<nBoxShape>(handle))
-				return box->getCentroid();
-			break;
-		}
-		case nCollisionShapeType::nSphere: {
-			if (auto* sphere = pool.getCollider<nSphereShape>(handle))
-				return sphere->getCentroid();
-			break;
-		}
-		default: break;
-		}
-		return nVector3();
-	}
-
-	inline nMatrix3 GetUnitInertia(const nCollisionShape& handle, nCollisionShapePool& pool)
-	{
-		switch (handle.type) {
-		case nCollisionShapeType::nBox: {
-			if (auto* box = pool.getCollider<nBoxShape>(handle))
-				return box->getUnitInertia();
-			break;
-		}
-		case nCollisionShapeType::nSphere: {
-			if (auto* sphere = pool.getCollider<nSphereShape>(handle))
-				return sphere->getUnitInertia();
-			break;
-		}
-		default: break;
-		}
-		return nMatrix3();
-	}
+inline nAABB GetWorldAABB(const nCollisionShape& handle, const nTransform& transform,
+    nCollisionShapePool& pool)
+{
+    switch (handle.type) {
+    case nCollisionShapeType::nBox: {
+        if (auto* box = pool.getCollider<nBoxShape>(handle))
+            return box->getAABB(transform);
+        break;
+    }
+    case nCollisionShapeType::nSphere: {
+        if (auto* sphere = pool.getCollider<nSphereShape>(handle))
+            return sphere->getAABB(transform);
+        break;
+    }
+    default: break;
+    }
+    return nAABB();
 }
+
+inline float GetVolume(const nCollisionShape& handle, nCollisionShapePool& pool)
+{
+    switch (handle.type) {
+    case nCollisionShapeType::nBox: {
+        if (auto* box = pool.getCollider<nBoxShape>(handle))
+            return box->getVolume();
+        break;
+    }
+    case nCollisionShapeType::nSphere: {
+        if (auto* sphere = pool.getCollider<nSphereShape>(handle))
+            return sphere->getVolume();
+        break;
+    }
+    default: break;
+    }
+    return 0.0f;
+}
+
+inline nVector3 GetCentroid(const nCollisionShape& handle, nCollisionShapePool& pool)
+{
+    switch (handle.type) {
+    case nCollisionShapeType::nBox: {
+        if (auto* box = pool.getCollider<nBoxShape>(handle))
+            return box->getCentroid();
+        break;
+    }
+    case nCollisionShapeType::nSphere: {
+        if (auto* sphere = pool.getCollider<nSphereShape>(handle))
+            return sphere->getCentroid();
+        break;
+    }
+    default: break;
+    }
+    return nVector3();
+}
+
+inline nMatrix3 GetUnitInertia(const nCollisionShape& handle, nCollisionShapePool& pool)
+{
+    switch (handle.type) {
+    case nCollisionShapeType::nBox: {
+        if (auto* box = pool.getCollider<nBoxShape>(handle))
+            return box->getUnitInertia();
+        break;
+    }
+    case nCollisionShapeType::nSphere: {
+        if (auto* sphere = pool.getCollider<nSphereShape>(handle))
+            return sphere->getUnitInertia();
+        break;
+    }
+    default: break;
+    }
+    return nMatrix3();
+}
+
+} // namespace nNewton

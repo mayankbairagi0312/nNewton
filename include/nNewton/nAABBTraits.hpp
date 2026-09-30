@@ -1,4 +1,3 @@
-// nAABBTraits.hpp — entity-to-BBV adaptation traits for the AABB trees.
 
 #pragma once
 #include "nCollisionTypes.hpp"

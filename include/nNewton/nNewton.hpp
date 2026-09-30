@@ -7,3 +7,4 @@
 #include "nCollision.hpp"
 #include "nCollisionShapes.hpp"
 #include "nCollisionTypes.hpp"
+#include "nSlotAllocator.hpp"

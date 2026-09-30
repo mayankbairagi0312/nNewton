@@ -7,8 +7,6 @@
 
 namespace nNewton {
 
-	// Node of a bounding-volume hierarchy. Owned children (unique_ptr) and
-	// a raw parent pointer; leaf nodes point back to their entity.
 	template<typename Entity>
 	struct nBVHNode
 	{
@@ -19,7 +17,7 @@ namespace nNewton {
 
 		Entity* CollEntity = nullptr;
 
-		// Intrusive queue links (dynamic tree refit queue)
+		// Intrusive queue links 
 		bool inQueue = false;
 		nBVHNode<Entity>* qPrev = nullptr;
 		nBVHNode<Entity>* qNext = nullptr;

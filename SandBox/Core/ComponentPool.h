@@ -1,12 +1,14 @@
 #pragma once
+
 #include <cstdint>
 #include <vector>
 #include <utility>
 #include <nNewton/nTypes.hpp>
+#include <nNewton/nSlotAllocator.hpp>
 
 struct ComponentSlot
 {
-    uint32_t index = UINT32_MAX;
+    uint32_t handle = nNewton::INVALID_SLOT_HANDLE;
 };
 
 class IComponentPool
@@ -35,33 +37,47 @@ public:
     // -- Component management --
     uint32_t Add(nNewton::nEntity_ID owner, const T& component)
     {
-        m_data.push_back({ owner, component });
-        return static_cast<uint32_t>(m_data.size()) - 1;
+        return m_alloc.emplace(Entry{owner, component});
     }
 
-    T& Get(uint32_t index) { return m_data[index].component; }
-
-    nNewton::nEntity_ID Remove(uint32_t index) override
+    T& Get(uint32_t handle)
     {
-        const uint32_t last = static_cast<uint32_t>(m_data.size()) - 1;
+        Entry* entry = m_alloc.get(handle);
+        assert(entry && "Invalid component handle");
+        return entry->component;
+    }
+
+    nNewton::nEntity_ID Remove(uint32_t handle) override
+    {
+        Entry* entry = m_alloc.get(handle);
+        if (!entry) return nNewton::INVALID_ENTITY;
+
         nNewton::nEntity_ID moved = nNewton::INVALID_ENTITY;
-        if (index != last)
-        {
-            moved = m_data[last].ownerID;
-            m_data[index] = std::move(m_data[last]);
-        }
-        m_data.pop_back();
+        m_alloc.release(handle);
         return moved;
     }
 
     // -- Queries --
-    size_t Size() const override { return m_data.size(); }
-    nNewton::nEntity_ID OwnerAt(uint32_t index) const override { return m_data[index].ownerID; }
+    size_t Size() const override { return m_alloc.aliveCount(); }
+    nNewton::nEntity_ID OwnerAt(uint32_t handle) const override
+    {
+        const Entry* entry = m_alloc.get(handle);
+        return entry ? entry->ownerID : nNewton::INVALID_ENTITY;
+    }
 
     // -- Iteration --
-    auto begin() { return m_data.begin(); }
-    auto end() { return m_data.end(); }
+    template<typename Fn>
+    void ForEach(Fn&& fn)
+    {
+        m_alloc.forEach([&](Entry& entry) { fn(entry.ownerID, entry.component); });
+    }
+
+    template<typename Fn>
+    void ForEach(Fn&& fn) const
+    {
+        m_alloc.forEach([&](const Entry& entry) { fn(entry.ownerID, entry.component); });
+    }
 
 private:
-    std::vector<Entry> m_data;
+    nNewton::nSlotAllocator<Entry> m_alloc;
 };

@@ -10,7 +10,6 @@ namespace nNewton
 
 	void nCollisionWorld::BuildTrees()
 	{
-		// Static tree: full rebuild over all static proxies.
 		std::vector<nCollisionEntity*> rawPtrVec = ToRawPtrs(m_StaticEntities);
 		if (!rawPtrVec.empty()) m_StaticTree->BuildAABBTree(rawPtrVec);
 
@@ -20,7 +19,7 @@ namespace nNewton
 
 	void nCollisionWorld::StepCollision()
 	{
-		// Write phase: refresh AABBs and update the BVH.
+		// Write phase
 		std::vector<nCollisionEntity*> dynamicEntities = ToRawPtrs(m_DynamicEntities);
 		for (nCollisionEntity* entity : dynamicEntities) {
 			entity->currentAABB = GetWorldAABB(entity->EntityShape, entity->EntityTransform, GetColliderPool());
@@ -28,7 +27,7 @@ namespace nNewton
 			m_DynamicTree->UpdateEntity(entity->BVHNodePtr);
 		}
 
-		// Restructure phase: process the refit queue.
+		// Restructure phase
 		m_DynamicTree->TreeletStepRestructure();
 
 		// Read phase.
@@ -90,7 +89,6 @@ namespace nNewton
 				});
 		};
 
-		// Already in the target container: nothing to do.
 		std::vector<std::unique_ptr<nCollisionEntity>>& targetContainer = targetStatic ? m_StaticEntities : m_DynamicEntities;
 		auto targetIt = findIn(targetContainer);
 		if (targetIt != targetContainer.end())
@@ -104,7 +102,7 @@ namespace nNewton
 		nCollisionEntity* entity = sourceIt->get();
 		const bool wasStatic = entity->isStatic;
 
-		// Detach from the source tree first.
+
 		if (!wasStatic && entity->BVHNodePtr)
 		{
 			m_DynamicTree->RemoveEntity(entity->BVHNodePtr);
@@ -133,7 +131,6 @@ namespace nNewton
 
 	void nCollisionWorld::QueryAllOverlappingPairs(std::vector<std::pair<nCollisionEntity*, nCollisionEntity*>>& overlapEntities)
 	{
-		// Within the static tree, within the dynamic tree, then cross-tree pairs.
 		if (m_StaticTree->GetRoot())
 			nAABBTree<nCollisionEntity>::TraverseOverlaps(overlapEntities, m_StaticTree->GetRoot(), m_StaticTree->GetRoot());
 		if (m_DynamicTree->GetRoot())
