@@ -6,9 +6,6 @@ namespace nNewton
     nDynamicsWorld::nDynamicsWorld()
         : m_CollisionWorld(std::make_unique<nCollisionWorld>())
     {
-        m_entityAlloc.reserve(1);
-        m_entityAlloc.emplace();  
-        m_entityAlloc.release(0);
     }
 
     nEntity_ID nDynamicsWorld::Create_Entity(const nTransform& initTransform)
@@ -67,7 +64,10 @@ namespace nNewton
         nEntity* slot = m_entityAlloc.getByIndex(idx);
         if (!slot) return;
 
-        if (slot->Entity.TYPE != nBodyType::Dynamic || !slot->Entity.ColEnt || slot->Entity.ColEnt->EntityShape.ColliderID == INVALID_ENTITY)
+        const bool hasCollider = slot->Entity.ColEnt
+            && SLOT_VALID(slot->Entity.ColEnt->EntityShape.ColliderID);
+
+        if (slot->Entity.TYPE != nBodyType::Dynamic || !hasCollider)
         {
             slot->Entity.INV_MASS = 0.0f;
             return;
@@ -88,7 +88,7 @@ namespace nNewton
 
         slot->Entity.INV_MASS = mass > 0.0f ? 1.0f / mass : 0.0f;
 
-        if (slot->Entity.ColEnt && slot->Entity.ColEnt->EntityShape.ColliderID != INVALID_ENTITY)
+        if (hasCollider)
         {
             slot->Entity.INERTIA_TENSOR_INV_LOCAL =
                 (GetUnitInertia(slot->Entity.ColEnt->EntityShape, m_CollisionWorld->GetColliderPool()) * mass).Inverse();
@@ -103,11 +103,6 @@ namespace nNewton
     {
         m_CollisionWorld->RemoveAll();
         m_entityAlloc.clear();
-        
-        // Re-reserve slot 0 as invalid 
-        m_entityAlloc.reserve(1);
-        m_entityAlloc.emplace();
-        m_entityAlloc.release(0);
     }
 
     nRigidBody* nDynamicsWorld::GetBody(nEntity_ID id)
@@ -141,7 +136,9 @@ namespace nNewton
 
             nRigidBody& body = entity.Entity;
 
-            body.ApplyForce(GetGravity() * body.MASS_OVERRIDE);
+            const float invMass = body.GetInvMass();
+            if (invMass > 0.0f)
+                body.ApplyForce(GetGravity() * (1.0f / invMass));
 
             body.Integrate(deltaT);
             body.ClearForces();

@@ -17,11 +17,12 @@ public:
     struct Slot
     {
         T          value{};
-        uint32_t   gen = 0;
+        uint32_t   gen = 1;     
         bool       alive = false;
     };
 
-    // --- Ctor / dtro ---
+    // --- Ctor / dtor ---
+
     nSlotAllocator() = default;
     nSlotAllocator(const nSlotAllocator&) = delete;
     nSlotAllocator& operator=(const nSlotAllocator&) = delete;
@@ -64,6 +65,8 @@ public:
         }
         else
         {
+            if (m_slots.empty())
+                m_slots.emplace_back();  // index 0, never used
             index = static_cast<uint32_t>(m_slots.size());
             m_slots.emplace_back();
         }
@@ -100,7 +103,6 @@ public:
         return &slot.value;
     }
 
-    
     T* getByIndex(uint32_t index) noexcept
     {
         if (index >= m_slots.size()) return nullptr;
@@ -117,7 +119,7 @@ public:
         return &slot.value;
     }
 
-    // Unchecked access 
+    // Unchecked access
     T* getUnsafe(uint32_t handle) noexcept
     {
         assert(SLOT_VALID(handle));
@@ -148,7 +150,7 @@ public:
         slot.alive = false;
         --m_aliveCount;
         ++slot.gen;
-        if (slot.gen > SLOT_MAX_GEN) slot.gen = 0; // wraparound 
+        if (slot.gen > SLOT_MAX_GEN) slot.gen = 0; // wraparound
         m_freeList.push_back(idx);
     }
 
@@ -206,7 +208,7 @@ public:
         m_aliveCount = 0;
         m_freeList.clear();
         m_freeList.reserve(m_slots.size());
-        // Index 0 is reserved as invalid 
+       
         for (size_t i = 1; i < m_slots.size(); ++i)
             m_freeList.push_back(static_cast<uint32_t>(i));
     }

@@ -347,6 +347,8 @@ namespace nNewton
 		nBVHNode<Entity>* siblingParent = sibling->parent;
 
 		std::unique_ptr<nBVHNode<Entity>> newParent = std::make_unique<nBVHNode<Entity>>();
+
+		nBVHNode<Entity>* newParentPtr = newParent.get();
 		newParent->parent = sibling->parent;
 		newParent->nodeAABB = Merge(leaf->nodeAABB, sibling->nodeAABB);
 
@@ -376,7 +378,7 @@ namespace nNewton
 			}
 		}
 
-		RefitUp(newParent->parent);
+		RefitUp(newParentPtr);
 	}
 
 	template<class Entity>

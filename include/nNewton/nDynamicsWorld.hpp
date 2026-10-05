@@ -104,6 +104,10 @@ inline nCollisionEntity* nDynamicsWorld::AddCollider(nEntity_ID id, ShapeType&& 
         std::forward<ShapeType>(shape), insertNow);
 
     slot->Entity.ColEnt = collider;
+
+    if (slot->Entity.TYPE == nBodyType::Dynamic)
+        RecomputeMassProperties(INDEX_FROM_ID(id));
+
     return collider;
 }
 
