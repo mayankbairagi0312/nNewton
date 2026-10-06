@@ -10,7 +10,7 @@ namespace nNewton
 
     nEntity_ID nDynamicsWorld::Create_Entity(const nTransform& initTransform)
     {
-        uint32_t handle = m_entityAlloc.emplace(nEntity{});
+        nEntity_ID handle = m_entityAlloc.emplace(nEntity{});
         nEntity* entity = m_entityAlloc.getUnsafe(handle);
         
         entity->Entity = nRigidBody{};

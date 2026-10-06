@@ -23,7 +23,7 @@ public:
     {
         nSlotAllocator<nCollider<ShapeType>>& alloc = Alloc<ShapeType>();
         
-        uint32_t handle = alloc.emplace();
+        nEntity_ID handle = alloc.emplace();
         nCollider<ShapeType>& slot = *alloc.getUnsafe(handle);
         
         slot.Collider = std::move(collider);

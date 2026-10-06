@@ -6,9 +6,15 @@
 #include <nNewton/nTypes.hpp>
 #include <nNewton/nSlotAllocator.hpp>
 
+// Sandbox component handle: the generic slot handle from the engine's
+// allocator. Handle 0 can never be allocated (index 0 is permanently dead),
+// so 0 doubles as the "no component" sentinel.
+using ComponentHandle = nNewton::nSlotHandle;
+constexpr ComponentHandle INVALID_COMPONENT_HANDLE = 0;
+
 struct ComponentSlot
 {
-    uint32_t handle = nNewton::INVALID_SLOT_HANDLE;
+    ComponentHandle handle = INVALID_COMPONENT_HANDLE;
 };
 
 class IComponentPool
@@ -16,8 +22,8 @@ class IComponentPool
 public:
     virtual ~IComponentPool() = default;
     virtual size_t Size() const = 0;
-    virtual nNewton::nEntity_ID OwnerAt(uint32_t index) const = 0;
-    virtual nNewton::nEntity_ID Remove(uint32_t index) = 0;
+    virtual nNewton::nEntity_ID OwnerAt(ComponentHandle handle) const = 0;
+    virtual nNewton::nEntity_ID Remove(ComponentHandle handle) = 0;
 };
 
 template<typename T>
@@ -35,19 +41,19 @@ public:
     ~ComponentPool() override = default;
 
     // -- Component management --
-    uint32_t Add(nNewton::nEntity_ID owner, const T& component)
+    ComponentHandle Add(nNewton::nEntity_ID owner, const T& component)
     {
         return m_alloc.emplace(Entry{owner, component});
     }
 
-    T& Get(uint32_t handle)
+    T& Get(ComponentHandle handle)
     {
         Entry* entry = m_alloc.get(handle);
         assert(entry && "Invalid component handle");
         return entry->component;
     }
 
-    nNewton::nEntity_ID Remove(uint32_t handle) override
+    nNewton::nEntity_ID Remove(ComponentHandle handle) override
     {
         Entry* entry = m_alloc.get(handle);
         if (!entry) return nNewton::INVALID_ENTITY;
@@ -59,7 +65,7 @@ public:
 
     // -- Queries --
     size_t Size() const override { return m_alloc.aliveCount(); }
-    nNewton::nEntity_ID OwnerAt(uint32_t handle) const override
+    nNewton::nEntity_ID OwnerAt(ComponentHandle handle) const override
     {
         const Entry* entry = m_alloc.get(handle);
         return entry ? entry->ownerID : nNewton::INVALID_ENTITY;

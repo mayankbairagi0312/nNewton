@@ -43,7 +43,7 @@ public:
         {
             if (!(entity.Mask & (1ull << t))) continue;
             IComponentPool* pool = s_poolRegistry[t];
-            const uint32_t handle = entity.Slots[t].handle;
+            const ComponentHandle handle = entity.Slots[t].handle;
             pool->Remove(handle);
         }
         entity.Mask = 0;
@@ -59,7 +59,7 @@ public:
         assert(IsAlive(id) && "stale nEntity_ID");
         eEntity& entity = entities[nNewton::INDEX_FROM_ID(id)];
         ComponentPool<T>& pool = GetPool<T>();
-        const uint32_t handle = pool.Add(id, component);
+        const ComponentHandle handle = pool.Add(id, component);
         constexpr auto type = ComponentTraits<T>::Value;
         entity.Slots[static_cast<size_t>(type)].handle = handle;
         entity.Mask |= (1ull << static_cast<size_t>(type));
@@ -74,10 +74,10 @@ public:
         assert(entity.Mask & (1ull << static_cast<size_t>(type)));
 
         ComponentPool<T>& pool = GetPool<T>();
-        const uint32_t handle = entity.Slots[static_cast<size_t>(type)].handle;
+        const ComponentHandle handle = entity.Slots[static_cast<size_t>(type)].handle;
         pool.Remove(handle);
 
-        entity.Slots[static_cast<size_t>(type)].handle = nNewton::INVALID_SLOT_HANDLE;
+        entity.Slots[static_cast<size_t>(type)].handle = INVALID_COMPONENT_HANDLE;
         entity.Mask &= ~(1ull << static_cast<size_t>(type));
     }
 

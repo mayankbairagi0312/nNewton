@@ -10,31 +10,37 @@
 
 namespace nNewton {
 
+// ---------------------------------------------------------------------------
+// SoA design (Structure of Arrays):
+//   m_values   — hot data, one flat array of T
+//   m_gens     — 4B per slot, generation counters
+//   m_alive    — 1B per slot, alive flags
+//   m_freeList — freed indices (never index 0)
+// Emplace => writes into pre-allocated slot memory; no placement new.
+// ---------------------------------------------------------------------------
 template<typename T>
 class nSlotAllocator
 {
 public:
-    struct Slot
-    {
-        T          value{};
-        uint32_t   gen = 1;     
-        bool       alive = false;
-    };
-
     // --- Ctor / dtor ---
-
     nSlotAllocator() = default;
     nSlotAllocator(const nSlotAllocator&) = delete;
     nSlotAllocator& operator=(const nSlotAllocator&) = delete;
     nSlotAllocator(nSlotAllocator&& other) noexcept
-        : m_slots(std::move(other.m_slots)), m_freeList(std::move(other.m_freeList)), m_aliveCount(other.m_aliveCount)
+        : m_values(std::move(other.m_values)),
+          m_gens(std::move(other.m_gens)),
+          m_alive(std::move(other.m_alive)),
+          m_freeList(std::move(other.m_freeList)),
+          m_aliveCount(other.m_aliveCount)
     {
         other.m_aliveCount = 0;
     }
     nSlotAllocator& operator=(nSlotAllocator&& other) noexcept
     {
         if (this != &other) {
-            m_slots       = std::move(other.m_slots);
+            m_values      = std::move(other.m_values);
+            m_gens        = std::move(other.m_gens);
+            m_alive       = std::move(other.m_alive);
             m_freeList    = std::move(other.m_freeList);
             m_aliveCount  = other.m_aliveCount;
             other.m_aliveCount = 0;
@@ -44,113 +50,123 @@ public:
     ~nSlotAllocator() = default;
 
     // --- Capacity ---
-    [[nodiscard]] size_t size() const noexcept { return m_slots.size(); }
-    [[nodiscard]] size_t capacity() const noexcept { return m_slots.capacity(); }
-    [[nodiscard]] size_t freeCount() const noexcept { return m_freeList.size(); }
-    [[nodiscard]] size_t aliveCount() const noexcept { return m_aliveCount; }
-    [[nodiscard]] bool empty() const noexcept { return m_aliveCount == 0; }
+    [[nodiscard]] size_t   size() const noexcept      { return m_values.size(); }
+    [[nodiscard]] size_t   capacity() const noexcept  { return m_values.capacity(); }
+    [[nodiscard]] size_t   freeCount() const noexcept { return m_freeList.size(); }
+    [[nodiscard]] size_t   aliveCount() const noexcept { return m_aliveCount; }
+    [[nodiscard]] bool     empty() const noexcept     { return m_aliveCount == 0; }
 
-    void reserve(size_t n) { m_slots.reserve(n); }
+    void reserve(size_t n) { m_values.reserve(n); m_gens.reserve(n); m_alive.reserve(n); }
 
     // --- Allocation ---
 
     template<typename... Args>
-    uint32_t emplace(Args&&... args)
+    nSlotHandle emplace(Args&&... args)
     {
         uint32_t index;
         if (!m_freeList.empty())
         {
             index = m_freeList.back();
             m_freeList.pop_back();
+            assert(index != 0); // index 0 is never in the free list
+            // Recycled slot: MUST overwrite with the new value. The old AoS
+            // code placement-new'd here; skipping this write leaves stale
+            // data from the previous owner (e.g. an old component's state).
+            m_values[index] = T(std::forward<Args>(args)...);
         }
         else
         {
-            if (m_slots.empty())
-                m_slots.emplace_back();  // index 0, never used
-            index = static_cast<uint32_t>(m_slots.size());
-            m_slots.emplace_back();
+            index = static_cast<uint32_t>(m_values.size());
+            if (index == 0)
+            {
+                // First allocation on a fresh allocator: grow to slot 1 so
+                // slot 0 exists as a permanently dead sentinel.
+                m_values.emplace_back();
+                m_gens.push_back(0);
+                m_alive.push_back(0);
+                index = 1;
+            }
+            m_values.emplace_back(std::forward<Args>(args)...);
+            m_gens.push_back(0);   // gen starts at 0; first handle has gen 0
+            m_alive.push_back(0);
         }
 
-        Slot& slot = m_slots[index];
-        assert(!slot.alive);
-        new (&slot.value) T(std::forward<Args>(args)...);
-        slot.alive = true;
+        assert(!m_alive[index]);
+        m_alive[index] = 1;
         ++m_aliveCount;
-        return SLOT_MAKE_HANDLE(index, slot.gen);
+        return SLOT_MAKE_HANDLE(index, m_gens[index]);
     }
 
-    uint32_t insert(const T& v)  { return emplace(v); }
-    uint32_t insert(T&& v)       { return emplace(std::move(v)); }
+    nSlotHandle insert(const T& v)  { return emplace(v); }
+    nSlotHandle insert(T&& v)       { return emplace(std::move(v)); }
 
     // --- Access ---
-    T* get(uint32_t handle) noexcept
+    T* get(nSlotHandle handle) noexcept
     {
         if (!SLOT_VALID(handle)) return nullptr;
         const uint32_t idx = SLOT_INDEX(handle);
-        if (idx >= m_slots.size()) return nullptr;
-        Slot& slot = m_slots[idx];
-        if (!slot.alive || slot.gen != SLOT_GEN(handle)) return nullptr;
-        return &slot.value;
+        if (idx >= m_values.size()) return nullptr;
+        if (!m_alive[idx] || m_gens[idx] != SLOT_GEN(handle)) return nullptr;
+        return &m_values[idx];
     }
 
-    const T* get(uint32_t handle) const noexcept
+    const T* get(nSlotHandle handle) const noexcept
     {
         if (!SLOT_VALID(handle)) return nullptr;
         const uint32_t idx = SLOT_INDEX(handle);
-        if (idx >= m_slots.size()) return nullptr;
-        const Slot& slot = m_slots[idx];
-        if (!slot.alive || slot.gen != SLOT_GEN(handle)) return nullptr;
-        return &slot.value;
+        if (idx >= m_values.size()) return nullptr;
+        if (!m_alive[idx] || m_gens[idx] != SLOT_GEN(handle)) return nullptr;
+        return &m_values[idx];
     }
 
     T* getByIndex(uint32_t index) noexcept
     {
-        if (index >= m_slots.size()) return nullptr;
-        Slot& slot = m_slots[index];
-        if (!slot.alive) return nullptr;
-        return &slot.value;
+        if (index >= m_values.size()) return nullptr;
+        if (!m_alive[index]) return nullptr;
+        return &m_values[index];
     }
 
     const T* getByIndex(uint32_t index) const noexcept
     {
-        if (index >= m_slots.size()) return nullptr;
-        const Slot& slot = m_slots[index];
-        if (!slot.alive) return nullptr;
-        return &slot.value;
+        if (index >= m_values.size()) return nullptr;
+        if (!m_alive[index]) return nullptr;
+        return &m_values[index];
     }
 
     // Unchecked access
-    T* getUnsafe(uint32_t handle) noexcept
+    T* getUnsafe(nSlotHandle handle) noexcept
     {
         assert(SLOT_VALID(handle));
-        assert(SLOT_INDEX(handle) < m_slots.size());
-        assert(m_slots[SLOT_INDEX(handle)].alive);
-        assert(m_slots[SLOT_INDEX(handle)].gen == SLOT_GEN(handle));
-        return &m_slots[SLOT_INDEX(handle)].value;
+        const uint32_t idx = SLOT_INDEX(handle);
+        assert(idx < m_values.size());
+        assert(m_alive[idx]);
+        assert(m_gens[idx] == SLOT_GEN(handle));
+        return &m_values[idx];
     }
-    const T* getUnsafe(uint32_t handle) const noexcept
+    const T* getUnsafe(nSlotHandle handle) const noexcept
     {
         assert(SLOT_VALID(handle));
-        assert(SLOT_INDEX(handle) < m_slots.size());
-        assert(m_slots[SLOT_INDEX(handle)].alive);
-        assert(m_slots[SLOT_INDEX(handle)].gen == SLOT_GEN(handle));
-        return &m_slots[SLOT_INDEX(handle)].value;
+        const uint32_t idx = SLOT_INDEX(handle);
+        assert(idx < m_values.size());
+        assert(m_alive[idx]);
+        assert(m_gens[idx] == SLOT_GEN(handle));
+        return &m_values[idx];
     }
 
     // --- Release ---
-    void release(uint32_t handle) noexcept
+    void release(nSlotHandle handle) noexcept
     {
         if (!SLOT_VALID(handle)) return;
         const uint32_t idx = SLOT_INDEX(handle);
-        if (idx >= m_slots.size()) return;
-        Slot& slot = m_slots[idx];
-        if (!slot.alive || slot.gen != SLOT_GEN(handle)) return;
+        if (idx >= m_values.size()) return;
+        if (!m_alive[idx] || m_gens[idx] != SLOT_GEN(handle)) return;
 
-        slot.value.~T();
-        slot.alive = false;
+        // nSlotAllocator does not own its T's resources; no destructor call needed
+        // because clear() / slot reuse simply marks the slot dead.
+        m_alive[idx] = 0;
         --m_aliveCount;
-        ++slot.gen;
-        if (slot.gen > SLOT_MAX_GEN) slot.gen = 0; // wraparound
+        uint32_t g = ++m_gens[idx];
+        if (g > SLOT_MAX_GEN) m_gens[idx] = 0; // wraparound
         m_freeList.push_back(idx);
     }
 
@@ -158,58 +174,56 @@ public:
     template<typename Fn>
     void forEach(Fn&& fn)
     {
-        for (Slot& slot : m_slots)
-            if (slot.alive)
-                fn(slot.value);
+        for (size_t i = 0; i < m_values.size(); ++i)
+            if (m_alive[i])
+                fn(m_values[i]);
     }
 
     template<typename Fn>
     void forEach(Fn&& fn) const
     {
-        for (const Slot& slot : m_slots)
-            if (slot.alive)
-                fn(slot.value);
+        for (size_t i = 0; i < m_values.size(); ++i)
+            if (m_alive[i])
+                fn(m_values[i]);
     }
 
     template<typename Fn>
     void forEachWithHandle(Fn&& fn)
     {
-        for (size_t i = 0; i < m_slots.size(); ++i)
+        for (size_t i = 0; i < m_values.size(); ++i)
         {
-            Slot& slot = m_slots[i];
-            if (slot.alive)
-                fn(SLOT_MAKE_HANDLE(static_cast<uint32_t>(i), slot.gen), slot.value);
+            if (m_alive[i])
+                fn(SLOT_MAKE_HANDLE(static_cast<uint32_t>(i), m_gens[i]), m_values[i]);
         }
     }
 
     template<typename Fn>
     void forEachWithHandle(Fn&& fn) const
     {
-        for (size_t i = 0; i < m_slots.size(); ++i)
+        for (size_t i = 0; i < m_values.size(); ++i)
         {
-            const Slot& slot = m_slots[i];
-            if (slot.alive)
-                fn(SLOT_MAKE_HANDLE(static_cast<uint32_t>(i), slot.gen), slot.value);
+            if (m_alive[i])
+                fn(SLOT_MAKE_HANDLE(static_cast<uint32_t>(i), m_gens[i]), m_values[i]);
         }
     }
 
     // -----
     void clear() noexcept
     {
-        for (Slot& slot : m_slots)
+        for (size_t i = 0; i < m_values.size(); ++i)
         {
-            if (slot.alive)
+            if (m_alive[i])
             {
-                slot.value.~T();
-                slot.alive = false;
-                ++slot.gen;
+                m_alive[i] = 0;
+                uint32_t g = ++m_gens[i];
+                if (g > SLOT_MAX_GEN) m_gens[i] = 0;
             }
         }
         m_aliveCount = 0;
         m_freeList.clear();
-        m_freeList.reserve(m_slots.size());
-       
-        for (size_t i = 1; i < m_slots.size(); ++i)
+        m_freeList.reserve(m_values.size());
+        // Index 0 is skipped: it never enters the free list.
+        for (size_t i = 1; i < m_values.size(); ++i)
             m_freeList.push_back(static_cast<uint32_t>(i));
     }
 
@@ -217,14 +231,16 @@ public:
     void debugPrint() const
     {
         size_t a = 0, d = 0;
-        for (const auto& s : m_slots) { if (s.alive) ++a; else ++d; }
-        // printf("nSlotAllocator: alive=%zu dead=%zu freeList=%zu cap=%zu\n", a, d, m_freeList.size(), m_slots.capacity());
+        for (size_t i = 0; i < m_values.size(); ++i) { if (m_alive[i]) ++a; else ++d; }
+        // printf("nSlotAllocator: alive=%zu dead=%zu freeList=%zu cap=%zu\n", a, d, m_freeList.size(), m_values.capacity());
     }
 
 private:
-    std::vector<Slot> m_slots;
-    std::vector<uint32_t> m_freeList;
-    size_t m_aliveCount = 0;
+    std::vector<T>         m_values;
+    std::vector<uint32_t>  m_gens;
+    std::vector<uint8_t>   m_alive;
+    std::vector<uint32_t>  m_freeList;
+    size_t                 m_aliveCount = 0;
 };
 
 } // namespace nNewton
